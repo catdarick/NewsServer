@@ -9,34 +9,33 @@ import           Database.PostgreSQL.Simple       (connectPostgreSQL,
                                                    execute_, query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Migration.User
+import           Migration.Create
 import           Network.HTTP.Types               (status200)
 import           Network.Wai
 import           Network.Wai.Handler.Warp         (run)
-
-application request respond = do
+import Control.Monad (void)
+import Api.Methods.Signin
+import Api.Methods.Login
+import Data.Function ((&))
+import Data.Text.Encoding (decodeUtf8)
+import Network.HTTP.Types.Status 
+application conn request respond = do
   print request
-  respond $ responseLBS status200 [("Content-Type", "text/plain")] "Hello World"
+  let queryString_ = (request & queryString)
+  let path = request & pathInfo
+  (status, response) <- case path of
+    ["signIn"] -> signIn conn queryString_
+    ["logIn"] -> logIn conn queryString_
+    smth -> return (status404, "")
+  respond $ responseLBS status [("Content-Type", "application/json")] response
 
 main = do
   conn <-
     connectPostgreSQL
       "host='127.0.0.1' port=5432 dbname='test' user='darick' password='IPOD103qwe'"
    -- q<-query_ conn "select somev, title from testtable"
-  q <-
-    query_
-      conn
-      [sql| WITH RECURSIVE r AS (
-            SELECT id, parent_id, title
-            FROM category
-            WHERE id = 4
-            UNION
-            SELECT category.id, category.parent_id, category.title
-            FROM category
-                JOIN r
-                    ON category.id = r.parent_id
-            )
-            SELECT * FROM r|]
+  --initDatabase conn
+  --createNewsTable conn
     --createCategoryTable conn
     --execute conn "insert into category (parent, title) values (?,?)"  $  ((1::Int), ("2323"::String))
 {-   execute
@@ -47,7 +46,7 @@ main = do
             |]
     (2::Int, "789" :: String) -}
    -- execute_ conn "create table testtable2 (somev_s INT, title_s VARCHAR)"
-  print (q :: [(Int, Maybe Int, String)])
+  --print (q :: [(Int, Maybe Int, String)])
   print defaultConnectInfo
-  run 3000 application
+  run 3000 $ application conn
   return ()

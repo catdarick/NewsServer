@@ -30,6 +30,16 @@ dependencies:
 - postgresql-simple 
 - bytestring
 - postgresql-simple-migration
+- lens
+- lens-aeson
+- configurator
+- aeson-casing
+- aeson
+- bytestring
+- containers
+- cryptohash
+- binary
+- random
 library:
   source-dirs: src
 

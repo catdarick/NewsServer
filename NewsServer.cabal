@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8ce3686c2638500f7f1f7a5af57adda27af48de67b230a69c374a1f2aa9b2b61
+-- hash: 7dd054de01bbb61acbeca4bf2ee6af3ae79acd46511f207584179676664a174b
 
 name:           NewsServer
 version:        0.1.0.0
@@ -27,9 +27,16 @@ source-repository head
 
 library
   exposed-modules:
+      Api.Methods.Helper
+      Api.Methods.Login
+      Api.Methods.Signin
+      Api.Types.Response
       Config
+      Database.Category
+      Database.Types
+      Database.User
       Lib
-      Migration.User
+      Migration.Create
       Types.Author
       Types.Category
       Types.Comment
@@ -42,12 +49,21 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , aeson-casing
+    , base >=4.7 && <5
+    , binary
     , blaze-builder
     , bytestring
+    , configurator
+    , containers
+    , cryptohash
     , http-types
+    , lens
+    , lens-aeson
     , postgresql-simple
     , postgresql-simple-migration
+    , random
     , text
     , time
     , wai
@@ -63,12 +79,21 @@ executable NewsServer-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       NewsServer
+    , aeson
+    , aeson-casing
     , base >=4.7 && <5
+    , binary
     , blaze-builder
     , bytestring
+    , configurator
+    , containers
+    , cryptohash
     , http-types
+    , lens
+    , lens-aeson
     , postgresql-simple
     , postgresql-simple-migration
+    , random
     , text
     , time
     , wai
@@ -85,12 +110,21 @@ test-suite NewsServer-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       NewsServer
+    , aeson
+    , aeson-casing
     , base >=4.7 && <5
+    , binary
     , blaze-builder
     , bytestring
+    , configurator
+    , containers
+    , cryptohash
     , http-types
+    , lens
+    , lens-aeson
     , postgresql-simple
     , postgresql-simple-migration
+    , random
     , text
     , time
     , wai

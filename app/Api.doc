@@ -1,0 +1,3 @@
+signIn
+    Required: ["login", "password", "first_name", "last_name"]
+    Optional: ["is_admin", "picture"]

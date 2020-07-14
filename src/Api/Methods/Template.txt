@@ -1,0 +1,32 @@
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module ModName where
+
+import           Api.Helpers.Check
+import           Api.Helpers.Getters
+import qualified Api.Methods.Errors         as Err
+import           Api.Types.Response
+import           Control.Exception          (SomeException)
+import           Data.ByteString            (ByteString)
+import           Database.PostgreSQL.Simple (Connection)
+import           Database.Types
+import           Network.HTTP.Types         (Status, status400)
+
+methodName ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Token)
+methodName conn queryString = do
+  let eitherParameters = checkAndGetParameters required optional queryString
+  case eitherParameters of
+    Left error -> return (status400, errorResponse error)
+    Right (requiredValues, optionalMaybeValues) -> do
+      let [] = requiredValues
+      let [] = optionalMaybeValues
+      undefined
+  where
+    requiredNames = []
+    requiredChecks = []
+    required = (requiredNames, requiredChecks)
+    optionalNames = []
+    optionalChecks = []
+    optional = (optionalNames, optionalChecks)

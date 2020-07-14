@@ -4,6 +4,16 @@
 
 module Main where
 
+import           Api.Methods.CreateAuthor
+import           Api.Methods.Login
+import           Api.Methods.PostNews
+import           Api.Methods.Signin
+import           Api.Methods.CreateCategory
+import           Api.Types.Response
+import           Control.Monad                    (void, when)
+import           Data.Aeson                       (encode)
+import           Data.Function                    ((&))
+import           Data.Text.Encoding               (decodeUtf8)
 import           Database.PostgreSQL.Simple       (connectPostgreSQL,
                                                    defaultConnectInfo, execute,
                                                    execute_, query, query_)
@@ -11,42 +21,36 @@ import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Migration.Create
 import           Network.HTTP.Types               (status200)
+import           Network.HTTP.Types.Status
 import           Network.Wai
 import           Network.Wai.Handler.Warp         (run)
-import Control.Monad (void)
-import Api.Methods.Signin
-import Api.Methods.Login
-import Data.Function ((&))
-import Data.Text.Encoding (decodeUtf8)
-import Network.HTTP.Types.Status 
+
 application conn request respond = do
   print request
   let queryString_ = (request & queryString)
   let path = request & pathInfo
-  (status, response) <- case path of
-    ["signIn"] -> signIn conn queryString_
-    ["logIn"] -> logIn conn queryString_
-    smth -> return (status404, "")
-  respond $ responseLBS status [("Content-Type", "application/json")] response
+  (status, bsResponse) <-
+    case path of
+      ["signIn"]       -> encoded $ signIn conn queryString_
+      ["logIn"]        -> encoded $ logIn conn queryString_
+      ["createAuthor"] -> encoded $ createAuthor conn queryString_
+      ["createCategory"] -> encoded $ createCategory conn queryString_
+      ["postNews"] -> encoded $ postNews conn queryString_
+      smth             -> return (status404, "")
+  respond $
+    responseLBS status [("Content-Type", "application/json")] $ bsResponse
+    --if (status == status404)
+    --  then ""
+    --  else bsResponse
+  where
+    encoded f = do
+      (status, response) <- f
+      return (status, encode response)
 
 main = do
   conn <-
     connectPostgreSQL
       "host='127.0.0.1' port=5432 dbname='test' user='darick' password='IPOD103qwe'"
-   -- q<-query_ conn "select somev, title from testtable"
-  --initDatabase conn
-  --createNewsTable conn
-    --createCategoryTable conn
-    --execute conn "insert into category (parent, title) values (?,?)"  $  ((1::Int), ("2323"::String))
-{-   execute
-    conn
-    [sql| insert into category
-              (parent, title)
-              values (?,?)
-            |]
-    (2::Int, "789" :: String) -}
-   -- execute_ conn "create table testtable2 (somev_s INT, title_s VARCHAR)"
-  --print (q :: [(Int, Maybe Int, String)])
   print defaultConnectInfo
   run 3000 $ application conn
   return ()

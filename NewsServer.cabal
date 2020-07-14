@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7dd054de01bbb61acbeca4bf2ee6af3ae79acd46511f207584179676664a174b
+-- hash: 4acd2c624f8da15677e4202eba90fdaeeec4fa83453767a14d393c521402a987
 
 name:           NewsServer
 version:        0.1.0.0
@@ -27,12 +27,19 @@ source-repository head
 
 library
   exposed-modules:
-      Api.Methods.Helper
+      Api.Helpers.Check
+      Api.Helpers.Getters
+      Api.Methods.CreateAuthor
+      Api.Methods.CreateCategory
+      Api.Methods.Errors
       Api.Methods.Login
+      Api.Methods.PostNews
       Api.Methods.Signin
       Api.Types.Response
       Config
+      Database.Author
       Database.Category
+      Database.News
       Database.Types
       Database.User
       Lib
@@ -66,6 +73,7 @@ library
     , random
     , text
     , time
+    , vector
     , wai
     , warp
   default-language: Haskell2010
@@ -96,6 +104,7 @@ executable NewsServer-exe
     , random
     , text
     , time
+    , vector
     , wai
     , warp
   default-language: Haskell2010
@@ -127,6 +136,7 @@ test-suite NewsServer-test
     , random
     , text
     , time
+    , vector
     , wai
     , warp
   default-language: Haskell2010

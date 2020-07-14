@@ -26,7 +26,7 @@ createAuthorTable conn = do
     conn
     [sql| CREATE TABLE author
         ( id SERIAL UNIQUE PRIMARY KEY
-        , user_id INTEGER REFERENCES user_account (id)
+        , user_id INTEGER UNIQUE REFERENCES user_account (id)
         , description TEXT
         )|]
 
@@ -44,7 +44,7 @@ createCategoryTable conn = do
     [sql| CREATE TABLE category
         ( id SERIAL UNIQUE PRIMARY KEY
         , parent_id INTEGER REFERENCES category (id)
-        , title TEXT
+        , name TEXT
         )|]
 
 createTagTable conn = do

@@ -21,9 +21,10 @@ import           Database.Types
 import qualified Database.User              as DB
 import           GHC.Exception              (errorCallException, throw)
 import           Network.HTTP.Types.Status
+import Data.ByteString.Char8 (pack)
 
 logIn ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Token)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response TokenString)
 logIn conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of

@@ -14,26 +14,27 @@ import           Database.PostgreSQL.Simple.Types (Binary (Binary))
 import           Database.PostgreSQL.Simple.Types (Only)
 import           Database.Types
 
-addCategory :: Connection -> Name -> Maybe CategoryId -> IO Int64
-addCategory conn name parentId =
+addCategory :: Connection -> Name -> Maybe CategoryId -> IO [Only CategoryId]
+addCategory conn name parentId = do
+  print parentId
   case parentId of
     Nothing ->
-      execute
+      query
         conn
         [sql|
-              INSERT INTO category (name)
-              VALUES (?)
-              |]
+        INSERT INTO category (name)
+        VALUES (?) RETURNING id
+        |]
         (Only name)
     Just _ ->
-      execute
+      query
         conn
         [sql|
-              INSERT INTO category (name, parent_id)
-              SELECT ?, ?
-              FROM category
-              WHERE (id = ?);
-              |]
+         INSERT INTO category (name, parent_id)
+         (SELECT ?, ?
+         FROM category
+         WHERE (id = ?)) RETURNING id
+         |]
         (name, parentId, parentId)
 
 sqlReqCategoryHierarchy =

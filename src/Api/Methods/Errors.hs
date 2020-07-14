@@ -13,6 +13,9 @@ loginBusy = "Login is busy, try another"
 badPassword :: ByteString
 badPassword = "Incorrect login or password"
 
+badToken :: ByteString
+badToken = "Bad token"
+
 alreadyAuthor :: ByteString
 alreadyAuthor = "This user is already an author or doesn't exists"
 
@@ -24,3 +27,15 @@ noParrent = "Parrent with this id doesnt exists"
 
 noCategory :: ByteString
 noCategory = "Category with this id doesnt exists"
+
+noDraft :: ByteString
+noDraft = "Draft with this id doesnt exists"
+
+noNews :: ByteString
+noNews = "News with this id doesnt exists"
+
+tagExists :: ByteString
+tagExists = "This tag already exists"
+
+badTags :: ByteString
+badTags = "Duplicates tag_id or doesnt exists"

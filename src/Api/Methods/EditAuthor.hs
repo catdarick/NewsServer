@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.CreateAuthor where
+module Api.Methods.EditAuthor where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
@@ -18,9 +18,9 @@ import           Network.HTTP.Types         (Status, status200, status400,
                                              status404)
 import Database.PostgreSQL.Simple.Types (Only(Only))
 
-createAuthor ::
+editAuthor ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-createAuthor conn queryString = do
+editAuthor conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status404, badResoponse)
@@ -39,7 +39,7 @@ createAuthor conn queryString = do
             Right [] -> return $ (status400, errorResponse Err.smth)
             Right [Only id] -> return $ (status200, idResponse id)
   where
-    requiredNames = ["token", "user_id"]
+    requiredNames = ["token", "author_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
     optionalNames = ["description"]

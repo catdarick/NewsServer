@@ -21,7 +21,17 @@ data Response resultType =
 instance (ToJSON resultType) => ToJSON (Response resultType) where
   toJSON = genericToJSON $ (aesonPrefix snakeCase) {omitNothingFields = True}
 
+data Idcont = 
+  Idcont
+  {idcontId::Int}
+    deriving (Generic, Eq, Show)
 
+instance ToJSON Idcont where
+  toJSON = genericToJSON $ (aesonPrefix snakeCase) {omitNothingFields = True}
+
+idContainer id = Idcont{idcontId=id}
+
+idResponse id = okResponse {responseResult = Just $ idContainer id}
 defaultResponse success =
   Response 
     { responseSuccess = success
@@ -35,5 +45,5 @@ okResponse = (defaultResponse True)
 
 okResponseWithResult result = (defaultResponse True) {responseResult = Just result}
 
-badResoponse :: Response ()
+
 badResoponse = defaultResponse False

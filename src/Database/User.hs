@@ -22,14 +22,14 @@ addUser ::
   -> LastName
   -> Maybe Picture
   -> Maybe Bool
-  -> IO Int64
+  -> IO [Only UserId]
 addUser conn login passHash fName lName pictureId isAdmin =
-  execute
+  query
     conn
     [sql|
         INSERT INTO user_account
         (login, password_hash, first_name, second_name, picture, is_admin)
-        VALUES (?,?,?,?,?,?)|]
+        VALUES (?,?,?,?,?,?) RETURNING id|]
     (login, Binary passHash, fName, lName, pictureId, isAdmin)
 
 getMaybeUserId :: Connection -> Login -> PassHash -> IO [Only Int]
@@ -42,7 +42,7 @@ getMaybeUserId conn login passHash = do
         |]
     (login, Binary passHash)
 
-setToken :: Connection -> UserId -> Token -> IO Int64
+setToken :: Connection -> UserId -> TokenString -> IO Int64
 setToken conn userId token =
   execute
     conn

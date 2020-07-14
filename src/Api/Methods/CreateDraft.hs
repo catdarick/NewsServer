@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.PostNews where
+module Api.Methods.CreateDraft where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
@@ -10,15 +10,16 @@ import           Api.Types.Response
 import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
 import qualified Database.Author                  as DB
-import qualified Database.News                    as DB
-import           Database.PostgreSQL.Simple       (SqlError, sqlErrorMsg, Connection)
+import qualified Database.Draft                    as DB
+import           Database.PostgreSQL.Simple       (Connection, SqlError,
+                                                   sqlErrorMsg)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Database.Types
 import           Network.HTTP.Types               (Status, status400)
 
-postNews ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-postNews conn queryString = do
+createDraft ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+createDraft conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)
@@ -31,8 +32,7 @@ postNews conn queryString = do
         [] -> return (status400, errorResponse Err.notAuthor)
         [Only authorId] -> do
           res <-
-            try $
-            DB.addNews
+            DB.addDraftWithTags
               conn
               authorId
               title
@@ -40,11 +40,12 @@ postNews conn queryString = do
               (fromInt categoryId)
               mainPicture
               (fromStringList <$> pictures)
+              (fromIntList <$> tagsId)
           case res of
-            Left (e :: SqlError) ->do
-              print e
-              return (status400, errorResponse Err.noCategory)
-            Right _ -> return (status400, okResponse)
+            Left err -> return (status400, errorResponse err)
+           -- Right [] -> return $ (status400, errorResponse Err.smth)
+            Right [Only id] -> do
+              return (status400, idResponse id)
   where
     requiredNames = ["token", "title", "content", "category_id"]
     requiredChecks =

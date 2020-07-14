@@ -18,9 +18,9 @@ addAuthor ::
      Connection
   -> UserId
   -> Maybe Description
-  -> IO Int64
+  -> IO [Only AuthorId]
 addAuthor conn userId description  =
-  execute
+  query
     conn
     [sql|
         INSERT INTO author
@@ -28,7 +28,7 @@ addAuthor conn userId description  =
         VALUES (?,?)|]
     (userId, description)
 
-getAuthorId :: Connection -> TokenBS -> IO [(Only AuthorId)]
+getAuthorId :: Connection -> Token-> IO [(Only AuthorId)]
 getAuthorId conn token =
   query
     conn

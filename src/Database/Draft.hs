@@ -1,0 +1,110 @@
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+
+module Database.Draft where
+
+import qualified Api.Methods.Errors               as Err
+import           Control.Exception                (SomeException, try)
+import           Data.ByteString                  (ByteString)
+import           Data.Int                         (Int64)
+import           Data.Text                        (Text)
+import           Data.Vector                      (fromList)
+import           Database.PostgreSQL.Simple       (Connection, execute,
+                                                   executeMany, query)
+import           Database.PostgreSQL.Simple       (Only (Only))
+import           Database.PostgreSQL.Simple       (In (In))
+import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           Database.PostgreSQL.Simple.Types (Binary (Binary))
+import           Database.PostgreSQL.Simple.Types (Only)
+import           Database.Types
+
+addDraftWithTags ::
+     Connection
+  -> AuthorId
+  -> Title
+  -> Content
+  -> CategoryId
+  -> Maybe Picture
+  -> Maybe [Picture]
+  -> Maybe [TagId]
+  -> IO (Either ByteString [Only NewsId])
+addDraftWithTags conn authorId title content caregoryId mbPicture mbPictures mbTagsId = do
+  resAddNews <-
+    try $ addDraft conn authorId title content caregoryId mbPicture mbPictures
+  case resAddNews of
+    Left (e :: SomeException) -> do
+      print e
+      return $ Left Err.noCategory
+    Right [Only id] -> do
+      resAddTags <- try $ addDraftTags conn id mbTagsId
+      case resAddTags of
+        Left (e :: SomeException) -> do
+          deleteDraft conn id
+          return $ Left Err.badTags
+        Right _ -> return $ Right [Only id]
+
+addDraft ::
+     Connection
+  -> AuthorId
+  -> Title
+  -> Content
+  -> CategoryId
+  -> Maybe Picture
+  -> Maybe [Picture]
+  -> IO [Only NewsId]
+addDraft conn authorId title content caregoryId mbPicture mbPictures =
+  query
+    conn
+    [sql|
+        INSERT INTO news
+        (author_id, title, content, category_id, main_picture, pictures)
+        VALUES (?,?,?,?,?,?) RETURNING id|]
+    (authorId, title, content, caregoryId, mbPicture, fromList <$> mbPictures)
+
+addDraftTags :: Connection -> NewsId -> Maybe [TagId] -> IO Int64
+addDraftTags conn news_id mbTagsId = do
+  case mbTagsId of
+    Nothing -> return 1
+    Just tagsId -> do
+      let rows = map (\tag -> (news_id, tag)) tagsId
+      executeMany
+        conn
+        [sql|
+              INSERT INTO news_tag
+              (news_id, tag_id)
+              VALUES (?,?)|]
+        rows
+
+deleteDraft :: Connection -> NewsId -> IO Int64
+deleteDraft conn newsId =
+  execute
+    conn
+    [sql|
+  DELETE FROM news
+  WHERE id=?|]
+    (Only newsId)
+
+getDraftAuthorToken :: Connection -> NewsId -> IO [(Only Token)]
+getDraftAuthorToken conn newsId =
+  query
+    conn
+    [sql|
+        SELECT user_token.token FROM user_token, author, news
+        WHERE news.id = ?
+        AND news.author_id = author.id
+        AND author.user_id = user_token.user_id
+        |]
+    (Only newsId)
+
+publishDraft :: Connection -> NewsId -> IO Int64
+publishDraft conn newsId =
+  execute
+    conn
+    [sql|
+      UPDATE news
+      SET is_published = TRUE
+      WHERE id=?|]
+    (Only newsId)

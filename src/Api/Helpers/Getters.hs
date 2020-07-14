@@ -6,20 +6,23 @@ module Api.Helpers.Getters where
 
 import           Api.Helpers.Check
 import           Api.Types.Response
-import           Control.Exception                (throw)
-import           Data.ByteString                  (ByteString, length)
-import           Data.List                        (find)
-import           Data.Maybe                       (fromMaybe, isJust, isNothing)
-import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
-import           Database.PostgreSQL.Simple       (connectPostgreSQL)
-import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           Control.Exception                  (Exception, SomeException, catch,
+                                                     throw)
+import           Data.ByteString                    (ByteString, length)
+import           Data.ByteString.Char8              (unpack)
+import           Data.ByteString.Char8              (pack)
+import           Data.List                          (find)
+import           Data.Maybe                         (fromMaybe, isJust,
+                                                     isNothing)
+import           Data.Text.Encoding                 (decodeUtf8, encodeUtf8)
+import           Database.PostgreSQL.Simple         (connectPostgreSQL)
+import           Database.PostgreSQL.Simple.SqlQQ   (sql)
+import           Database.PostgreSQL.Simple.ToField (ToField (toField),
+                                                     toJSONField)
+import           Database.PostgreSQL.Simple.Types   (In (In))
 import           Database.Types
-import           System.Random                    (Random (randomRIO))
-import Data.ByteString.Char8 (unpack)
-import Data.ByteString.Char8 (pack)
-import Database.PostgreSQL.Simple.ToField (toJSONField, ToField(toField))
-import Database.PostgreSQL.Simple.Types (In(In))
-
+import           Network.HTTP.Types.Status          (status404, Status)
+import           System.Random                      (Random (randomRIO))
 
 checkAndGetParameters ::
      ([FieldName], [CheckPredicat])
@@ -74,9 +77,9 @@ genRandomString length = do
   xs <- genRandomString (length - 1)
   return $ x : xs
 
-genToken :: IO Token
-genToken = do 
-  r <-genRandomString 50
+genToken :: IO TokenString
+genToken = do
+  r <- genRandomString 50
   return r
 
 fromBool :: ByteString -> Bool
@@ -86,10 +89,10 @@ fromBool "false" = False
 fromInt :: ByteString -> Int
 fromInt val = read $ unpack val
 
-fromIntList :: ByteString->[Int]
+fromIntList :: ByteString -> [Int]
 fromIntList val = read $ unpack val
 
-fromStringList :: ByteString->[ByteString]
+fromStringList :: ByteString -> [ByteString]
 fromStringList val = read $ unpack val
 
-t = toJSONField $ ["12"::String, "34"]
+

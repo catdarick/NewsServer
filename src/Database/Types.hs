@@ -14,16 +14,26 @@ type PassHash = ByteString
 type FirstName = ByteString
 
 type LastName = ByteString
+
 type Name = ByteString
+
 type Picture = ByteString
+
 type PictureId = Int
+
 type UserId = Int
 
 type AuthorId = Int
 
-type Token = String
+type NewsId = Int
 
-type TokenBS = ByteString
+type TagId = Int
+
+type CommentId = Int
+
+type Token = ByteString
+
+type TokenString = String
 
 type CheckPredicat = (ByteString, ByteString) -> Either ByteString Bool
 
@@ -42,5 +52,6 @@ type Description = ByteString
 type Title = ByteString
 
 type CategoryId = Int
-type TagId = Int
+
+
 type Content = ByteString

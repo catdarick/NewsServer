@@ -52,7 +52,7 @@ createTagTable conn = do
     conn
     [sql| CREATE TABLE tag
         ( id SERIAL UNIQUE PRIMARY KEY
-        , title TEXT
+        , name TEXT UNIQUE
         )|]
 
 createNewsTable conn = do
@@ -67,6 +67,7 @@ createNewsTable conn = do
         , content TEXT
         , main_picture TEXT
         , pictures TEXT ARRAY
+        , is_published BOOl
         )|]
 
 createNewsTagTable conn = do

@@ -5,10 +5,13 @@
 module Main where
 
 import           Api.Methods.CreateAuthor
-import           Api.Methods.Login
-import           Api.Methods.PostNews
-import           Api.Methods.Signin
 import           Api.Methods.CreateCategory
+import           Api.Methods.CreateDraft
+import           Api.Methods.CreateTag
+import           Api.Methods.Login
+import           Api.Methods.PostComment
+import           Api.Methods.PostDraft
+import           Api.Methods.Signin
 import           Api.Types.Response
 import           Control.Monad                    (void, when)
 import           Data.Aeson                       (encode)
@@ -31,12 +34,15 @@ application conn request respond = do
   let path = request & pathInfo
   (status, bsResponse) <-
     case path of
-      ["signIn"]       -> encoded $ signIn conn queryString_
-      ["logIn"]        -> encoded $ logIn conn queryString_
-      ["createAuthor"] -> encoded $ createAuthor conn queryString_
+      ["signIn"]         -> encoded $ signIn conn queryString_
+      ["logIn"]          -> encoded $ logIn conn queryString_
+      ["createAuthor"]   -> encoded $ createAuthor conn queryString_
       ["createCategory"] -> encoded $ createCategory conn queryString_
-      ["postNews"] -> encoded $ postNews conn queryString_
-      smth             -> return (status404, "")
+      ["createTag"]      -> encoded $ createTag conn queryString_
+      ["createDraft"]    -> encoded $ createDraft conn queryString_
+      ["postDraft"]      -> encoded $ postDraft conn queryString_
+      ["postComment"]    -> encoded $ postComment conn queryString_
+      smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse
     --if (status == status404)

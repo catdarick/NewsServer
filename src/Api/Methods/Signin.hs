@@ -21,9 +21,10 @@ import           Database.Types
 import qualified Database.User              as DB
 import           GHC.Exception              (errorCallException, throw)
 import           Network.HTTP.Types.Status
+import Database.PostgreSQL.Simple.Types (Only(Only))
 
 signIn ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Status, Response ())
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Status, Response Idcont)
 signIn conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
@@ -46,7 +47,8 @@ signIn conn queryString = do
       case res of
         Left (e :: SomeException) ->
           return (status400, errorResponse Err.loginBusy)
-        Right _ -> return (status200, okResponse)
+        Right [] -> return $ (status400, errorResponse Err.smth)
+        Right [Only id] -> return (status200, idResponse id)
   where
     requiredNames = ["login", "password", "first_name", "last_name"]
     requiredChecks =

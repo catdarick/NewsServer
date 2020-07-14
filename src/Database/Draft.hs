@@ -108,3 +108,32 @@ publishDraft conn newsId =
       SET is_published = TRUE
       WHERE id=?|]
     (Only newsId)
+
+
+editDraft ::
+     Connection
+  -> NewsId
+  -> Maybe Title
+  -> Maybe Content
+  -> Maybe CategoryId
+  -> Maybe Picture
+  -> Maybe [Picture]
+  -> IO Int64
+editDraft conn draftId mbTitle mbContent mbCategoryId mbPicture mbPictures =
+  execute
+    conn
+    [sql|
+      UPDATE news
+      SET
+      title = COALESCE(?, title),
+      content = COALESCE(?, content),
+      category_id = COALESCE(?, category_id),
+      main_picture = COALESCE(?, main_picture),
+      pictures = COALESCE(?, pictures)
+      WHERE id=?|]
+    ( mbTitle
+    , mbContent
+    , mbCategoryId
+    , mbPicture
+    , fromList <$> mbPictures
+    , draftId)

@@ -39,3 +39,13 @@ getAuthorId conn token =
         AND author.user_id = user_account.id
         |]
     (Only token)
+
+editAuthor :: Connection -> AuthorId -> Maybe Description -> IO Int64
+editAuthor conn auhorId mbDescription =
+  execute
+    conn
+    [sql|
+      UPDATE author
+      SET description = COALESCE(?, description)
+      WHERE id=?|]
+    (mbDescription, auhorId)

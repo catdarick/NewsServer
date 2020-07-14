@@ -49,3 +49,15 @@ sqlReqCategoryHierarchy =
                     ON category.id = r.parent_id
             )
             SELECT * FROM r|]
+
+editCategory :: Connection -> CategoryId -> Maybe Name -> Maybe CategoryId -> IO Int64
+editCategory conn categoryId mbName mbParentId=
+  execute
+    conn
+    [sql|
+      UPDATE category
+      SET 
+      name = COALESCE(?, name),
+      parent_id = COALESCE(?, parent_id)
+      WHERE id=?|]
+    (mbName, mbParentId, categoryId)

@@ -43,7 +43,6 @@ createDraft conn queryString = do
               (fromIntList <$> tagsId)
           case res of
             Left err -> return (status400, errorResponse err)
-           -- Right [] -> return $ (status400, errorResponse Err.smth)
             Right [Only id] -> do
               return (status400, idResponse id)
   where

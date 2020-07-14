@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.EditAuthor where
+module Api.Methods.EditCategory where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
@@ -10,7 +10,7 @@ import           Api.Types.Response
 import           Control.Exception          (SomeException, try)
 import           Data.ByteString            (ByteString)
 import           Data.ByteString.Char8      (unpack)
-import qualified Database.Author            as DB
+import qualified Database.Category            as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Database.Types
 import qualified Database.User              as DB
@@ -18,30 +18,30 @@ import           Network.HTTP.Types         (Status, status200, status400,
                                              status404)
 import Database.PostgreSQL.Simple.Types (Only(Only))
 
-editAuthor ::
+editCategory ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-editAuthor conn queryString = do
+editCategory conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status404, badResoponse)
     Right (requiredValues, optionalMaybeValues) -> do
-      let [token, authorId] = requiredValues
-      let [description] = optionalMaybeValues
+      let [token, categoryId] = requiredValues
+      let [name, parentId] = optionalMaybeValues
       maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn token
       case maybeUserIdAndPriv of
         [] -> return (status404, badResoponse)
         [(_, False)] -> return (status404, badResoponse)
         [(_, True)] -> do
-          res <- try $ DB.editAuthor conn (fromInt authorId) description
+          res <- try $ DB.editCategory conn (fromInt categoryId) name (fromInt <$> parentId)
           case res of
             Left (e :: SomeException) ->
-              return (status400, errorResponse Err.smth)
-            Right 0 -> return $ (status400, errorResponse Err.noAuthor)
+              return (status400, errorResponse Err.noParrent)
+            Right 0 -> return $ (status400, errorResponse Err.smth)
             Right 1 -> return $ (status200, okResponse)
   where
-    requiredNames = ["token", "author_id"]
+    requiredNames = ["token", "category_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
-    optionalNames = ["description"]
-    optionalChecks = [isNotEmpty]
+    optionalNames = ["name", "parent_id"]
+    optionalChecks = [isNotEmpty, isInt]
     optional = (optionalNames, optionalChecks)

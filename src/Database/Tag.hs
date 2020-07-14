@@ -25,3 +25,12 @@ addTag conn name =
         (Only name)
 
 
+editTag :: Connection -> TagId -> Maybe Name -> IO Int64
+editTag conn tagId mbName =
+  execute
+    conn
+    [sql|
+      UPDATE tag
+      SET name = COALESCE(?, name)
+      WHERE id=?|]
+    (mbName, tagId)

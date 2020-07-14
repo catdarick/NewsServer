@@ -22,6 +22,9 @@ alreadyAuthor = "This user is already an author or doesn't exists"
 notAuthor :: ByteString
 notAuthor = "You are not an author"
 
+noAuthor :: ByteString
+noAuthor = "Author with this id doesnt exists"
+
 noParrent :: ByteString
 noParrent = "Parrent with this id doesnt exists"
 
@@ -33,6 +36,11 @@ noDraft = "Draft with this id doesnt exists"
 
 noNews :: ByteString
 noNews = "News with this id doesnt exists"
+noPerms :: ByteString
+noPerms = "You do not have permission for this action"
+
+noTag :: ByteString
+noTag="Tag with this id doesnt exists"
 
 tagExists :: ByteString
 tagExists = "This tag already exists"

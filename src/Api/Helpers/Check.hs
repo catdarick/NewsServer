@@ -47,6 +47,7 @@ isNotEmptyTextList (name, val)
       case find pred listString of
         Nothing -> False
         Just _  -> True
+
 isInt :: (ByteString, ByteString) -> Either ByteString Bool
 isInt (name, val)
   | isNothing maybeInteger = Left $ name <> " is not decimal value"

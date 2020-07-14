@@ -8,6 +8,10 @@ import           Api.Methods.CreateAuthor
 import           Api.Methods.CreateCategory
 import           Api.Methods.CreateDraft
 import           Api.Methods.CreateTag
+import           Api.Methods.EditAuthor
+import           Api.Methods.EditCategory
+import           Api.Methods.EditDraft
+import           Api.Methods.EditTag
 import           Api.Methods.Login
 import           Api.Methods.PostComment
 import           Api.Methods.PostDraft
@@ -42,6 +46,10 @@ application conn request respond = do
       ["createDraft"]    -> encoded $ createDraft conn queryString_
       ["postDraft"]      -> encoded $ postDraft conn queryString_
       ["postComment"]    -> encoded $ postComment conn queryString_
+      ["editAuthor"]     -> encoded $ editAuthor conn queryString_
+      ["editCategory"]   -> encoded $ editCategory conn queryString_
+      ["editTag"]        -> encoded $ editTag conn queryString_
+      ["editDraft"]      -> encoded $ editDraft conn queryString_
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse

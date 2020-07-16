@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Database.Get.User where
+module Database.Get.Tag where
 
 import           Data.Int                         (Int64)
 import           Data.Text                        (Text)
@@ -13,30 +13,26 @@ import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
 import           Database.PostgreSQL.Simple.Types (Only)
 import           Database.Types
-import           Api.Types.User
+import           Api.Types.Tag
 
-getUsers ::
+getTags ::
      Connection
-  -> Maybe UserId
-  -> Maybe Login
-  -> Maybe FirstName
-  -> Maybe LastName
+  -> Maybe TagId
+  -> Maybe Name
   -> Maybe Limit
   -> Maybe Offset
-  -> IO [User]
-getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset= do
+  -> IO [Tag]
+getTags conn mbTagId mbName mbLimit mbOffset= do
   res <-
     query
       conn
       [sql|
-                SELECT id, login, first_name, last_name, picture, creation_time, is_admin
-                FROM user_account
+                SELECT id, name
+                FROM tag
                 WHERE id = COALESCE(?, id)
-                AND login = COALESCE(?, login)
-                AND first_name = COALESCE(?, first_name)
-                AND last_name = COALESCE(?, last_name)
+                AND name = COALESCE(?, name)
                 LIMIT COALESCE(?, 50) 
                 OFFSET COALESCE(?, 0) 
                 |]
-      (mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset)
-  return $ map tupleToUser res
+      (mbTagId, mbName, mbLimit, mbOffset)
+  return $ map tupleToTag res

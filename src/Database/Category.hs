@@ -37,18 +37,7 @@ addCategory conn name parentId = do
          |]
         (name, parentId, parentId)
 
-sqlReqCategoryHierarchy =
-  [sql| WITH RECURSIVE r AS (
-            SELECT id, parent_id, name
-            FROM category
-            WHERE id = 5
-            UNION
-            SELECT category.id, category.parent_id, category.name
-            FROM category
-                JOIN r
-                    ON category.id = r.parent_id
-            )
-            SELECT * FROM r|]
+
 
 editCategory :: Connection -> CategoryId -> Maybe Name -> Maybe CategoryId -> IO Int64
 editCategory conn categoryId mbName mbParentId=

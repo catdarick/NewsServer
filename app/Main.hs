@@ -18,6 +18,10 @@ import           Api.Methods.Edit.Author
 import           Api.Methods.Edit.Category
 import           Api.Methods.Edit.Draft
 import           Api.Methods.Edit.Tag
+import           Api.Methods.Get.Author
+import           Api.Methods.Get.Category
+import           Api.Methods.Get.News
+import           Api.Methods.Get.Tag
 import           Api.Methods.Get.User
 import           Api.Methods.Login
 import           Api.Methods.Post.Comment
@@ -63,7 +67,11 @@ application conn request respond = do
       ["deleteComment"]  -> encoded $ deleteComment conn queryString_
       ["deleteCategory"] -> encoded $ deleteCategory conn queryString_
       ["deleteAuthor"]   -> encoded $ deleteAuthor conn queryString_
-      ["getUsers"]   -> encoded $ getUsers conn queryString_
+      ["getUsers"]       -> encoded $ getUsers conn queryString_
+      ["getCategories"]  -> encoded $ getCategories conn queryString_
+      ["getTags"]        -> encoded $ getTags conn queryString_
+      ["getAuthors"]     -> encoded $ getAuthors conn queryString_
+      ["getNews"]        -> encoded $ getNews conn queryString_
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse

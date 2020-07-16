@@ -12,6 +12,7 @@ import           Data.ByteString.Char8 (unpack)
 import           Data.List             (find)
 import           Data.Maybe            (fromJust, fromMaybe, isJust, isNothing)
 import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
+import           Data.Time.LocalTime   (LocalTime)
 import           Database.Types
 import qualified Database.User         as DB
 import           System.Random         (Random (randomRIO))
@@ -29,6 +30,15 @@ checkOptionalParamsForCorrect predicats values = do
   where
     f pred (a, (Just x)) = pred (a, x)
     f pred (_, Nothing)  = Right True
+
+isDate :: (ByteString, ByteString) -> Either ByteString Bool
+isDate (name, val)
+  | isNothing maybeTime = Left $ name <> " must be date: YYYY:MM:DD"
+  | otherwise = Right True
+  where
+    dateWithTimeStr = unpack $val <> " 00:00:00"
+    maybeTime :: Maybe LocalTime
+    maybeTime = readMaybe dateWithTimeStr
 
 isNotEmpty :: (ByteString, ByteString) -> Either ByteString Bool
 isNotEmpty (name, "") = Left $ name <> " field is empty"
@@ -72,8 +82,8 @@ isIntBetween min max (name, val)
   | fromJust maybeInteger < min = Left $ name <> bsMinAppend
   | otherwise = Right True
   where
-    bsMinAppend = " is too large, " <> (pack $ show min <> " is minimal")
-    bsMaxAppend = " is too little, " <> (pack $ show max <> " is maximal")
+    bsMinAppend = " is too little, " <> (pack $ show min <> " is minimal")
+    bsMaxAppend = " is too large, " <> (pack $ show max <> " is maximal")
     strVal = unpack val
     maybeInteger :: Maybe Integer
     maybeInteger = readMaybe strVal

@@ -11,7 +11,7 @@ import           GHC.Generics      (Generic)
 
 data User =
   User
-    { userId           :: Integer
+    { userId           :: Int
     , userLogin        :: Text
     , userFirstName    :: Text
     , userLastName     :: Text
@@ -25,7 +25,7 @@ instance ToJSON User where
   toJSON = genericToJSON $ (aesonPrefix snakeCase) {omitNothingFields = True}
 
 tupleToUser ::
-     (Integer, Text, Text, Text, Maybe PictureText, LocalTime, Bool) -> User
+     (Int, Text, Text, Text, Maybe PictureText, LocalTime, Bool) -> User
 tupleToUser (id, login, fName, lName, picture, creationTime, isAdmin) =
   User
     { userId = id

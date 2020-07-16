@@ -62,7 +62,7 @@ createNewsTable conn = do
         ( id SERIAL UNIQUE PRIMARY KEY
         , author_id INTEGER REFERENCES author (id) ON DELETE SET NULL
         , category_id INTEGER REFERENCES category (id) ON DELETE SET NULL
-        , creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        , creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         , title TEXT
         , content TEXT
         , main_picture TEXT

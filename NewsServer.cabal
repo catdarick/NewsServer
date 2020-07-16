@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 993d861b69a8efd123d1f37892393a3d2201b11f8c64459a7242194214ac311f
+-- hash: 4c76767ed2444d7acf280eac4dd31af8f2f921992e8694e783c50045457ed1ec
 
 name:           NewsServer
 version:        0.1.0.0
@@ -46,30 +46,38 @@ library
       Api.Methods.Edit.Draft
       Api.Methods.Edit.Tag
       Api.Methods.Errors
+      Api.Methods.Get.Author
+      Api.Methods.Get.Category
+      Api.Methods.Get.News
+      Api.Methods.Get.Tag
       Api.Methods.Get.User
       Api.Methods.Login
       Api.Methods.Post.Comment
       Api.Methods.Post.Draft
       Api.Methods.Signin
+      Api.Types.Author
+      Api.Types.Category
+      Api.Types.Comment
+      Api.Types.News
       Api.Types.Response
+      Api.Types.Tag
       Api.Types.User
       Config
       Database.Author
       Database.Category
       Database.Comment
       Database.Draft
+      Database.Get.Author
+      Database.Get.Category
+      Database.Get.News
+      Database.Get.Tag
       Database.Get.User
       Database.Tag
       Database.Types
       Database.User
       Lib
       Migration.Create
-      Types.Author
-      Types.Category
-      Types.Comment
-      Types.News
       Types.Picture
-      Types.Tag
   other-modules:
       Paths_NewsServer
   hs-source-dirs:

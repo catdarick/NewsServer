@@ -4,17 +4,24 @@
 
 module Main where
 
-import           Api.Methods.CreateAuthor
-import           Api.Methods.CreateCategory
-import           Api.Methods.CreateDraft
-import           Api.Methods.CreateTag
-import           Api.Methods.EditAuthor
-import           Api.Methods.EditCategory
-import           Api.Methods.EditDraft
-import           Api.Methods.EditTag
+import           Api.Methods.Create.Author
+import           Api.Methods.Create.Category
+import           Api.Methods.Create.Draft
+import           Api.Methods.Create.Tag
+import           Api.Methods.Delete.Author
+import           Api.Methods.Delete.Category
+import           Api.Methods.Delete.Comment
+import           Api.Methods.Delete.Draft
+import           Api.Methods.Delete.Tag
+import           Api.Methods.Delete.User
+import           Api.Methods.Edit.Author
+import           Api.Methods.Edit.Category
+import           Api.Methods.Edit.Draft
+import           Api.Methods.Edit.Tag
+import           Api.Methods.Get.User
 import           Api.Methods.Login
-import           Api.Methods.PostComment
-import           Api.Methods.PostDraft
+import           Api.Methods.Post.Comment
+import           Api.Methods.Post.Draft
 import           Api.Methods.Signin
 import           Api.Types.Response
 import           Control.Monad                    (void, when)
@@ -50,6 +57,13 @@ application conn request respond = do
       ["editCategory"]   -> encoded $ editCategory conn queryString_
       ["editTag"]        -> encoded $ editTag conn queryString_
       ["editDraft"]      -> encoded $ editDraft conn queryString_
+      ["deleteUser"]     -> encoded $ deleteUser conn queryString_
+      ["deleteTag"]      -> encoded $ deleteTag conn queryString_
+      ["deleteDraft"]    -> encoded $ deleteDraft conn queryString_
+      ["deleteComment"]  -> encoded $ deleteComment conn queryString_
+      ["deleteCategory"] -> encoded $ deleteCategory conn queryString_
+      ["deleteAuthor"]   -> encoded $ deleteAuthor conn queryString_
+      ["getUsers"]   -> encoded $ getUsers conn queryString_
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse
@@ -65,6 +79,7 @@ main = do
   conn <-
     connectPostgreSQL
       "host='127.0.0.1' port=5432 dbname='test' user='darick' password='IPOD103qwe'"
+  --initDatabase conn
   print defaultConnectInfo
   run 3000 $ application conn
   return ()

@@ -61,3 +61,12 @@ editCategory conn categoryId mbName mbParentId=
       parent_id = COALESCE(?, parent_id)
       WHERE id=?|]
     (mbName, mbParentId, categoryId)
+
+deleteCategory :: Connection -> CategoryId -> IO Int64
+deleteCategory conn categoryId =
+  execute
+    conn
+    [sql|
+          DELETE FROM category
+          WHERE id=?|]
+    (Only categoryId)

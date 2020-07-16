@@ -19,6 +19,8 @@ type Name = ByteString
 
 type Picture = ByteString
 
+type PictureText = Text
+
 type PictureId = Int
 
 type UserId = Int
@@ -28,7 +30,8 @@ type AuthorId = Int
 type NewsId = Int
 
 type TagId = Int
-
+type Limit = Int
+type Offset = Int
 type CommentId = Int
 
 type Token = ByteString

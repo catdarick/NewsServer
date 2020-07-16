@@ -1,4 +1,3 @@
-{-# LANGUAGE DatatypeContexts #-}
 {-# LANGUAGE DeriveGeneric    #-}
 
 module Api.Types.Response where
@@ -45,5 +44,6 @@ okResponse = (defaultResponse True)
 
 okResponseWithResult result = (defaultResponse True) {responseResult = Just result}
 
-
+payloadResponse :: resultType -> Response resultType
+payloadResponse payload = (defaultResponse True) {responseResult = Just payload}
 badResoponse = defaultResponse False

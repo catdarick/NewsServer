@@ -21,16 +21,25 @@ addUser ::
   -> FirstName
   -> LastName
   -> Maybe Picture
-  -> Maybe Bool
+  -> Bool
   -> IO [Only UserId]
 addUser conn login passHash fName lName pictureId isAdmin =
   query
     conn
     [sql|
         INSERT INTO user_account
-        (login, password_hash, first_name, second_name, picture, is_admin)
+        (login, password_hash, first_name, last_name, picture, is_admin)
         VALUES (?,?,?,?,?,?) RETURNING id|]
     (login, Binary passHash, fName, lName, pictureId, isAdmin)
+
+deleteUser :: Connection -> UserId -> IO Int64
+deleteUser conn userId =
+  execute
+    conn
+    [sql|
+          DELETE FROM user_account
+          WHERE id=?|]
+    (Only userId)
 
 getMaybeUserId :: Connection -> Login -> PassHash -> IO [Only Int]
 getMaybeUserId conn login passHash = do
@@ -64,3 +73,17 @@ getMaybeUserIdAndPriv conn token =
         WHERE user_token.token = ? AND user_account.id = user_token.user_id
         |]
     (Only token)
+
+isAdminToken :: Connection -> Token -> IO Bool
+isAdminToken conn token = do
+  res <-
+    query
+      conn
+      [sql|
+        SELECT user_account.is_admin FROM user_token, user_account
+        WHERE user_token.token = ? AND user_account.id = user_token.user_id
+        |]
+      (Only token)
+  case res of
+    [Only True] -> return True
+    _           -> return False

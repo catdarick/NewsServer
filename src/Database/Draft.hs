@@ -8,8 +8,10 @@ module Database.Draft where
 
 import qualified Api.Methods.Errors               as Err
 import           Control.Exception                (SomeException, try)
+import           Control.Monad                    (void, when)
 import           Data.ByteString                  (ByteString)
 import           Data.Int                         (Int64)
+import           Data.Maybe                       (isJust)
 import           Data.Text                        (Text)
 import           Data.Vector                      (fromList)
 import           Database.PostgreSQL.Simple       (Connection, execute,
@@ -99,6 +101,39 @@ getDraftAuthorToken conn newsId =
         |]
     (Only newsId)
 
+isDraftExists :: Connection -> NewsId -> IO Bool
+isDraftExists conn newsId = do
+  res <-
+    query
+      conn
+      [sql|
+        SELECT id FROM news
+        WHERE id = ?
+        |]
+      (Only newsId)
+  case res of
+    []               -> return False
+    [id :: Only Int] -> return True
+  return True
+
+isDraftAuthorToken :: Connection -> NewsId -> Token -> IO Bool
+isDraftAuthorToken conn newsId token = do
+  res <-
+    query
+      conn
+      [sql|
+        SELECT user_token.id FROM user_token, author, news
+        WHERE news.id = ?
+        AND news.author_id = author.id
+        AND author.user_id = user_token.user_id
+        AND user_token.token = ?
+        |]
+      (newsId, token)
+  case res of
+    []               -> return False
+    [id :: Only Int] -> return True
+  return True
+
 publishDraft :: Connection -> NewsId -> IO Int64
 publishDraft conn newsId =
   execute
@@ -109,6 +144,14 @@ publishDraft conn newsId =
       WHERE id=?|]
     (Only newsId)
 
+deleteDraftTags :: Connection -> NewsId -> IO Int64
+deleteDraftTags conn draftId =
+  execute
+    conn
+    [sql|
+          DELETE FROM news_tag
+          WHERE news_id=?|]
+    (Only draftId)
 
 editDraft ::
      Connection
@@ -118,8 +161,9 @@ editDraft ::
   -> Maybe CategoryId
   -> Maybe Picture
   -> Maybe [Picture]
-  -> IO Int64
-editDraft conn draftId mbTitle mbContent mbCategoryId mbPicture mbPictures =
+  -> Maybe [TagId]
+  -> IO ()
+editDraft conn draftId mbTitle mbContent mbCategoryId mbPicture mbPictures mbTagsId = do
   execute
     conn
     [sql|
@@ -137,3 +181,7 @@ editDraft conn draftId mbTitle mbContent mbCategoryId mbPicture mbPictures =
     , mbPicture
     , fromList <$> mbPictures
     , draftId)
+  when (isJust mbTagsId) $
+    void $ do
+      deleteDraftTags conn draftId
+      addDraftTags conn draftId mbTagsId

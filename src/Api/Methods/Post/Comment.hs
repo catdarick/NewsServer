@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.PostComment where
+module Api.Methods.Post.Comment where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters

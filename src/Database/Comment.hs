@@ -43,6 +43,15 @@ addAssociation conn newsId commentId = do
     VALUES (?,?)|]
     (newsId, commentId)
 
+getCommentCreator :: Connection -> CommentId -> IO [Only UserId]
+getCommentCreator conn commentId = do
+  query
+      conn
+      [sql|
+      SELECT user_id FROM comment
+      WHERE id = ?|]
+      (Only commentId)
+      
 deleteComment :: Connection -> CommentId -> IO Int64
 deleteComment conn commentId = do
   execute

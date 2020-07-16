@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 95c065fb93f0e2cfbf3cb6a4a5932fdc94a179b61cd70d2e3a8631db5ea2dacf
+-- hash: 993d861b69a8efd123d1f37892393a3d2201b11f8c64459a7242194214ac311f
 
 name:           NewsServer
 version:        0.1.0.0
@@ -30,25 +30,35 @@ library
       Api.ErrorException
       Api.Helpers.Check
       Api.Helpers.Getters
-      Api.Methods.CreateAuthor
-      Api.Methods.CreateCategory
-      Api.Methods.CreateDraft
-      Api.Methods.CreateTag
-      Api.Methods.EditAuthor
-      Api.Methods.EditCategory
-      Api.Methods.EditDraft
-      Api.Methods.EditTag
+      Api.Methods.Create.Author
+      Api.Methods.Create.Category
+      Api.Methods.Create.Draft
+      Api.Methods.Create.Tag
+      Api.Methods.Delete
+      Api.Methods.Delete.Author
+      Api.Methods.Delete.Category
+      Api.Methods.Delete.Comment
+      Api.Methods.Delete.Draft
+      Api.Methods.Delete.Tag
+      Api.Methods.Delete.User
+      Api.Methods.Edit.Author
+      Api.Methods.Edit.Category
+      Api.Methods.Edit.Draft
+      Api.Methods.Edit.Tag
       Api.Methods.Errors
+      Api.Methods.Get.User
       Api.Methods.Login
-      Api.Methods.PostComment
-      Api.Methods.PostDraft
+      Api.Methods.Post.Comment
+      Api.Methods.Post.Draft
       Api.Methods.Signin
       Api.Types.Response
+      Api.Types.User
       Config
       Database.Author
       Database.Category
       Database.Comment
       Database.Draft
+      Database.Get.User
       Database.Tag
       Database.Types
       Database.User
@@ -60,7 +70,6 @@ library
       Types.News
       Types.Picture
       Types.Tag
-      Types.User
   other-modules:
       Paths_NewsServer
   hs-source-dirs:

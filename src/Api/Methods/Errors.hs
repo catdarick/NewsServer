@@ -25,6 +25,12 @@ notAuthor = "You are not an author"
 noAuthor :: ByteString
 noAuthor = "Author with this id doesnt exists"
 
+noUser :: ByteString
+noUser = "User with this id doesnt exists"
+
+noComment :: ByteString
+noComment = "Comment with this id doesnt exists"
+
 noParrent :: ByteString
 noParrent = "Parrent with this id doesnt exists"
 

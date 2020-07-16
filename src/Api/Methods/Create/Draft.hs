@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.CreateDraft where
+module Api.Methods.Create.Draft where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters

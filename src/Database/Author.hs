@@ -25,7 +25,7 @@ addAuthor conn userId description  =
     [sql|
         INSERT INTO author
         (user_id, description)
-        VALUES (?,?)|]
+        VALUES (?,?) RETURNING id|]
     (userId, description)
 
 getAuthorId :: Connection -> Token-> IO [(Only AuthorId)]
@@ -49,3 +49,11 @@ editAuthor conn auhorId mbDescription =
       SET description = COALESCE(?, description)
       WHERE id=?|]
     (mbDescription, auhorId)
+deleteAuthor :: Connection -> AuthorId -> IO Int64
+deleteAuthor conn authorId =
+  execute
+    conn
+    [sql|
+          DELETE FROM author
+          WHERE id=?|]
+    (Only authorId)

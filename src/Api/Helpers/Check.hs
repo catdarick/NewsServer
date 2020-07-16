@@ -13,6 +13,7 @@ import           Data.List             (find)
 import           Data.Maybe            (fromJust, fromMaybe, isJust, isNothing)
 import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
 import           Database.Types
+import qualified Database.User         as DB
 import           System.Random         (Random (randomRIO))
 import           Text.Read             (readMaybe)
 
@@ -30,8 +31,12 @@ checkOptionalParamsForCorrect predicats values = do
     f pred (_, Nothing)  = Right True
 
 isNotEmpty :: (ByteString, ByteString) -> Either ByteString Bool
-isNotEmpty (name, "") = Left $ name <> " field is empty."
+isNotEmpty (name, "") = Left $ name <> " field is empty"
 isNotEmpty smt        = Right True
+
+isGlobalAdminPass :: (ByteString, ByteString) -> Either ByteString Bool
+isGlobalAdminPass (name, "GlobalAdminPass") = Right True
+isGlobalAdminPass smt = Left $ "Incorrect global password"
 
 isNotEmptyTextList :: (ByteString, ByteString) -> Either ByteString Bool
 isNotEmptyTextList (name, val)
@@ -52,9 +57,23 @@ isInt :: (ByteString, ByteString) -> Either ByteString Bool
 isInt (name, val)
   | isNothing maybeInteger = Left $ name <> " is not decimal value"
   | fromJust maybeInteger > 2147483646 = Left $ name <> " is too large"
-  | fromJust maybeInteger <= 0 = Left $ name <> " must be positive"
+  | fromJust maybeInteger < 0 = Left $ name <> " must be positive"
   | otherwise = Right True
   where
+    strVal = unpack val
+    maybeInteger :: Maybe Integer
+    maybeInteger = readMaybe strVal
+
+isIntBetween ::
+     Integer -> Integer -> (ByteString, ByteString) -> Either ByteString Bool
+isIntBetween min max (name, val)
+  | isNothing maybeInteger = Left $ name <> " is not decimal value"
+  | fromJust maybeInteger > max = Left $ name <> bsMaxAppend
+  | fromJust maybeInteger < min = Left $ name <> bsMinAppend
+  | otherwise = Right True
+  where
+    bsMinAppend = " is too large, " <> (pack $ show min <> " is minimal")
+    bsMaxAppend = " is too little, " <> (pack $ show max <> " is maximal")
     strVal = unpack val
     maybeInteger :: Maybe Integer
     maybeInteger = readMaybe strVal

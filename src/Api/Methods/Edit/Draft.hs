@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.EditDraft where
+module Api.Methods.Edit.Draft where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
@@ -28,27 +28,25 @@ editDraft conn queryString = do
       let [token, draftId] = requiredValues
       let [title, content, categoryId, tagsId, mainPicture, pictures] =
             optionalMaybeValues
-      let performEditAndReturnOk = do
-            DB.editDraft
-              conn
-              (fromInt draftId)
-              title
-              content
-              (fromInt <$> categoryId)
-              mainPicture
-              (fromStringList <$> pictures)
-            return (status400, okResponse)
-      maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn token
+      isAdmin <- DB.isAdminToken conn token
       mbAuthorToken <- DB.getDraftAuthorToken conn (fromInt draftId)
       case mbAuthorToken of
         [] -> return (status400, errorResponse Err.noDraft)
         [Only authorToken] ->
-          if authorToken == token
-            then performEditAndReturnOk
-            else case maybeUserIdAndPriv of
-                   [(_, True)] -> performEditAndReturnOk
-                   _ -> return (status403, errorResponse Err.noPerms)
-  where
+          if authorToken == token || isAdmin
+            then do
+              DB.editDraft
+                conn
+                (fromInt draftId)
+                title
+                content
+                (fromInt <$> categoryId)
+                mainPicture
+                (fromStringList <$> pictures)
+                (fromIntList <$> tagsId)
+              return (status400, okResponse)
+            else return (status403, errorResponse Err.noPerms)
+  where 
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
@@ -57,3 +55,4 @@ editDraft conn queryString = do
     optionalChecks =
       [isNotEmpty, isNotEmpty, isInt, isIntList, isNotEmpty, isNotEmptyTextList]
     optional = (optionalNames, optionalChecks)
+

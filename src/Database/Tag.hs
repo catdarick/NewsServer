@@ -34,3 +34,12 @@ editTag conn tagId mbName =
       SET name = COALESCE(?, name)
       WHERE id=?|]
     (mbName, tagId)
+
+deleteTag :: Connection -> TagId -> IO Int64
+deleteTag conn tagId =
+  execute
+    conn
+    [sql|
+          DELETE FROM tag
+          WHERE id=?|]
+    (Only tagId)

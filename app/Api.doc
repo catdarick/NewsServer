@@ -23,9 +23,9 @@ createTag
     Optional: []
     Result type: Int
     Result description: tag_id
-postNews
+createDraft
     Required : ["token", "title", "content", "category_id"]
     Optional: ["tags_id", "main_picture", "pictures"]
     Result type: Int
-    Result description: news_id
+    Result description: draft_id
 

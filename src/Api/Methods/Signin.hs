@@ -31,7 +31,7 @@ signIn conn queryString = do
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do
       let [login, password, fName, lName] = requiredValues
-      let [isAdmin, picture] = optionalMaybeValues
+      let [adminPass, picture] = optionalMaybeValues
       let passHash = (hash password)
       print passHash
       res <-
@@ -43,7 +43,7 @@ signIn conn queryString = do
           fName
           lName
           picture
-          (fromBool <$> isAdmin)
+          (isJust adminPass)
       case res of
         Left (e :: SomeException) ->
           return (status400, errorResponse Err.loginBusy)
@@ -54,6 +54,6 @@ signIn conn queryString = do
     requiredChecks =
       [isCorrectLength 5 20, isCorrectLength 6 40, isNotEmpty, isNotEmpty]
     required = (requiredNames, requiredChecks)
-    optionalNames = ["is_admin", "picture"]
-    optionalChecks = [isBool, isNotEmpty]
+    optionalNames = ["admin_pass", "picture"]
+    optionalChecks = [isGlobalAdminPass, isNotEmpty]
     optional = (optionalNames, optionalChecks)

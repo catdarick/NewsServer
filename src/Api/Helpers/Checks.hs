@@ -2,20 +2,13 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Helpers.Check where
+module Api.Helpers.Checks where
 
-import           Api.Types.Response
-import           Control.Exception     (throw)
 import           Data.ByteString       (ByteString, length)
-import           Data.ByteString.Char8 (pack)
-import           Data.ByteString.Char8 (unpack)
+import           Data.ByteString.Char8 (pack, unpack)
 import           Data.List             (find)
 import           Data.Maybe            (fromJust, fromMaybe, isJust, isNothing)
-import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
 import           Data.Time.LocalTime   (LocalTime)
-import           Database.Types
-import qualified Database.User         as DB
-import           System.Random         (Random (randomRIO))
 import           Text.Read             (readMaybe)
 
 checkRequiredParamsForCorrect ::
@@ -24,6 +17,8 @@ checkRequiredParamsForCorrect predicats values = do
   let eitherList = zipWith id predicats values
   sequence eitherList
 
+checkOptionalParamsForCorrect ::
+     [(a1, b) -> Either a2 Bool] -> [(a1, Maybe b)] -> Either a2 [Bool]
 checkOptionalParamsForCorrect predicats values = do
   let eitherList = zipWith f predicats values
   sequence eitherList

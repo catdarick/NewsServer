@@ -1,49 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
 
 module Main where
 
-import           Api.Methods.Create.Author
-import           Api.Methods.Create.Category
-import           Api.Methods.Create.Draft
-import           Api.Methods.Create.Tag
-import           Api.Methods.Delete.Author
-import           Api.Methods.Delete.Category
-import           Api.Methods.Delete.Comment
-import           Api.Methods.Delete.Draft
-import           Api.Methods.Delete.Tag
-import           Api.Methods.Delete.User
-import           Api.Methods.Edit.Author
-import           Api.Methods.Edit.Category
-import           Api.Methods.Edit.Draft
-import           Api.Methods.Edit.Tag
-import           Api.Methods.Get.Author
-import           Api.Methods.Get.Category
-import           Api.Methods.Get.Comment
-import           Api.Methods.Get.Draft
-import           Api.Methods.Get.News
-import           Api.Methods.Get.Tag
-import           Api.Methods.Get.User
-import           Api.Methods.Login
+import           Api.Methods.Create
+import           Api.Methods.Delete
+import           Api.Methods.Edit
+import           Api.Methods.Get
 import           Api.Methods.Post.Comment
 import           Api.Methods.Post.Draft
-import           Api.Methods.Signin
 import           Api.Types.Response
-import           Control.Monad                    (void, when)
-import           Data.Aeson                       (encode)
-import           Data.Function                    ((&))
-import           Data.Text.Encoding               (decodeUtf8)
-import           Database.PostgreSQL.Simple       (connectPostgreSQL,
-                                                   defaultConnectInfo, execute,
-                                                   execute_, query, query_)
-import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
+import           Control.Monad              (void, when)
+import           Data.Aeson                 (encode)
+import           Data.Function              ((&))
+import           Data.Text.Encoding         (decodeUtf8)
+import           Database.PostgreSQL.Simple (connectPostgreSQL,
+                                             defaultConnectInfo)
 import           Migration.Create
-import           Network.HTTP.Types               (status200)
 import           Network.HTTP.Types.Status
 import           Network.Wai
-import           Network.Wai.Handler.Warp         (run)
+import           Network.Wai.Handler.Warp   (run)
 
 application conn request respond = do
   print request
@@ -51,8 +26,8 @@ application conn request respond = do
   let path = request & pathInfo
   (status, bsResponse) <-
     case path of
-      ["signIn"]         -> encoded $ signIn conn queryString_
-      ["logIn"]          -> encoded $ logIn conn queryString_
+      ["createAccount"]  -> encoded $ createAccount conn queryString_
+      ["logIn"]          -> encoded $ getToken conn queryString_
       ["createAuthor"]   -> encoded $ createAuthor conn queryString_
       ["createCategory"] -> encoded $ createCategory conn queryString_
       ["createTag"]      -> encoded $ createTag conn queryString_

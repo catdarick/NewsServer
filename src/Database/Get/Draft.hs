@@ -5,21 +5,15 @@
 
 module Database.Get.Draft where
 
+import           Api.Types
 import           Api.Types.Author
 import           Api.Types.News
-import           Data.Int                         (Int64)
-import           Data.Text                        (Text)
 import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category
-import           Database.Get.Comment
 import           Database.Get.Tag
-import           Database.PostgreSQL.Simple       (Connection, execute, query,
-                                                   query_)
-import           Database.PostgreSQL.Simple       (Only (Only))
+import           Database.PostgreSQL.Simple       (Connection, Only (Only),
+                                                   query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Database.PostgreSQL.Simple.Types (Only)
-import           Database.Types
 
 getDrafts ::
      Connection
@@ -67,7 +61,7 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
       , fromList <$> mbTagsIdAll
       , fromList <$> mbTagsIdIn
       , fromList <$> mbTagsIdIn)
-  sequence $ map f res
+  mapM f res
   where
     toTemplate Nothing  = "%"
     toTemplate (Just a) = "%" <> a <> "%"
@@ -77,12 +71,17 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
       category <- getCategoryTreeFromBottom conn categoryId
       let drafts =
             tupleToDraft
-              ( id
-              , title
-              , time
-              , content
-              , mainPic
-              , addPics
-              , tags
-              , category)
+              (id, title, time, content, mainPic, addPics, tags, category)
       return drafts
+
+getDraftAuthorToken :: Connection -> NewsId -> IO [(Only Token)]
+getDraftAuthorToken conn newsId =
+  query
+    conn
+    [sql|
+        SELECT user_token.token FROM user_token, author, news
+        WHERE news.id = ?
+        AND news.author_id = author.id
+        AND author.user_id = user_token.user_id
+        |]
+    (Only newsId)

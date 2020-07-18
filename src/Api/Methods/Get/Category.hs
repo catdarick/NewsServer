@@ -4,25 +4,17 @@
 
 module Api.Methods.Get.Category where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Category
 import           Api.Types.Response
-import           Control.Exception                (try)
-import           Control.Exception                (SomeException)
-import           Crypto.Hash.MD5                  (hash)
-import           Data.Aeson                       (encode)
 import           Data.ByteString                  (ByteString)
-import           Data.List                        (find)
-import           Data.Maybe                       (isJust, isNothing)
-import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
-import qualified Database.Category                as DB
+import           Data.Maybe                       (isJust)
 import qualified Database.Get.Category            as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import           GHC.Exception                    (errorCallException, throw)
 import           Network.HTTP.Types.Status
 
 getCategories ::
@@ -40,8 +32,8 @@ getCategories conn queryString = do
         if isJust categoryId || isJust parentId || isJust name
           then DB.getCategoriesTreeFromTop
                  conn
-                 (fromInt <$> categoryId)
-                 (fromInt <$> parentId)
+                 (toInt <$> categoryId)
+                 (toInt <$> parentId)
                  name
           else DB.getRootCategoriesTree conn
       return (status200, payloadResponse categories)

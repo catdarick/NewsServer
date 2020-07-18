@@ -4,25 +4,17 @@
 
 module Api.Methods.Get.Draft where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.News
 import           Api.Types.Response
-import           Control.Exception                (try)
-import           Control.Exception                (SomeException)
-import           Crypto.Hash.MD5                  (hash)
-import           Data.Aeson                       (encode)
 import           Data.ByteString                  (ByteString)
-import           Data.List                        (find)
-import           Data.Maybe                       (isJust, isNothing)
-import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
 import qualified Database.Get.Draft               as DB
 import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import           GHC.Exception                    (errorCallException, throw)
 import           Network.HTTP.Types.Status
 
 getDrafts ::
@@ -41,14 +33,14 @@ getDrafts conn queryString = do
         DB.getDrafts
           conn
           token
-          (fromInt <$> mbCategoryId)
-          (fromInt <$> mbTagId)
-          (fromIntList <$> mbTagsIdIn)
-          (fromIntList <$> mbTagsIdAll)
+          (toInt <$> mbCategoryId)
+          (toInt <$> mbTagId)
+          (toIntList <$> mbTagsIdIn)
+          (toIntList <$> mbTagsIdAll)
           mbTitle
           mbContent
-          (fromInt <$> mbLimit)
-          (fromInt <$> mbOffset)
+          (toInt <$> mbLimit)
+          (toInt <$> mbOffset)
       return (status200, payloadResponse news)
   where
     requiredNames = ["token"]

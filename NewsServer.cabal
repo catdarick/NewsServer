@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b7075134722d1f697044093f400735c621b39e00648c7afb39c3f968115c6627
+-- hash: 0be5e16b2a22c0460419715c7286822a9cfe5083fa9416edd5cf56089e6e308c
 
 name:           NewsServer
 version:        0.1.0.0
@@ -28,8 +28,10 @@ source-repository head
 library
   exposed-modules:
       Api.ErrorException
-      Api.Helpers.Check
+      Api.Helpers.Checks
       Api.Helpers.Getters
+      Api.Methods.Create
+      Api.Methods.Create.Account
       Api.Methods.Create.Author
       Api.Methods.Create.Category
       Api.Methods.Create.Draft
@@ -41,22 +43,24 @@ library
       Api.Methods.Delete.Draft
       Api.Methods.Delete.Tag
       Api.Methods.Delete.User
+      Api.Methods.Edit
       Api.Methods.Edit.Author
       Api.Methods.Edit.Category
       Api.Methods.Edit.Draft
       Api.Methods.Edit.Tag
       Api.Methods.Errors
+      Api.Methods.Get
       Api.Methods.Get.Author
       Api.Methods.Get.Category
       Api.Methods.Get.Comment
       Api.Methods.Get.Draft
       Api.Methods.Get.News
       Api.Methods.Get.Tag
+      Api.Methods.Get.Token
       Api.Methods.Get.User
-      Api.Methods.Login
       Api.Methods.Post.Comment
       Api.Methods.Post.Draft
-      Api.Methods.Signin
+      Api.Types
       Api.Types.Author
       Api.Types.Category
       Api.Types.Comment
@@ -65,10 +69,24 @@ library
       Api.Types.Tag
       Api.Types.User
       Config
-      Database.Author
-      Database.Category
-      Database.Comment
-      Database.Draft
+      Database.Checks.Draft
+      Database.Checks.User
+      Database.Create.Author
+      Database.Create.Category
+      Database.Create.Comment
+      Database.Create.Draft
+      Database.Create.Tag
+      Database.Create.User
+      Database.Delete.Author
+      Database.Delete.Category
+      Database.Delete.Comment
+      Database.Delete.Draft
+      Database.Delete.Tag
+      Database.Delete.User
+      Database.Edit.Author
+      Database.Edit.Category
+      Database.Edit.Draft
+      Database.Edit.Tag
       Database.Get.Author
       Database.Get.Category
       Database.Get.Comment
@@ -76,9 +94,6 @@ library
       Database.Get.News
       Database.Get.Tag
       Database.Get.User
-      Database.Tag
-      Database.Types
-      Database.User
       Lib
       Migration.Create
       Types.Picture

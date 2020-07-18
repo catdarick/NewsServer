@@ -3,18 +3,17 @@
 
 module Api.Methods.Create.Author where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
 import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Char8            (unpack)
-import qualified Database.Author                  as DB
+import qualified Database.Checks.User             as DB
+import qualified Database.Create.Author           as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import qualified Database.User                    as DB
 import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
@@ -31,13 +30,13 @@ createAuthor conn queryString = do
       if not isAdmin
         then return (status404, badResoponse)
         else do
-          res <- try $ DB.addAuthor conn (fromInt userId) description
+          res <- try $ DB.addAuthor conn (toInt userId) description
           case res of
             Left (e :: SomeException) -> do
               print e
               return (status400, errorResponse Err.alreadyAuthor)
-            Right [] -> return $ (status400, errorResponse Err.smth)
-            Right [Only id] -> return $ (status200, idResponse id)
+            Right [] -> return (status400, errorResponse Err.smth)
+            Right [Only id] -> return (status200, idResponse id)
   where
     requiredNames = ["token", "user_id"]
     requiredChecks = [isNotEmpty, isInt]

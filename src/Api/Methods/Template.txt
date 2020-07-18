@@ -3,14 +3,14 @@
 
 module Api.Methods.Method where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors         as Err
 import           Api.Types.Response
 import           Control.Exception          (SomeException)
 import           Data.ByteString            (ByteString)
 import           Database.PostgreSQL.Simple (Connection)
-import           Database.Types
+import           Api.Types
 import           Network.HTTP.Types         (Status, status400)
 
 methodName ::

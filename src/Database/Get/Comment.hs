@@ -5,16 +5,11 @@
 
 module Database.Get.Comment where
 
+import           Api.Types
 import           Api.Types.Comment
-import           Data.Int                         (Int64)
-import           Data.Text                        (Text)
-import           Data.Vector                      (fromList)
-import           Database.PostgreSQL.Simple       (Connection, execute, query)
-import           Database.PostgreSQL.Simple       (Only (Only))
+import           Database.PostgreSQL.Simple       (Connection, Only (Only),
+                                                   query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Database.PostgreSQL.Simple.Types (Only)
-import           Database.Types
 
 getComments ::
      Connection -> NewsId -> Maybe Limit -> Maybe Offset -> IO [Comment]
@@ -33,3 +28,12 @@ getComments conn newsId mbLimit mbOffset = do
                 |]
       (newsId, mbLimit, mbOffset)
   return $ map tupleToComment res
+
+getCommentCreator :: Connection -> CommentId -> IO [Only UserId]
+getCommentCreator conn commentId =
+  query
+    conn
+    [sql|
+      SELECT user_id FROM comment
+      WHERE id = ?|]
+    (Only commentId)

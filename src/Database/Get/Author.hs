@@ -5,16 +5,12 @@
 
 module Database.Get.Author where
 
+import           Api.Types
 import           Api.Types.Author
-import           Data.Int                         (Int64)
-import           Data.Text                        (Text)
 import           Database.Get.User
-import           Database.PostgreSQL.Simple       (Connection, execute, query)
-import           Database.PostgreSQL.Simple       (Only (Only))
+import           Database.PostgreSQL.Simple       (Connection, Only (Only),
+                                                   execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Database.PostgreSQL.Simple.Types (Only)
-import           Database.Types
 
 getAuthors ::
      Connection
@@ -45,3 +41,15 @@ getAuthors conn mbAuthorId mbUserId mbLogin mbFName mbLName mbLimit mbOffset = d
                 |]
       (mbAuthorId, mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset)
   return $ map tupleToAuthor res
+
+getAuthorId :: Connection -> Token -> IO [Only AuthorId]
+getAuthorId conn token =
+  query
+    conn
+    [sql|
+        SELECT author.id FROM user_token, user_account, author
+        WHERE user_token.token = ?
+        AND user_account.id = user_token.user_id
+        AND author.user_id = user_account.id
+        |]
+    (Only token)

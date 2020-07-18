@@ -4,25 +4,16 @@
 
 module Api.Methods.Get.Tag where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
 import           Api.Types.Tag
-import           Control.Exception                (try)
-import           Control.Exception                (SomeException)
-import           Crypto.Hash.MD5                  (hash)
-import           Data.Aeson                       (encode)
 import           Data.ByteString                  (ByteString)
-import           Data.List                        (find)
-import           Data.Maybe                       (isJust, isNothing)
-import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
 import qualified Database.Get.Tag                 as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import qualified Database.User                    as DB
-import           GHC.Exception                    (errorCallException, throw)
 import           Network.HTTP.Types.Status
 
 getTags ::
@@ -39,11 +30,11 @@ getTags conn queryString = do
       tags <-
         DB.getTags
           conn
-          (fromInt <$> mbTagId)
-          (fromIntList <$> mbTagsId)
+          (toInt <$> mbTagId)
+          (toIntList <$> mbTagsId)
           mbName
-          (fromInt <$> mbLimit)
-          (fromInt <$> mbOffset)
+          (toInt <$> mbLimit)
+          (toInt <$> mbOffset)
       return (status200, payloadResponse tags)
   where
     requiredNames = []

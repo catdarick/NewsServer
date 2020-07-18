@@ -2,30 +2,26 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.Login where
+module Api.Methods.Get.Token where
 
-import qualified Api.Methods.Errors         as Err
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import           Api.Helpers.Check
+import qualified Api.Methods.Errors         as Err
+import           Api.Types
 import           Api.Types.Response
-import           Control.Exception          (try)
-import           Control.Exception          (SomeException)
+import           Control.Exception          (SomeException, try)
 import           Crypto.Hash.MD5            (hash)
-import           Data.Aeson                 (encode)
 import           Data.ByteString            (ByteString)
-import           Data.List                  (find)
-import           Data.Maybe                 (isJust, isNothing)
-import           Data.Text.Encoding         (decodeUtf8, encodeUtf8)
+import qualified Database.Create.User       as DB
+import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection, Only (Only))
-import           Database.Types
-import qualified Database.User              as DB
-import           GHC.Exception              (errorCallException, throw)
 import           Network.HTTP.Types.Status
-import Data.ByteString.Char8 (pack)
 
-logIn ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response TokenString)
-logIn conn queryString = do
+getToken ::
+     Connection
+  -> [(ByteString, Maybe Login)]
+  -> IO (Status, Response TokenString)
+getToken conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)

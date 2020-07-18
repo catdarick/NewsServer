@@ -7,7 +7,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Text         (Text)
 import           Data.Time         (LocalTime, UTCTime)
-import           Database.Types
+import           Api.Types
 import           GHC.Generics      (Generic)
 
 data Author =

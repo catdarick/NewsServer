@@ -3,18 +3,17 @@
 
 module Api.Methods.Edit.Draft where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
-import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Char8            (unpack)
-import qualified Database.Draft                   as DB
+import qualified Database.Checks.User             as DB
+import qualified Database.Edit.Draft              as DB
+import qualified Database.Get.Draft               as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import qualified Database.User                    as DB
 import           Network.HTTP.Types               (Status, status200, status400,
                                                    status403, status404)
 
@@ -29,7 +28,7 @@ editDraft conn queryString = do
       let [title, content, categoryId, tagsId, mainPicture, pictures] =
             optionalMaybeValues
       isAdmin <- DB.isAdminToken conn token
-      mbAuthorToken <- DB.getDraftAuthorToken conn (fromInt draftId)
+      mbAuthorToken <- DB.getDraftAuthorToken conn (toInt draftId)
       case mbAuthorToken of
         [] -> return (status400, errorResponse Err.noDraft)
         [Only authorToken] ->
@@ -37,16 +36,16 @@ editDraft conn queryString = do
             then do
               DB.editDraft
                 conn
-                (fromInt draftId)
+                (toInt draftId)
                 title
                 content
-                (fromInt <$> categoryId)
+                (toInt <$> categoryId)
                 mainPicture
-                (fromStringList <$> pictures)
-                (fromIntList <$> tagsId)
+                (toStringList <$> pictures)
+                (toIntList <$> tagsId)
               return (status400, okResponse)
             else return (status403, errorResponse Err.noPerms)
-  where 
+  where
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
@@ -55,4 +54,3 @@ editDraft conn queryString = do
     optionalChecks =
       [isNotEmpty, isNotEmpty, isInt, isIntList, isNotEmpty, isNotEmptyTextList]
     optional = (optionalNames, optionalChecks)
-

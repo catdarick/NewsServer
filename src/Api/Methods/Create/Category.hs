@@ -3,18 +3,17 @@
 
 module Api.Methods.Create.Category where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
 import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Char8            (unpack)
-import qualified Database.Category                as DB
+import qualified Database.Checks.User             as DB
+import qualified Database.Create.Category         as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import qualified Database.User                    as DB
 import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
@@ -31,7 +30,7 @@ createCategory conn queryString = do
       if not isAdmin
         then return (status404, badResoponse)
         else do
-          res <- try $ DB.addCategory conn name (fromInt <$> parentId)
+          res <- try $ DB.addCategory conn name (toInt <$> parentId)
           case res of
             Left (e :: SomeException) -> do
               print e

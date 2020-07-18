@@ -1,30 +1,17 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Api.Helpers.Getters where
 
-import           Api.Helpers.Check
-import           Api.Types.Response
-import           Control.Exception                  (Exception, SomeException,
-                                                     catch, throw)
-import           Data.ByteString                    (ByteString, length)
-import           Data.ByteString.Char8              (unpack)
-import           Data.ByteString.Char8              (pack)
-import           Data.List                          (find)
-import           Data.Maybe                         (fromMaybe, isJust,
-                                                     isNothing)
-import           Data.Text.Encoding                 (decodeUtf8, encodeUtf8)
-import           Data.Time.LocalTime                (LocalTime)
-import           Database.PostgreSQL.Simple         (connectPostgreSQL)
-import           Database.PostgreSQL.Simple.SqlQQ   (sql)
-import           Database.PostgreSQL.Simple.ToField (ToField (toField),
-                                                     toJSONField)
-import           Database.PostgreSQL.Simple.Types   (In (In))
-import           Database.Types
-import           Network.HTTP.Types.Status          (Status, status404)
-import           System.Random                      (Random (randomRIO))
-import           Text.Read                          (readMaybe)
+import           Api.Helpers.Checks
+
+import           Api.Types
+import           Data.ByteString       (ByteString, length)
+import           Data.ByteString.Char8 (unpack)
+import           Data.List             (find)
+import           Data.Maybe            (fromMaybe, isJust, isNothing)
+import           Data.Text.Encoding    (decodeUtf8)
+import           Data.Time.LocalTime   (LocalTime)
+import           System.Random         (Random (randomRIO))
 
 checkAndGetParameters ::
      ([FieldName], [CheckPredicat])
@@ -80,22 +67,20 @@ genRandomString length = do
   return $ x : xs
 
 genToken :: IO TokenString
-genToken = do
-  r <- genRandomString 50
-  return r
+genToken = genRandomString 50
 
-fromBool :: ByteString -> Bool
-fromBool "true"  = True
-fromBool "false" = False
+toBool :: ByteString -> Bool
+toBool "true"  = True
+toBool "false" = False
 
-fromInt :: ByteString -> Int
-fromInt val = read $ unpack val
+toInt :: ByteString -> Int
+toInt val = read $ unpack val
 
-fromIntList :: ByteString -> [Int]
-fromIntList val = read $ unpack val
+toIntList :: ByteString -> [Int]
+toIntList val = read $ unpack val
 
-fromStringList :: ByteString -> [ByteString]
-fromStringList val = read $ unpack val
+toStringList :: ByteString -> [ByteString]
+toStringList val = read $ unpack val
 
 toDate :: ByteString -> LocalTime
 toDate val = read dateWithTimeStr

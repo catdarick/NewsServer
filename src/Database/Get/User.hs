@@ -5,15 +5,12 @@
 
 module Database.Get.User where
 
-import           Data.Int                         (Int64)
-import           Data.Text                        (Text)
-import           Database.PostgreSQL.Simple       (Connection, execute, query)
-import           Database.PostgreSQL.Simple       (Only (Only))
+import           Api.Types
+import           Api.Types.User
+import           Database.PostgreSQL.Simple       (Connection, Only (Only),
+                                                   execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Database.PostgreSQL.Simple.Types (Only)
-import           Database.Types
-import           Api.Types.User
 
 getUsers ::
      Connection
@@ -24,7 +21,7 @@ getUsers ::
   -> Maybe Limit
   -> Maybe Offset
   -> IO [User]
-getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset= do
+getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset = do
   res <-
     query
       conn
@@ -35,8 +32,28 @@ getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset= do
                 AND login = COALESCE(?, login)
                 AND first_name = COALESCE(?, first_name)
                 AND last_name = COALESCE(?, last_name)
-                LIMIT COALESCE(?, 50) 
-                OFFSET COALESCE(?, 0) 
+                LIMIT COALESCE(?, 50)
+                OFFSET COALESCE(?, 0)
                 |]
       (mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset)
   return $ map tupleToUser res
+
+getMaybeUserIdAndPriv :: Connection -> Token -> IO [(UserId, IsAdmin)]
+getMaybeUserIdAndPriv conn token =
+  query
+    conn
+    [sql|
+        SELECT user_token.user_id, user_account.is_admin FROM user_token, user_account
+        WHERE user_token.token = ? AND user_account.id = user_token.user_id
+        |]
+    (Only token)
+
+getMaybeUserId :: Connection -> Login -> PassHash -> IO [Only Int]
+getMaybeUserId conn login passHash =
+  query
+    conn
+    [sql|
+        SELECT id FROM user_account
+        WHERE login = ? AND password_hash = ?
+        |]
+    (login, Binary passHash)

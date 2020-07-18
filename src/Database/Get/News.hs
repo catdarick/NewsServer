@@ -6,24 +6,16 @@
 
 module Database.Get.News where
 
+import           Api.Types
 import           Api.Types.Author
 import           Api.Types.News
-import           Data.Int                           (Int64)
-import           Data.Text                          (Text)
-import           Data.Vector                        (fromList, toList)
+import           Data.Time                        (LocalTime)
+import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category
 import           Database.Get.Comment
 import           Database.Get.Tag
-import           Database.PostgreSQL.Simple         (Connection, execute, query,
-                                                     query_)
-import           Database.PostgreSQL.Simple         (Only (Only))
-import           Database.PostgreSQL.Simple.SqlQQ   (sql)
-import           Database.PostgreSQL.Simple.ToField
-import           Database.PostgreSQL.Simple.ToRow
-import           Database.PostgreSQL.Simple.Types   (Binary (Binary))
-import           Database.PostgreSQL.Simple.Types   (Only)
-import           Database.Types
-import Data.Time (LocalTime)
+import           Database.PostgreSQL.Simple       (Connection, query)
+import           Database.PostgreSQL.Simple.SqlQQ (sql)
 
 getNews ::
      Connection
@@ -44,15 +36,15 @@ getNews ::
   -> Maybe Limit
   -> Maybe Offset
   -> IO [News]
-getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbSort mbDate mbDateBefore mbDateAfter mbLimit mbOffset  = do
+getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbSort mbDate mbDateBefore mbDateAfter mbLimit mbOffset = do
   res <-
     query
       conn
       [sql|
-                SELECT news_id, title, news_creation_time,content,main_picture,pictures,category_id,tags_id,author_id,description,user_id,login,first_name,last_name,picture,user_creation_time,is_admin 
+                SELECT news_id, title, news_creation_time,content,main_picture,pictures,category_id,tags_id,author_id,description,user_id,login,first_name,last_name,picture,user_creation_time,is_admin
                 FROM (SELECT (?::int) as sort, news.id as news_id, news.title, date_trunc('second',news.creation_time) as news_creation_time, news.content, news.main_picture, news.pictures, news.category_id,
                 (SELECT ARRAY(select news_tag.tag_id from news_tag
-                  where news_tag.news_id = news.id)) as tags_id,
+                  WHERE news_tag.news_id = news.id)) as tags_id,
                 author.id as author_id, author.description,
                 usr.id as user_id, usr.login, usr.first_name, usr.last_name, usr.picture, date_trunc('second',usr.creation_time) as user_creation_time, usr.is_admin,
                 category.name as category_name
@@ -104,7 +96,7 @@ getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn 
       , fromList <$> mbTagsIdAll
       , fromList <$> mbTagsIdIn
       , fromList <$> mbTagsIdIn)
-  sequence $ map f res
+  mapM f res
   where
     toTemplate Nothing  = "%"
     toTemplate (Just a) = "%" <> a <> "%"

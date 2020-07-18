@@ -1,6 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-
-module Database.Types where
+module Api.Types where
 
 import           Data.ByteString (ByteString, length)
 import           Data.Text       (Text)
@@ -30,8 +28,11 @@ type AuthorId = Int
 type NewsId = Int
 
 type TagId = Int
+
 type Limit = Int
+
 type Offset = Int
+
 type CommentId = Int
 
 type Token = ByteString
@@ -55,6 +56,5 @@ type Description = ByteString
 type Title = ByteString
 
 type CategoryId = Int
-
 
 type Content = ByteString

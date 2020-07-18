@@ -3,18 +3,18 @@
 
 module Api.Methods.Post.Comment where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
-import           Control.Exception                (SomeException)
+import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
-import qualified Database.Comment                 as DB
-import qualified Database.Draft                   as DB
+import qualified Database.Checks.Draft            as DB
+import qualified Database.Create.Comment          as DB
+import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
-import qualified Database.User                    as DB
 import           Network.HTTP.Types               (Status, status400)
 
 postComment ::
@@ -26,20 +26,15 @@ postComment conn queryString = do
     Right (requiredValues, optionalMaybeValues) -> do
       let [token, newsId, content] = requiredValues
       let [] = optionalMaybeValues
-      maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn (token)
+      maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn token
       case maybeUserIdAndPriv of
         [] -> return (status400, errorResponse Err.badToken)
         [(userId, _)] -> do
-          isDraftPublished <- DB.isDraftPublished conn (fromInt newsId)
-          print isDraftPublished
-          if not isDraftPublished
-            then return (status400, errorResponse Err.noNews)
-            else do
-              res <- DB.addComment conn (fromInt newsId) userId content
-              case res of
-                Left err -> return (status400, errorResponse err)
-                Right [Only commentId] ->
-                  return (status400, idResponse commentId)
+          res <- try $ DB.addComment conn (toInt newsId) userId content
+          case res of
+            Left (e :: SomeException) ->
+              return (status400, errorResponse Err.noNews)
+            Right [Only commentId] -> return (status400, idResponse commentId)
   where
     requiredNames = ["token", "news_id", "content"]
     requiredChecks = [isNotEmpty, isInt, isNotEmpty]

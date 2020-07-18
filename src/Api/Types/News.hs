@@ -14,7 +14,7 @@ import           Data.Time                  (LocalTime, UTCTime)
 import           Data.Vector                (Vector)
 import           Database.Get.Tag
 import           Database.PostgreSQL.Simple (Connection)
-import           Database.Types
+import           Api.Types
 import           GHC.Generics               (Generic)
 
 data News =

@@ -3,18 +3,16 @@
 
 module Api.Methods.Create.Draft where
 
-import           Api.Helpers.Check
+import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
+import           Api.Types
 import           Api.Types.Response
-import           Control.Exception                (SomeException, try)
 import           Data.ByteString                  (ByteString)
-import qualified Database.Author                  as DB
-import qualified Database.Draft                    as DB
-import           Database.PostgreSQL.Simple       (Connection, SqlError,
-                                                   sqlErrorMsg)
+import qualified Database.Create.Draft            as DB
+import qualified Database.Get.Author              as DB
+import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Database.Types
 import           Network.HTTP.Types               (Status, status400)
 
 createDraft ::
@@ -37,14 +35,13 @@ createDraft conn queryString = do
               authorId
               title
               content
-              (fromInt categoryId)
+              (toInt categoryId)
               mainPicture
-              (fromStringList <$> pictures)
-              (fromIntList <$> tagsId)
+              (toStringList <$> pictures)
+              (toIntList <$> tagsId)
           case res of
-            Left err -> return (status400, errorResponse err)
-            Right [Only id] -> do
-              return (status400, idResponse id)
+            Left err        -> return (status400, errorResponse err)
+            Right [Only id] -> return (status400, idResponse id)
   where
     requiredNames = ["token", "title", "content", "category_id"]
     requiredChecks =

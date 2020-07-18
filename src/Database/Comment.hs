@@ -22,9 +22,9 @@ addComment conn newsId userId content = do
       conn
       [sql|
       INSERT INTO comment
-      (user_id, content)
-      VALUES (?,?) RETURNING id|]
-      (userId, content)
+      (user_id, content,news_id)
+      VALUES (?,?,?) RETURNING id|]
+      (userId, content,newsId)
   res <- try $ addAssociation conn newsId commentId
   case res of
       Left (e::SomeException) -> do 

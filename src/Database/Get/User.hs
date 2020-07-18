@@ -29,7 +29,7 @@ getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset= do
     query
       conn
       [sql|
-                SELECT id, login, first_name, last_name, picture, creation_time, is_admin
+                SELECT id, login, first_name, last_name, picture, date_trunc('second',creation_time), is_admin
                 FROM user_account
                 WHERE id = COALESCE(?, id)
                 AND login = COALESCE(?, login)

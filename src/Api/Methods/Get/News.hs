@@ -7,8 +7,8 @@ module Api.Methods.Get.News where
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
-import           Api.Types.Response
 import           Api.Types.News
+import           Api.Types.Response
 import           Control.Exception                (try)
 import           Control.Exception                (SomeException)
 import           Crypto.Hash.MD5                  (hash)
@@ -17,11 +17,11 @@ import           Data.ByteString                  (ByteString)
 import           Data.List                        (find)
 import           Data.Maybe                       (isJust, isNothing)
 import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
+import qualified Database.Get.News                as DB
 import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Database.Types
-import qualified Database.Get.News                    as DB
 import           GHC.Exception                    (errorCallException, throw)
 import           Network.HTTP.Types.Status
 
@@ -35,7 +35,7 @@ getNews conn queryString = do
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do
       let [] = requiredValues
-      let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
+      let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
             optionalMaybeValues
       news <-
         DB.getNews
@@ -50,6 +50,10 @@ getNews conn queryString = do
           (fromIntList <$> mbTagsIdAll)
           mbTitle
           mbContent
+          (fromInt <$> mbSort)
+          (toDate <$> mbDate)
+          (toDate <$> mbBeforeDate)
+          (toDate <$> mbAfterDate)
           (fromInt <$> mbLimit)
           (fromInt <$> mbOffset)
       return (status200, payloadResponse news)
@@ -70,6 +74,10 @@ getNews conn queryString = do
       , "content"
       , "limit"
       , "offset"
+      , "sort"
+      , "date"
+      , "after_date"
+      , "before_date"
       ]
     optionalChecks =
       [ isInt
@@ -84,5 +92,9 @@ getNews conn queryString = do
       , isNotEmpty
       , isIntBetween 1 200
       , isInt
+      , isIntBetween 1 8
+      , isDate
+      , isDate
+      , isDate
       ]
     optional = (optionalNames, optionalChecks)

@@ -32,7 +32,7 @@ getAuthors conn mbAuthorId mbUserId mbLogin mbFName mbLName mbLimit mbOffset = d
       conn
       [sql|
                 SELECT author.id, author.description,
-                usr.id, usr.login, usr.first_name, usr.last_name, usr.picture, usr.creation_time, usr.is_admin
+                usr.id, usr.login, usr.first_name, usr.last_name, usr.picture, date_trunc('second',usr.creation_time), usr.is_admin
                 FROM author, user_account as usr
                 WHERE author.id = COALESCE(?, author.id)
                 AND author.user_id = COALESCE(?, author.user_id)

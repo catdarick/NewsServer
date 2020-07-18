@@ -20,6 +20,8 @@ import           Api.Methods.Edit.Draft
 import           Api.Methods.Edit.Tag
 import           Api.Methods.Get.Author
 import           Api.Methods.Get.Category
+import           Api.Methods.Get.Comment
+import           Api.Methods.Get.Draft
 import           Api.Methods.Get.News
 import           Api.Methods.Get.Tag
 import           Api.Methods.Get.User
@@ -72,6 +74,8 @@ application conn request respond = do
       ["getTags"]        -> encoded $ getTags conn queryString_
       ["getAuthors"]     -> encoded $ getAuthors conn queryString_
       ["getNews"]        -> encoded $ getNews conn queryString_
+      ["getDrafts"]      -> encoded $ getDrafts conn queryString_
+      ["getComments"]    -> encoded $ getComments conn queryString_
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse

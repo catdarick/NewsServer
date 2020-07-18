@@ -85,17 +85,11 @@ createCommentTable conn = do
     [sql| CREATE TABLE comment
         ( id SERIAL UNIQUE PRIMARY KEY 
         , user_id INTEGER REFERENCES user_account (id) ON DELETE CASCADE
+        , news_id INTEGER REFERENCES news (id) ON DELETE CASCADE
+        , creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         , content TEXT
         )|]
 
-createNewsCommentTable conn = do
-  execute_
-    conn
-    [sql| CREATE TABLE news_comment
-        ( news_id INTEGER REFERENCES news (id) ON DELETE CASCADE
-        , comment_id INTEGER REFERENCES comment (id) ON DELETE CASCADE
-        , PRIMARY KEY (news_id, comment_id)
-        )|]
 
 initDatabase conn = sequence_ $ 
   [ createUserTable
@@ -106,6 +100,5 @@ initDatabase conn = sequence_ $
   , createNewsTable
   , createNewsTagTable
   , createCommentTable
-  , createNewsCommentTable
   ] <*>
   pure conn

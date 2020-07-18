@@ -14,6 +14,8 @@ import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
 import           Database.PostgreSQL.Simple.Types (Only)
 import           Database.Types
+import Data.Maybe (fromJust, isNothing)
+import Data.List (find)
 
 
 
@@ -30,15 +32,15 @@ getRootCategoriesTree conn= do
                 WHERE parent_id IS NULL
                 |]
   let rootCatgories = map fromOnly onlyRootCatgories
-  sequence $ map (getCategoryTree conn) rootCatgories 
+  sequence $ map (getCategoryTreeFromTop conn) rootCatgories 
 
-getCategoriesTree ::
+getCategoriesTreeFromTop::
      Connection
   -> Maybe CategoryId
   -> Maybe CategoryId
   -> Maybe Name
   -> IO [Category]
-getCategoriesTree conn mbId mbParentId mbName= do
+getCategoriesTreeFromTop conn mbId mbParentId mbName= do
   onlyRootCatgories <-
     query
       conn
@@ -50,12 +52,11 @@ getCategoriesTree conn mbId mbParentId mbName= do
                 AND name = COALESCE(?, name)
                 |] (mbId, mbParentId, mbName)
   let rootCatgories = map fromOnly onlyRootCatgories
-  sequence $ map (getCategoryTree conn) rootCatgories 
+  sequence $ map (getCategoryTreeFromTop conn) rootCatgories 
 
-getCategoryTree :: Connection -> Int -> IO Category
-getCategoryTree conn categoryId =do
+getCategoryTreeFromTop :: Connection -> Int -> IO Category
+getCategoryTreeFromTop conn categoryId =do
     res<- query
-
       conn
       [sql| WITH RECURSIVE r AS (
               SELECT id, parent_id, name
@@ -72,6 +73,30 @@ getCategoryTree conn categoryId =do
     case res  of
       [(id, _, name)] -> return $ getCategory id name []
       (id, _, name):xs -> return $ getCategory id name (getCategoryChildsFromList id xs)
+
+getCategoryTreeFromBottom :: Connection -> Int -> IO Category
+getCategoryTreeFromBottom conn categoryId =do
+    res<- query
+      conn
+      [sql| WITH RECURSIVE r AS (
+              SELECT id, parent_id, name
+              FROM category
+              WHERE id =  ?
+              UNION
+              SELECT category.id, category.parent_id, category.name
+              FROM category
+                  JOIN r
+                      ON category.id = r.parent_id
+              )
+              SELECT * FROM r|]
+      (Only categoryId)
+    let (id,_,name) = getRoot res
+    case res  of
+      [(id, _, name)] -> return $ getCategory id name []
+      xs -> return $ getCategory id name (getCategoryChildsFromList id xs)
+  where
+    getRoot xs = fromJust$ find isRoot xs
+    isRoot (_, parent_id, _) = isNothing parent_id
 
  
 getCategoryChildsFromList :: Int -> [(Int, Maybe Int, Text)] -> [Category]

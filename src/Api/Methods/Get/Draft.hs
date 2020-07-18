@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.Get.Category where
+module Api.Methods.Get.Draft where
 
 import           Api.Helpers.Check
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
-import           Api.Types.Category
+import           Api.Types.News
 import           Api.Types.Response
 import           Control.Exception                (try)
 import           Control.Exception                (SomeException)
@@ -17,38 +17,61 @@ import           Data.ByteString                  (ByteString)
 import           Data.List                        (find)
 import           Data.Maybe                       (isJust, isNothing)
 import           Data.Text.Encoding               (decodeUtf8, encodeUtf8)
-import qualified Database.Category                as DB
-import qualified Database.Get.Category            as DB
+import qualified Database.Get.Draft               as DB
+import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Database.Types
 import           GHC.Exception                    (errorCallException, throw)
 import           Network.HTTP.Types.Status
 
-getCategories ::
+getDrafts ::
      Connection
   -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Category])
-getCategories conn queryString = do
+  -> IO (Status, Response [News])
+getDrafts conn queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do
-      let [] = requiredValues
-      let [categoryId, parentId, name] = optionalMaybeValues
-      categories <-
-        if isJust categoryId || isJust parentId || isJust name
-          then DB.getCategoriesTreeFromTop
-                 conn
-                 (fromInt <$> categoryId)
-                 (fromInt <$> parentId)
-                 name
-          else DB.getRootCategoriesTree conn
-      return (status200, payloadResponse categories)
+      let [token] = requiredValues
+      let [mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
+            optionalMaybeValues
+      news <-
+        DB.getDrafts
+          conn
+          token
+          (fromInt <$> mbCategoryId)
+          (fromInt <$> mbTagId)
+          (fromIntList <$> mbTagsIdIn)
+          (fromIntList <$> mbTagsIdAll)
+          mbTitle
+          mbContent
+          (fromInt <$> mbLimit)
+          (fromInt <$> mbOffset)
+      return (status200, payloadResponse news)
   where
-    requiredNames = []
-    requiredChecks = [isInt]
+    requiredNames = ["token"]
+    requiredChecks = [isNotEmpty]
     required = (requiredNames, requiredChecks)
-    optionalNames = ["category_id", "parent_id", "name"]
-    optionalChecks = [isInt, isInt, isNotEmpty]
+    optionalNames =
+      [ "category_id"
+      , "tag_id"
+      , "tags_id_in"
+      , "tags_id_all"
+      , "title"
+      , "content"
+      , "limit"
+      , "offset"
+      ]
+    optionalChecks =
+      [ isInt
+      , isInt
+      , isIntList
+      , isIntList
+      , isNotEmpty
+      , isNotEmpty
+      , isIntBetween 1 200
+      , isInt
+      ]
     optional = (optionalNames, optionalChecks)

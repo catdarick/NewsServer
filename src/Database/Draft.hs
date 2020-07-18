@@ -62,8 +62,8 @@ addDraft conn authorId title content caregoryId mbPicture mbPictures =
     conn
     [sql|
         INSERT INTO news
-        (author_id, title, content, category_id, main_picture, pictures)
-        VALUES (?,?,?,?,?,?) RETURNING id|]
+        (author_id, title, content, category_id, main_picture, pictures, is_published)
+        VALUES (?,?,?,?,?,?, false) RETURNING id|]
     (authorId, title, content, caregoryId, mbPicture, fromList <$> mbPictures)
 
 addDraftTags :: Connection -> NewsId -> Maybe [TagId] -> IO Int64
@@ -132,7 +132,6 @@ isDraftAuthorToken conn newsId token = do
   case res of
     []               -> return False
     [id :: Only Int] -> return True
-  return True
 
 publishDraft :: Connection -> NewsId -> IO Int64
 publishDraft conn newsId =
@@ -140,9 +139,26 @@ publishDraft conn newsId =
     conn
     [sql|
       UPDATE news
-      SET is_published = TRUE
+      SET is_published = TRUE, creation_time = CURRENT_TIMESTAMP
       WHERE id=?|]
     (Only newsId)
+
+isDraftPublished :: Connection -> NewsId -> IO Bool
+isDraftPublished conn newsId = do
+  res <-
+    query
+      conn
+      [sql|
+        SELECT id FROM news
+        WHERE id = ?
+        AND is_published=true
+        |]
+      (Only newsId)
+  print res
+  case res of
+    []               -> return False
+    [id :: Only Int] -> return True
+
 
 deleteDraftTags :: Connection -> NewsId -> IO Int64
 deleteDraftTags conn draftId =

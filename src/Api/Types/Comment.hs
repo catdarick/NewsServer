@@ -29,3 +29,7 @@ comment id user time content =
     , commentCreationTime = time
     , commentContent = content
     }
+tupleToComment (id, content, time, userId, login, fName, lName, picture, creationTime, isAdmin) = 
+  comment id user time content
+  where 
+    user = tupleToUser (userId, login, fName, lName, picture, creationTime, isAdmin)

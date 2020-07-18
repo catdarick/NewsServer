@@ -6,8 +6,8 @@ module Api.Helpers.Getters where
 
 import           Api.Helpers.Check
 import           Api.Types.Response
-import           Control.Exception                  (Exception, SomeException, catch,
-                                                     throw)
+import           Control.Exception                  (Exception, SomeException,
+                                                     catch, throw)
 import           Data.ByteString                    (ByteString, length)
 import           Data.ByteString.Char8              (unpack)
 import           Data.ByteString.Char8              (pack)
@@ -15,14 +15,16 @@ import           Data.List                          (find)
 import           Data.Maybe                         (fromMaybe, isJust,
                                                      isNothing)
 import           Data.Text.Encoding                 (decodeUtf8, encodeUtf8)
+import           Data.Time.LocalTime                (LocalTime)
 import           Database.PostgreSQL.Simple         (connectPostgreSQL)
 import           Database.PostgreSQL.Simple.SqlQQ   (sql)
 import           Database.PostgreSQL.Simple.ToField (ToField (toField),
                                                      toJSONField)
 import           Database.PostgreSQL.Simple.Types   (In (In))
 import           Database.Types
-import           Network.HTTP.Types.Status          (status404, Status)
+import           Network.HTTP.Types.Status          (Status, status404)
 import           System.Random                      (Random (randomRIO))
+import           Text.Read                          (readMaybe)
 
 checkAndGetParameters ::
      ([FieldName], [CheckPredicat])
@@ -95,4 +97,7 @@ fromIntList val = read $ unpack val
 fromStringList :: ByteString -> [ByteString]
 fromStringList val = read $ unpack val
 
-
+toDate :: ByteString -> LocalTime
+toDate val = read dateWithTimeStr
+  where
+    dateWithTimeStr = unpack $ val <> " 00:00:00"

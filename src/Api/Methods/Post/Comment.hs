@@ -10,6 +10,7 @@ import           Api.Types.Response
 import           Control.Exception                (SomeException)
 import           Data.ByteString                  (ByteString)
 import qualified Database.Comment                 as DB
+import qualified Database.Draft                   as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Database.Types
@@ -26,14 +27,19 @@ postComment conn queryString = do
       let [token, newsId, content] = requiredValues
       let [] = optionalMaybeValues
       maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn (token)
-      print maybeUserIdAndPriv
       case maybeUserIdAndPriv of
         [] -> return (status400, errorResponse Err.badToken)
         [(userId, _)] -> do
-          res <- DB.addComment conn (fromInt newsId) userId content
-          case res of
-            Left err -> return (status400, errorResponse err)
-            Right [Only commentId] -> return (status400, idResponse commentId)
+          isDraftPublished <- DB.isDraftPublished conn (fromInt newsId)
+          print isDraftPublished
+          if not isDraftPublished
+            then return (status400, errorResponse Err.noNews)
+            else do
+              res <- DB.addComment conn (fromInt newsId) userId content
+              case res of
+                Left err -> return (status400, errorResponse err)
+                Right [Only commentId] ->
+                  return (status400, idResponse commentId)
   where
     requiredNames = ["token", "news_id", "content"]
     requiredChecks = [isNotEmpty, isInt, isNotEmpty]

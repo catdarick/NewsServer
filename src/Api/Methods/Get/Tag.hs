@@ -35,11 +35,12 @@ getTags conn queryString = do
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do
       let [] = requiredValues
-      let [mbTagId, mbName, mbLimit, mbOffset] = optionalMaybeValues
+      let [mbTagId, mbTagsId, mbName, mbLimit, mbOffset] = optionalMaybeValues
       tags <-
         DB.getTags
           conn
           (fromInt <$> mbTagId)
+          (fromIntList <$> mbTagsId)
           mbName
           (fromInt <$> mbLimit)
           (fromInt <$> mbOffset)
@@ -48,6 +49,6 @@ getTags conn queryString = do
     requiredNames = []
     requiredChecks = [isInt]
     required = (requiredNames, requiredChecks)
-    optionalNames = ["tag_id", "name", "limit", "offset"]
-    optionalChecks = [isInt, isNotEmpty, isIntBetween 1 200, isInt]
+    optionalNames = ["tag_id", "tags_id", "name", "limit", "offset"]
+    optionalChecks = [isInt, isIntList, isNotEmpty, isIntBetween 1 200, isInt]
     optional = (optionalNames, optionalChecks)

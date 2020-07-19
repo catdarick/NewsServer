@@ -32,23 +32,25 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
     query
       conn
       [sql|
-                SELECT * FROM (SELECT news.id, news.title, date_trunc('second',news.creation_time), news.content, news.main_picture, news.pictures, news.category_id,
-                (SELECT ARRAY(select news_tag.tag_id from news_tag
-                  where news_tag.news_id = news.id)) as tagsId
-                FROM news, author, user_token
-                WHERE news.is_published = false
-                AND user_token.user_id =  author.user_id
-                AND news.author_id = author.id
-                AND news.title LIKE ?
-                AND news.content LIKE ?
-                AND user_token.token=?
-                AND news.category_id = COALESCE(?, news.category_id)
-                LIMIT COALESCE(?, 50)
-                OFFSET COALESCE(?, 0)) as foo
-                WHERE  (? IS NULL OR (? = ANY (foo.tagsId)))
-                AND (? IS NULL OR (? <@ (foo.tagsId)))
-                AND (? IS NULL OR (? && (foo.tagsId)))
-                |]
+      SELECT * FROM
+        (SELECT news.id, news.title, date_trunc('second',news.creation_time),
+        news.content, news.main_picture, news.pictures, news.category_id,
+        (SELECT ARRAY(select news_tag.tag_id from news_tag
+          where news_tag.news_id = news.id)) as tagsId
+        FROM news, author, user_token
+        WHERE news.is_published = false
+        AND user_token.user_id =  author.user_id
+        AND news.author_id = author.id
+        AND news.title LIKE ?
+        AND news.content LIKE ?
+        AND user_token.token=?
+        AND news.category_id = COALESCE(?, news.category_id)
+        LIMIT COALESCE(?, 50)
+        OFFSET COALESCE(?, 0)) as foo
+      WHERE  (? IS NULL OR (? = ANY (foo.tagsId)))
+      AND (? IS NULL OR (? <@ (foo.tagsId)))
+      AND (? IS NULL OR (? && (foo.tagsId)))
+      |]
       ( toTemplate mbTitle
       , toTemplate mbContent
       , token
@@ -61,11 +63,11 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
       , fromList <$> mbTagsIdAll
       , fromList <$> mbTagsIdIn
       , fromList <$> mbTagsIdIn)
-  mapM f res
+  mapM toNews res
   where
     toTemplate Nothing  = "%"
     toTemplate (Just a) = "%" <> a <> "%"
-    f (id, title, time, content, mainPic, addPics, categoryId, tagsId) = do
+    toNews (id, title, time, content, mainPic, addPics, categoryId, tagsId) = do
       tags <-
         getTags conn Nothing (Just $ toList tagsId) Nothing Nothing Nothing
       category <- getCategoryTreeFromBottom conn categoryId

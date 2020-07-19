@@ -46,7 +46,7 @@ getCategoriesTreeFromTop conn mbId mbParentId mbName = do
                 |]
       (mbId, mbParentId, mbName)
   let rootCatgories = map fromOnly onlyRootCatgories
-  sequence $ map (getCategoryTreeFromTop conn) rootCatgories
+  mapM (getCategoryTreeFromTop conn) rootCatgories
 
 getCategoryTreeFromTop :: Connection -> Int -> IO Category
 getCategoryTreeFromTop conn categoryId = do

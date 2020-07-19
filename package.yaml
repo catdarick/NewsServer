@@ -41,6 +41,12 @@ dependencies:
 - binary
 - random
 - vector
+- transformers
+- hspec-pg-transact
+- pg-transact
+- hspec
+- hspec-expectations
+- hspec-expectations-lifted
 library:
   source-dirs: src
 

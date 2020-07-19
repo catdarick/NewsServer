@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0be5e16b2a22c0460419715c7286822a9cfe5083fa9416edd5cf56089e6e308c
+-- hash: 39a622fd2fe4e14074d8160206a9c90a1fdedf3f1e88ab69c8f5d3d227012485
 
 name:           NewsServer
 version:        0.1.0.0
@@ -96,6 +96,7 @@ library
       Database.Get.User
       Lib
       Migration.Create
+      State.Types
       Types.Picture
   other-modules:
       Paths_NewsServer
@@ -111,14 +112,20 @@ library
     , configurator
     , containers
     , cryptohash
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-lifted
+    , hspec-pg-transact
     , http-types
     , lens
     , lens-aeson
+    , pg-transact
     , postgresql-simple
     , postgresql-simple-migration
     , random
     , text
     , time
+    , transformers
     , vector
     , wai
     , warp
@@ -142,14 +149,20 @@ executable NewsServer-exe
     , configurator
     , containers
     , cryptohash
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-lifted
+    , hspec-pg-transact
     , http-types
     , lens
     , lens-aeson
+    , pg-transact
     , postgresql-simple
     , postgresql-simple-migration
     , random
     , text
     , time
+    , transformers
     , vector
     , wai
     , warp
@@ -159,6 +172,13 @@ test-suite NewsServer-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      DatabaseTest.Author
+      DatabaseTest.Category
+      DatabaseTest.Comment
+      DatabaseTest.Draft
+      DatabaseTest.News
+      DatabaseTest.Tag
+      DatabaseTest.User
       Paths_NewsServer
   hs-source-dirs:
       test
@@ -174,14 +194,20 @@ test-suite NewsServer-test
     , configurator
     , containers
     , cryptohash
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-lifted
+    , hspec-pg-transact
     , http-types
     , lens
     , lens-aeson
+    , pg-transact
     , postgresql-simple
     , postgresql-simple-migration
     , random
     , text
     , time
+    , transformers
     , vector
     , wai
     , warp

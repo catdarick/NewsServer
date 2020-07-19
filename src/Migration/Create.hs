@@ -7,7 +7,7 @@ module Migration.Create where
 import           Database.PostgreSQL.Simple       (execute_)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 
-createUserTable conn = do
+createUserTable conn =  
   execute_
     conn
     [sql| CREATE TABLE user_account
@@ -21,7 +21,7 @@ createUserTable conn = do
         , is_admin BOOL
         )|]
 
-createAuthorTable conn = do
+createAuthorTable conn =  
   execute_
     conn
     [sql| CREATE TABLE author 
@@ -30,7 +30,7 @@ createAuthorTable conn = do
         , description TEXT
         )|]
 
-createUserTokenTable conn = do
+createUserTokenTable conn =  
   execute_
     conn
     [sql| CREATE TABLE user_token
@@ -38,16 +38,16 @@ createUserTokenTable conn = do
         , token TEXT
         )|]
 
-createCategoryTable conn = do
+createCategoryTable conn =  
   execute_
     conn
     [sql| CREATE TABLE category
         ( id SERIAL UNIQUE PRIMARY KEY
-        , parent_id INTEGER REFERENCES category (id) ON DELETE RESTRICT
+        , parent_id INTEGER REFERENCES category (id) ON DELETE CASCADE
         , name TEXT
         )|]
 
-createTagTable conn = do
+createTagTable conn =  
   execute_
     conn
     [sql| CREATE TABLE tag
@@ -55,7 +55,7 @@ createTagTable conn = do
         , name TEXT UNIQUE
         )|]
 
-createNewsTable conn = do
+createNewsTable conn =  
   execute_
     conn
     [sql| CREATE TABLE news
@@ -70,7 +70,7 @@ createNewsTable conn = do
         , is_published BOOl
         )|]
 
-createNewsTagTable conn = do
+createNewsTagTable conn =  
   execute_
     conn
     [sql| CREATE TABLE news_tag
@@ -79,7 +79,7 @@ createNewsTagTable conn = do
         , PRIMARY KEY (news_id, tag_id)
         )|]
 
-createCommentTable conn = do
+createCommentTable conn =  
   execute_
     conn
     [sql| CREATE TABLE comment

@@ -39,9 +39,12 @@ isNotEmpty :: (ByteString, ByteString) -> Either ByteString Bool
 isNotEmpty (name, "") = Left $ name <> " field is empty"
 isNotEmpty smt        = Right True
 
-isGlobalAdminPass :: (ByteString, ByteString) -> Either ByteString Bool
-isGlobalAdminPass (name, "GlobalAdminPass") = Right True
-isGlobalAdminPass smt = Left $ "Incorrect global password"
+isGlobalAdminPass ::
+     ByteString -> (ByteString, ByteString) -> Either ByteString Bool
+isGlobalAdminPass pass (name, val) =
+  if pass == val
+    then Right True
+    else Left "Incorrect global password"
 
 isNotEmptyTextList :: (ByteString, ByteString) -> Either ByteString Bool
 isNotEmptyTextList (name, val)

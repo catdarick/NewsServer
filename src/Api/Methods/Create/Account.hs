@@ -9,20 +9,18 @@ import           Api.Helpers.Getters
 import qualified Api.Methods.Errors               as Err
 import           Api.Types
 import           Api.Types.Response
+import           Config
 import           Control.Exception                (SomeException, try)
 import           Crypto.Hash.MD5                  (hash)
 import           Data.ByteString                  (ByteString)
+import           Data.Function                    ((&))
 import           Data.Maybe                       (isJust, isNothing)
 import qualified Database.Create.User             as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
-createAccount ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response Idcont)
-createAccount conn queryString = do
+createAccount conn config queryString = do
   let eitherParameters = checkAndGetParameters required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)
@@ -44,5 +42,5 @@ createAccount conn queryString = do
       [isCorrectLength 5 20, isCorrectLength 6 40, isNotEmpty, isNotEmpty]
     required = (requiredNames, requiredChecks)
     optionalNames = ["admin_pass", "picture"]
-    optionalChecks = [isGlobalAdminPass, isNotEmpty]
+    optionalChecks = [isGlobalAdminPass (config & globalAdminPass), isNotEmpty]
     optional = (optionalNames, optionalChecks)

@@ -10,6 +10,16 @@ import           Api.Types
 
 editCategory ::
      Connection -> CategoryId -> Maybe Name -> Maybe CategoryId -> IO Int64
+editCategory conn categoryId mbName (Just 0) =
+  execute
+    conn
+    [sql|
+      UPDATE category
+      SET
+      name = COALESCE(?, name),
+      parent_id = null
+      WHERE id=?|]
+    (mbName, categoryId)
 editCategory conn categoryId mbName mbParentId =
   execute
     conn
@@ -20,3 +30,4 @@ editCategory conn categoryId mbName mbParentId =
       parent_id = COALESCE(?, parent_id)
       WHERE id=?|]
     (mbName, mbParentId, categoryId)
+

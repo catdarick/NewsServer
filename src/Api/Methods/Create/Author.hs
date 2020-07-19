@@ -32,10 +32,8 @@ createAuthor conn queryString = do
         else do
           res <- try $ DB.addAuthor conn (toInt userId) description
           case res of
-            Left (e :: SomeException) -> do
-              print e
+            Left (e :: SomeException) ->
               return (status400, errorResponse Err.alreadyAuthor)
-            Right [] -> return (status400, errorResponse Err.smth)
             Right [Only id] -> return (status200, idResponse id)
   where
     requiredNames = ["token", "user_id"]

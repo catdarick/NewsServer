@@ -10,8 +10,7 @@ import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Api.Types
 
 addCategory :: Connection -> Name -> Maybe CategoryId -> IO [Only CategoryId]
-addCategory conn name parentId = do
-  print parentId
+addCategory conn name parentId = 
   case parentId of
     Nothing ->
       query

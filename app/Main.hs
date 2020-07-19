@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -19,15 +20,22 @@ import           Migration.Create
 import           Network.HTTP.Types.Status
 import           Network.Wai
 import           Network.Wai.Handler.Warp   (run)
-
-application conn request respond = do
-  print request
-  let queryString_ = (request & queryString)
+import Control.Exception (try, SomeException)
+import Data.Configurator.Types (Worth(Required))
+import Data.Configurator (load)
+import Config
+import State.Types
+import           Data.Function               ((&))
+import Control.Monad.Trans.State (StateT(runStateT))
+import Control.Monad.Trans.Class (MonadTrans(lift))
+application conn config request respond = do
+  --print request
+  let queryString_ = request & queryString
   let path = request & pathInfo
   (status, bsResponse) <-
     case path of
-      ["createAccount"]  -> encoded $ createAccount conn queryString_
-      ["logIn"]          -> encoded $ getToken conn queryString_
+      ["createAccount"]  -> encoded $ createAccount conn config queryString_
+     {-  ["logIn"]          -> encoded $ getToken conn queryString_
       ["createAuthor"]   -> encoded $ createAuthor conn queryString_
       ["createCategory"] -> encoded $ createCategory conn queryString_
       ["createTag"]      -> encoded $ createTag conn queryString_
@@ -50,23 +58,38 @@ application conn request respond = do
       ["getAuthors"]     -> encoded $ getAuthors conn queryString_
       ["getNews"]        -> encoded $ getNews conn queryString_
       ["getDrafts"]      -> encoded $ getDrafts conn queryString_
-      ["getComments"]    -> encoded $ getComments conn queryString_
+      ["getComments"]    -> encoded $ getComments conn queryString_ -}
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse
     --if (status == status404)
     --  then ""
     --  else bsResponse
+
   where
     encoded f = do
       (status, response) <- f
       return (status, encode response)
 
 main = do
-  conn <-
-    connectPostgreSQL
-      "host='127.0.0.1' port=5432 dbname='test' user='darick' password='IPOD103qwe'"
+  eitherCfg <- try $ load [Required "$(PWD)/app/server.cfg"]
+  case eitherCfg of
+    Left (e :: SomeException) -> print "Can't find config file" >> print e
+    Right handleConfig -> do
+      config <- parseConfig handleConfig
+      
+      conn <-
+        connectPostgreSQL $ connectString config
+
+      run 3000 $ (application conn config)  
+      
+  
+  
   --initDatabase conn
-  print defaultConnectInfo
-  run 3000 $ application conn
+
+  
   return ()
+  where 
+    connectString config="host='" <> (config & dbHost) <> "' port=" <> (config & dbPort) <> 
+        " dbname='" <> (config & dbName) <> "' user='" <> (config&dbUsername) <> "' password='" 
+        <> (config&dbUserPass) <> "'" 

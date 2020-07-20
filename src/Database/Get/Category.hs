@@ -38,11 +38,11 @@ getCategoriesTreeFromTop conn mbId mbParentId mbName = do
     query
       conn
       [sql|
-                SELECT id
-                FROM category
-                WHERE id = COALESCE(?, id)
-                AND parent_id = COALESCE(?, parent_id)
-                AND name = COALESCE(?, name)
+       SELECT id
+       FROM category
+       WHERE id = COALESCE(?, id)
+       AND (parent_id IS NULL OR parent_id = COALESCE(?, parent_id))
+       AND name = COALESCE(?, name)
                 |]
       (mbId, mbParentId, mbName)
   let rootCatgories = map fromOnly onlyRootCatgories

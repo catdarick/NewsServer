@@ -28,7 +28,6 @@ getToken conn queryString = do
     Right (requiredValues, optionalMaybeValues) -> do
       let [login, password] = requiredValues
       let passHash = (hash password)
-      print passHash
       res <- try $ DB.getMaybeUserId conn login passHash
       case res of
         Left (e :: SomeException) -> return (status400, errorResponse Err.smth)

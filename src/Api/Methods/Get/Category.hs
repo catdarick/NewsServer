@@ -39,7 +39,7 @@ getCategories conn queryString = do
       return (status200, payloadResponse categories)
   where
     requiredNames = []
-    requiredChecks = [isInt]
+    requiredChecks = []
     required = (requiredNames, requiredChecks)
     optionalNames = ["category_id", "parent_id", "name"]
     optionalChecks = [isInt, isInt, isNotEmpty]

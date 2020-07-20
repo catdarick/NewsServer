@@ -1,0 +1,317 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module MethodsTest.User where
+
+import           Api.Methods.Create.Account
+import           Api.Methods.Delete.User
+import           Api.Methods.Get.Token
+import           Api.Methods.Get.User
+import           Api.Types.Response
+import           Api.Types.User
+import           Config
+import           Control.Monad
+import           Control.Monad.Trans.Class      (MonadTrans (lift))
+import           Data.ByteString.Char8          (ByteString, pack)
+import           Data.Configurator              (load)
+import           Data.Configurator.Types        (Worth (Required))
+import           Data.Function                  ((&))
+import           Data.Maybe                     (fromJust)
+import           Data.Time.Calendar             (Day (ModifiedJulianDay))
+import           Data.Time.LocalTime            (LocalTime (LocalTime),
+                                                 midnight)
+import           Database.PostgreSQL.Simple
+import           Database.PostgreSQL.Transact   (DBT, getConnection)
+import           Migration.Create
+import           Network.HTTP.Types.Status      (status200, status400,
+                                                 status404)
+import           Test.Hspec                     (Spec, SpecWith, hspec)
+import           Test.Hspec.DB
+import           Test.Hspec.Expectations.Lifted
+
+spec :: Spec
+spec =
+  describeDB initDatabase "Methods.User: " $ do
+    createUser
+    createAdmin
+    createUserDuplicate
+    createAdminWithBadPass
+    createMissingLogin
+    createMissingPassword
+    createMissingFName
+    createMissingLName
+    getUsers_
+    getToken_
+    getById
+    getByLogin
+    getByFName
+    getByLName
+    deleteByUser
+    deleteByAdmin
+    getUsersAfterDelete
+
+createUser :: SpecWith TestDB
+createUser =
+  itDB "can create user" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query =
+      [ ("login", Just "user1")
+      , ("password", Just "testPass")
+      , ("first_name", Just "userFName")
+      , ("last_name", Just "userLName")
+      ]
+
+createAuthorUser :: SpecWith TestDB
+createAuthorUser =
+  itDB "can create user" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query =
+      [ ("login", Just "author")
+      , ("password", Just "testPass")
+      , ("first_name", Just "authorFName")
+      , ("last_name", Just "authorLName")
+      ]
+
+createUserAdminAuthorAccounts = do
+  createUser
+  createAdmin
+  createAuthorUser
+
+createAdmin :: SpecWith TestDB
+createAdmin =
+  itDB "can create admin" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config (query config)
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query config =
+      [ ("login", Just "admin")
+      , ("password", Just "testPass")
+      , ("first_name", Just "adminFName")
+      , ("last_name", Just "adminLName")
+      , ("admin_pass", Just $ config & globalAdminPass)
+      ]
+
+createUserDuplicate :: SpecWith TestDB
+createUserDuplicate =
+  itDB "can't create user with duplicate login" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query =
+      [ ("login", Just "user1")
+      , ("password", Just "testPass")
+      , ("first_name", Just "userFName")
+      , ("last_name", Just "userLName")
+      ]
+
+createMissingLogin :: SpecWith TestDB
+createMissingLogin =
+  itDB "can't create without required 'login' field" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query =
+      [ ("password", Just "testPass")
+      , ("first_name", Just "userFName")
+      , ("last_name", Just "userLName")
+      ]
+
+createMissingPassword :: SpecWith TestDB
+createMissingPassword =
+  itDB "can't create without required 'password' field" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query =
+      [ ("login", Just "user3")
+      , ("first_name", Just "userFName")
+      , ("last_name", Just "userLName")
+      ]
+
+createMissingFName :: SpecWith TestDB
+createMissingFName =
+  itDB "can't create without required 'first_name' field" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query =
+      [ ("login", Just "user3")
+      , ("password", Just "testPass")
+      , ("last_name", Just "userLName")
+      ]
+
+createMissingLName :: SpecWith TestDB
+createMissingLName =
+  itDB "can't create without required 'last_name' field" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query =
+      [ ("login", Just "user3")
+      , ("password", Just "testPass")
+      , ("first_name", Just "userFName")
+      ]
+
+createAdminWithBadPass :: SpecWith TestDB
+createAdminWithBadPass =
+  itDB "can't create admin with bad pass" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config (query config)
+    (status, resp & responseSuccess) `shouldBe` (status400, False)
+  where
+    query config =
+      [ ("login", Just "admin")
+      , ("password", Just "testPass")
+      , ("first_name", Just "adminFName")
+      , ("last_name", Just "adminLName")
+      , ("admin_pass", Just "incorrectPass")
+      ]
+
+getUsers_ :: SpecWith TestDB
+getUsers_ =
+  itDB "can get only two accounts (user and admin)" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testUser, testAdmin])
+  where
+    query = []
+
+getToken_ :: SpecWith TestDB
+getToken_ =
+  itDB "can get token" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getToken conn query
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query = [("login", Just "user1"), ("password", Just "testPass")]
+
+getById :: SpecWith TestDB
+getById =
+  itDB "can get by id" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testUser])
+  where
+    query = [("user_id", Just "1")]
+
+getByLogin :: SpecWith TestDB
+getByLogin =
+  itDB "can get by login" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testUser])
+  where
+    query = [("login", Just "user1")]
+
+getByFName :: SpecWith TestDB
+getByFName =
+  itDB "can get by first name" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testUser])
+  where
+    query = [("first_name", Just "userFName")]
+
+getByLName :: SpecWith TestDB
+getByLName =
+  itDB "can get by first name" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testUser])
+  where
+    query = [("last_name", Just "userLName")]
+
+deleteByUser :: SpecWith TestDB
+deleteByUser =
+  itDB "user can't delete account" $ do
+    conn <- getConnection
+    token <- getUserToken conn
+    (status, resp) <- lift $ deleteUser conn (query token)
+    (status, resp & responseSuccess) `shouldBe` (status404, False)
+  where
+    query token = [("user_id", Just "2"), ("token", Just token)]
+
+deleteByAdmin :: SpecWith TestDB
+deleteByAdmin =
+  itDB "admin can delete account" $ do
+    conn <- getConnection
+    token <- getAdminToken conn
+    (status, resp) <- lift $ deleteUser conn (query token)
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query token = [("user_id", Just "1"), ("token", Just token)]
+
+getUsersAfterDelete :: SpecWith TestDB
+getUsersAfterDelete =
+  itDB "can get only one account after delete (admin)" $ do
+    conn <- getConnection
+    (status, resp) <- lift $ getUsers conn query
+    (status, withDefTime_ (resp & responseResult)) `shouldBe`
+      (status200, Just [testAdmin])
+  where
+    query = []
+
+getUserToken :: Connection -> DBT IO ByteString
+getUserToken conn = do
+  (_, respToken) <- lift $ getToken conn query
+  return $ pack $ fromJust $respToken & responseResult
+  where
+    query = [("login", Just "user1"), ("password", Just "testPass")]
+
+getAdminToken :: Connection -> DBT IO ByteString
+getAdminToken conn = do
+  (_, respToken) <- lift $ getToken conn query
+  return $ pack $ fromJust $respToken & responseResult
+  where
+    query = [("login", Just "admin"), ("password", Just "testPass")]
+
+getAuthor1Token :: Connection -> DBT IO ByteString
+getAuthor1Token conn = do
+  (_, respToken) <- lift $ getToken conn query
+  return $ pack $ fromJust $respToken & responseResult
+  where
+    query = [("login", Just "admin"), ("password", Just "testPass")]
+
+getAuthor2Token :: Connection -> DBT IO ByteString
+getAuthor2Token = getAdminToken
+
+defTime = (LocalTime (ModifiedJulianDay 0) midnight)
+
+withDefTime user = user {userCreationTime = defTime}
+
+withDefTime_ = (fmap . fmap) withDefTime
+
+testUser = User 1 "user1" "userFName" "userLName" Nothing defTime False
+
+testAdmin = User 2 "admin" "adminFName" "adminLName" Nothing defTime True
+
+authorUser = User 3 "author" "authorFName" "authorLName" Nothing defTime False
+
+getConfig = do
+  cfgHandle <- lift $ load [Required "$(PWD)/app/server.cfg"]
+  lift $ parseConfig cfgHandle

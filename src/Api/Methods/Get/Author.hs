@@ -41,7 +41,7 @@ getAuthors conn queryString = do
       return (status200, payloadResponse authors)
   where
     requiredNames = []
-    requiredChecks = [isInt]
+    requiredChecks = []
     required = (requiredNames, requiredChecks)
     optionalNames =
       [ "author_id"

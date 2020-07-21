@@ -27,12 +27,11 @@ editDraft conn queryString = do
       let [token, draftId] = requiredValues
       let [title, content, categoryId, tagsId, mainPicture, pictures] =
             optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
       mbAuthorToken <- DB.getDraftAuthorToken conn (toInt draftId)
       case mbAuthorToken of
         [] -> return (status400, errorResponse Err.noDraft)
         [Only authorToken] ->
-          if authorToken == token || isAdmin
+          if authorToken == token 
             then do
               DB.editDraft
                 conn
@@ -43,7 +42,7 @@ editDraft conn queryString = do
                 mainPicture
                 (toStringList <$> pictures)
                 (toIntList <$> tagsId)
-              return (status400, okResponse)
+              return (status200, okResponse)
             else return (status403, errorResponse Err.noPerms)
   where
     requiredNames = ["token", "draft_id"]

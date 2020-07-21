@@ -68,14 +68,14 @@ getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn 
                 WHERE  (? IS NULL OR (? = ANY (foo.tags_id)))
                 AND (? IS NULL OR (? <@ (foo.tags_id)))
                 AND (? IS NULL OR (? && (foo.tags_id)))
-                ORDER BY CASE WHEN (foo.sort IS NULL) OR (foo.sort = 1)  THEN news_creation_time END ASC,
-                         CASE WHEN foo.sort = 2 THEN news_creation_time END DESC,
-                         CASE WHEN foo.sort = 3 THEN first_name END, last_name ASC,
-                         CASE WHEN foo.sort = 4 THEN first_name END, last_name DESC,
-                         CASE WHEN foo.sort = 5 THEN category_name END ASC,
-                         CASE WHEN foo.sort = 6 THEN category_name END DESC,
-                         CASE WHEN foo.sort = 7 THEN array_length(pictures,1) END ASC,
-                         CASE WHEN foo.sort = 8 THEN array_length(pictures,1) END DESC
+                ORDER BY CASE WHEN (foo.sort IS NULL) OR (foo.sort = 1)  THEN news_creation_time END DESC,
+                         CASE WHEN foo.sort = 2 THEN news_creation_time END ASC,
+                         CASE WHEN foo.sort = 3 THEN first_name END, last_name DESC,
+                         CASE WHEN foo.sort = 4 THEN first_name END, last_name ASC,
+                         CASE WHEN foo.sort = 5 THEN category_name END DESC,
+                         CASE WHEN foo.sort = 6 THEN category_name END ASC,
+                         CASE WHEN foo.sort = 7 THEN array_length(pictures,1) END DESC,
+                         CASE WHEN foo.sort = 8 THEN array_length(pictures,1) END ASC
                 |]
       ( mbSort
       , toTemplate mbTitle

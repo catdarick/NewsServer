@@ -64,25 +64,41 @@ createUser =
       , ("last_name", Just "userLName")
       ]
 
-createAuthorUser :: SpecWith TestDB
-createAuthorUser =
-  itDB "can create user" $ do
+createAuthor1Account :: SpecWith TestDB
+createAuthor1Account =
+  itDB "can create author1 account" $ do
     conn <- getConnection
     config <- getConfig
     (status, resp) <- lift $ createAccount conn config query
     (status, resp & responseSuccess) `shouldBe` (status200, True)
   where
     query =
-      [ ("login", Just "author")
+      [ ("login", Just "author1")
       , ("password", Just "testPass")
-      , ("first_name", Just "authorFName")
-      , ("last_name", Just "authorLName")
+      , ("first_name", Just "author1FName")
+      , ("last_name", Just "author1LName")
+      ]
+
+createAuthor2Account :: SpecWith TestDB
+createAuthor2Account =
+  itDB "can create author2 account" $ do
+    conn <- getConnection
+    config <- getConfig
+    (status, resp) <- lift $ createAccount conn config query
+    (status, resp & responseSuccess) `shouldBe` (status200, True)
+  where
+    query =
+      [ ("login", Just "author2")
+      , ("password", Just "testPass")
+      , ("first_name", Just "author2FName")
+      , ("last_name", Just "author2LName")
       ]
 
 createUserAdminAuthorAccounts = do
   createUser
   createAdmin
-  createAuthorUser
+  createAuthor1Account
+  createAuthor2Account
 
 createAdmin :: SpecWith TestDB
 createAdmin =
@@ -295,10 +311,15 @@ getAuthor1Token conn = do
   (_, respToken) <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
-    query = [("login", Just "admin"), ("password", Just "testPass")]
+    query = [("login", Just "author1"), ("password", Just "testPass")]
 
 getAuthor2Token :: Connection -> DBT IO ByteString
-getAuthor2Token = getAdminToken
+getAuthor2Token conn = do
+  (_, respToken) <- lift $ getToken conn query
+  return $ pack $ fromJust $respToken & responseResult
+  where
+    query = [("login", Just "author2"), ("password", Just "testPass")]
+
 
 defTime = (LocalTime (ModifiedJulianDay 0) midnight)
 
@@ -310,7 +331,9 @@ testUser = User 1 "user1" "userFName" "userLName" Nothing defTime False
 
 testAdmin = User 2 "admin" "adminFName" "adminLName" Nothing defTime True
 
-authorUser = User 3 "author" "authorFName" "authorLName" Nothing defTime False
+author1 = User 3 "author1" "author1FName" "author1LName" Nothing defTime False
+
+author2 = User 4 "author2" "author2FName" "author2LName" Nothing defTime False
 
 getConfig = do
   cfgHandle <- lift $ load [Required "$(PWD)/app/server.cfg"]

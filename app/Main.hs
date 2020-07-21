@@ -35,7 +35,7 @@ application conn config request respond = do
   (status, bsResponse) <-
     case path of
       ["createAccount"]  -> encoded $ createAccount conn config queryString_
-     {-  ["logIn"]          -> encoded $ getToken conn queryString_
+      ["logIn"]          -> encoded $ getToken conn queryString_
       ["createAuthor"]   -> encoded $ createAuthor conn queryString_
       ["createCategory"] -> encoded $ createCategory conn queryString_
       ["createTag"]      -> encoded $ createTag conn queryString_
@@ -58,7 +58,7 @@ application conn config request respond = do
       ["getAuthors"]     -> encoded $ getAuthors conn queryString_
       ["getNews"]        -> encoded $ getNews conn queryString_
       ["getDrafts"]      -> encoded $ getDrafts conn queryString_
-      ["getComments"]    -> encoded $ getComments conn queryString_ -}
+      ["getComments"]    -> encoded $ getComments conn queryString_
       smth               -> return (status404, "")
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse

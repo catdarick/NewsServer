@@ -32,8 +32,7 @@ createCategory conn queryString = do
         else do
           res <- try $ DB.addCategory conn name (toInt <$> parentId)
           case res of
-            Left (e :: SomeException) -> do
-              print e
+            Left (e :: SomeException) ->
               return (status400, errorResponse Err.smth)
             Right [] -> return $ (status400, errorResponse Err.noParrent)
             Right [Only id] -> return $ (status200, idResponse id)

@@ -38,8 +38,8 @@ spec =
   describeDB initDatabase "Methods.Author: " $ do
     User.createUserAdminAuthorAccounts
     createAuthorByUser
-    createAuthorByAdmin
-    createAuthorByAdmin2
+    createAuthor1ByAdmin
+    createAuthor2ByAdmin
     createMissingUserId
     createMissingToken
     getAuthors_
@@ -62,8 +62,8 @@ createAuthorByUser =
   where
     query token = [("user_id", Just "3"), ("token", Just token)]
 
-createAuthorByAdmin :: SpecWith TestDB
-createAuthorByAdmin =
+createAuthor1ByAdmin :: SpecWith TestDB
+createAuthor1ByAdmin =
   itDB "admin can create author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
@@ -76,8 +76,8 @@ createAuthorByAdmin =
       , ("description", Just "someDescription")
       ]
 
-createAuthorByAdmin2 :: SpecWith TestDB
-createAuthorByAdmin2 =
+createAuthor2ByAdmin :: SpecWith TestDB
+createAuthor2ByAdmin =
   itDB "admin can make himsel an author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
@@ -85,7 +85,7 @@ createAuthorByAdmin2 =
     (status, resp & responseSuccess) `shouldBe` (status200, True)
   where
     query token =
-      [ ("user_id", Just "2")
+      [ ("user_id", Just "4")
       , ("token", Just token)
       , ("description", Just "someDescription2")
       ]
@@ -111,11 +111,11 @@ createMissingToken =
 
 getAuthors_ :: SpecWith TestDB
 getAuthors_ =
-  itDB "get only two accounts (user and admin)" $ do
+  itDB "get only two aauthors" $ do
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
-      [testAuthor, testAuthor2]
+      [testAuthor1, testAuthor2]
   where
     query = []
 
@@ -125,7 +125,7 @@ getById =
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAuthor])
+      (status200, Just [testAuthor1])
   where
     query = [("author_id", Just "1")]
 
@@ -135,7 +135,7 @@ getByUserId =
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAuthor])
+      (status200, Just [testAuthor1])
   where
     query = [("user_id", Just "3")]
 
@@ -145,9 +145,9 @@ getByLogin =
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAuthor])
+      (status200, Just [testAuthor1])
   where
-    query = [("login", Just "author")]
+    query = [("login", Just "author1")]
 
 getByFName :: SpecWith TestDB
 getByFName =
@@ -155,9 +155,9 @@ getByFName =
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAuthor])
+      (status200, Just [testAuthor1])
   where
-    query = [("first_name", Just "authorFName")]
+    query = [("first_name", Just "author1FName")]
 
 getByLName :: SpecWith TestDB
 getByLName =
@@ -165,9 +165,9 @@ getByLName =
     conn <- getConnection
     (status, resp) <- lift $ getAuthors conn query
     (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAuthor])
+      (status200, Just [testAuthor1])
   where
-    query = [("last_name", Just "authorLName")]
+    query = [("last_name", Just "author1LName")]
 
 deleteByUser :: SpecWith TestDB
 deleteByUser =
@@ -206,6 +206,6 @@ withDefTime author@Author {authorUser = user} =
 
 withDefTime_ = (fmap . fmap) withDefTime
 
-testAuthor = Author 1 User.authorUser (Just "someDescription")
+testAuthor1 = Author 1 User.author1 (Just "someDescription")
 
-testAuthor2 = Author 2 User.testAdmin (Just "someDescription2")
+testAuthor2 = Author 2 User.author2 (Just "someDescription2")

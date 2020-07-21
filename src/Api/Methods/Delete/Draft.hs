@@ -28,16 +28,14 @@ deleteDraft conn queryString = do
       let [token, draftId] = requiredValues
       let [title, content, categoryId, tagsId, mainPicture, pictures] =
             optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
       mbAuthorToken <- DB.getDraftAuthorToken conn (toInt draftId)
-      print mbAuthorToken
       case mbAuthorToken of
         [] -> return (status400, errorResponse Err.noDraft)
         [Only authorToken] ->
-          if authorToken == token || isAdmin
+          if authorToken == token
             then do
               DB.deleteDraft conn (toInt draftId)
-              return (status400, okResponse)
+              return (status200, okResponse)
             else return (status403, errorResponse Err.noPerms)
   where
     requiredNames = ["token", "draft_id"]

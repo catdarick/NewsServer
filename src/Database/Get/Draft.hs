@@ -83,6 +83,7 @@ getDraftAuthorToken conn newsId =
     [sql|
         SELECT user_token.token FROM user_token, author, news
         WHERE news.id = ?
+        AND news.is_published = false
         AND news.author_id = author.id
         AND author.user_id = user_token.user_id
         |]

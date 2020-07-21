@@ -52,7 +52,6 @@ isDraftPublished conn newsId = do
         AND is_published=true
         |]
       (Only newsId)
-  print res
   case res of
     []               -> return False
     [id :: Only Int] -> return True

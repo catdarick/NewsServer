@@ -14,7 +14,7 @@ import qualified Database.Get.Comment             as DB
 import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status200, status400)
+import           Network.HTTP.Types               (status403, Status, status200, status400)
 
 deleteComment ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
@@ -36,7 +36,7 @@ deleteComment conn queryString = do
             [Only creatorId] ->
               if creatorId == userId
                 then deleteCommentAndReturnRes commentId
-                else return (status400, errorResponse Err.noPerms)
+                else return (status403, errorResponse Err.noPerms)
   where
     requiredNames = ["token", "comment_id"]
     requiredChecks = [isNotEmpty, isInt]

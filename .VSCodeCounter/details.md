@@ -1,10 +1,10 @@
 # Details
 
-Date : 2020-07-20 01:54:24
+Date : 2020-07-20 23:15:17
 
 Directory /home/darick/NewsServer
 
-Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
+Total : 109 files,  5074 codes, 397 comments, 701 blanks, all 6172 lines
 
 [summary](results.md)
 
@@ -13,7 +13,7 @@ Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
 | :--- | :--- | ---: | ---: | ---: | ---: |
 | [.gitattributes](/.gitattributes) | Properties | 1 | 1 | 1 | 3 |
 | [ChangeLog.md](/ChangeLog.md) | Markdown | 2 | 0 | 2 | 4 |
-| [NewsServer.cabal](/NewsServer.cabal) | Cabal | 203 | 5 | 7 | 215 |
+| [NewsServer.cabal](/NewsServer.cabal) | Cabal | 208 | 5 | 7 | 220 |
 | [NewsServer/.gitattributes](/NewsServer/.gitattributes) | Properties | 1 | 1 | 1 | 3 |
 | [NewsServer/README.md](/NewsServer/README.md) | Markdown | 1 | 0 | 2 | 3 |
 | [README.md](/README.md) | Markdown | 1 | 0 | 1 | 2 |
@@ -41,7 +41,7 @@ Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
 | [src/Api/Methods/Create/Account.hs](/src/Api/Methods/Create/Account.hs) | Haskell | 40 | 3 | 4 | 47 |
 | [src/Api/Methods/Create/Author.hs](/src/Api/Methods/Create/Author.hs) | Haskell | 39 | 2 | 4 | 45 |
 | [src/Api/Methods/Create/Category.hs](/src/Api/Methods/Create/Category.hs) | Haskell | 41 | 2 | 4 | 47 |
-| [src/Api/Methods/Create/Draft.hs](/src/Api/Methods/Create/Draft.hs) | Haskell | 47 | 2 | 4 | 53 |
+| [src/Api/Methods/Create/Draft.hs](/src/Api/Methods/Create/Draft.hs) | Haskell | 46 | 3 | 4 | 53 |
 | [src/Api/Methods/Create/Tag.hs](/src/Api/Methods/Create/Tag.hs) | Haskell | 40 | 2 | 4 | 46 |
 | [src/Api/Methods/Delete.hs](/src/Api/Methods/Delete.hs) | Haskell | 9 | 0 | 2 | 11 |
 | [src/Api/Methods/Delete/Author.hs](/src/Api/Methods/Delete/Author.hs) | Haskell | 40 | 2 | 4 | 46 |
@@ -63,7 +63,7 @@ Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
 | [src/Api/Methods/Get/Draft.hs](/src/Api/Methods/Get/Draft.hs) | Haskell | 63 | 3 | 4 | 70 |
 | [src/Api/Methods/Get/News.hs](/src/Api/Methods/Get/News.hs) | Haskell | 86 | 3 | 4 | 93 |
 | [src/Api/Methods/Get/Tag.hs](/src/Api/Methods/Get/Tag.hs) | Haskell | 39 | 3 | 4 | 46 |
-| [src/Api/Methods/Get/Token.hs](/src/Api/Methods/Get/Token.hs) | Haskell | 41 | 3 | 4 | 48 |
+| [src/Api/Methods/Get/Token.hs](/src/Api/Methods/Get/Token.hs) | Haskell | 40 | 3 | 4 | 47 |
 | [src/Api/Methods/Get/User.hs](/src/Api/Methods/Get/User.hs) | Haskell | 43 | 3 | 4 | 50 |
 | [src/Api/Methods/Post/Comment.hs](/src/Api/Methods/Post/Comment.hs) | Haskell | 39 | 2 | 4 | 45 |
 | [src/Api/Methods/Post/Draft.hs](/src/Api/Methods/Post/Draft.hs) | Haskell | 37 | 2 | 5 | 44 |
@@ -81,7 +81,7 @@ Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
 | [src/Database/Create/Author.hs](/src/Database/Create/Author.hs) | Haskell | 14 | 2 | 4 | 20 |
 | [src/Database/Create/Category.hs](/src/Database/Create/Category.hs) | Haskell | 26 | 3 | 4 | 33 |
 | [src/Database/Create/Comment.hs](/src/Database/Create/Comment.hs) | Haskell | 14 | 2 | 4 | 20 |
-| [src/Database/Create/Draft.hs](/src/Database/Create/Draft.hs) | Haskell | 74 | 4 | 7 | 85 |
+| [src/Database/Create/Draft.hs](/src/Database/Create/Draft.hs) | Haskell | 72 | 4 | 7 | 83 |
 | [src/Database/Create/Tag.hs](/src/Database/Create/Tag.hs) | Haskell | 14 | 3 | 4 | 21 |
 | [src/Database/Create/User.hs](/src/Database/Create/User.hs) | Haskell | 36 | 2 | 5 | 43 |
 | [src/Database/Delete/Author.hs](/src/Database/Delete/Author.hs) | Haskell | 14 | 2 | 4 | 20 |
@@ -114,6 +114,11 @@ Total : 104 files,  4090 codes, 272 comments, 598 blanks, all 4960 lines
 | [test/DatabaseTest/News.hs](/test/DatabaseTest/News.hs) | Haskell | 160 | 1 | 21 | 182 |
 | [test/DatabaseTest/Tag.hs](/test/DatabaseTest/Tag.hs) | Haskell | 75 | 1 | 11 | 87 |
 | [test/DatabaseTest/User.hs](/test/DatabaseTest/User.hs) | Haskell | 123 | 1 | 16 | 140 |
-| [test/Spec.hs](/test/Spec.hs) | Haskell | 20 | 0 | 4 | 24 |
+| [test/MethodsTest/Author.hs](/test/MethodsTest/Author.hs) | Haskell | 188 | 1 | 23 | 212 |
+| [test/MethodsTest/Category.hs](/test/MethodsTest/Category.hs) | Haskell | 170 | 1 | 17 | 188 |
+| [test/MethodsTest/Draft.hs](/test/MethodsTest/Draft.hs) | Haskell | 180 | 109 | 14 | 303 |
+| [test/MethodsTest/Tag.hs](/test/MethodsTest/Tag.hs) | Haskell | 163 | 1 | 15 | 179 |
+| [test/MethodsTest/User.hs](/test/MethodsTest/User.hs) | Haskell | 283 | 1 | 34 | 318 |
+| [test/Spec.hs](/test/Spec.hs) | Haskell | 19 | 11 | 4 | 34 |
 
 [summary](results.md)

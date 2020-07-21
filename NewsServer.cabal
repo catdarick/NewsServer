@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f25f779dc7579c9c160035a886eae204c8f6feab2a964161d35069baf3bea36
+-- hash: 216cca4167cdddf2f477cdbb548c710e89ac0df0c24271020e32b31d781b6c9c
 
 name:           NewsServer
 version:        0.1.0.0
@@ -181,7 +181,9 @@ test-suite NewsServer-test
       DatabaseTest.User
       MethodsTest.Author
       MethodsTest.Category
+      MethodsTest.Comment
       MethodsTest.Draft
+      MethodsTest.News
       MethodsTest.Tag
       MethodsTest.User
       Paths_NewsServer

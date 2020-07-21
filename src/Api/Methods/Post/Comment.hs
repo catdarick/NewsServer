@@ -15,7 +15,7 @@ import qualified Database.Create.Comment          as DB
 import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status400)
+import           Network.HTTP.Types               (status200, Status, status400)
 
 postComment ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
@@ -34,7 +34,7 @@ postComment conn queryString = do
           case res of
             Left (e :: SomeException) ->
               return (status400, errorResponse Err.noNews)
-            Right [Only commentId] -> return (status400, idResponse commentId)
+            Right [Only commentId] -> return (status200, idResponse commentId)
   where
     requiredNames = ["token", "news_id", "content"]
     requiredChecks = [isNotEmpty, isInt, isNotEmpty]

@@ -18,24 +18,14 @@ import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
 createTag ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 createTag conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
-  case eitherParameters of
-    Left error -> return (status404, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, name] = requiredValues
-      let [] = optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
-      if not isAdmin
-        then return (status404, badResoponse)
-        else do
-          res <- try $ DB.addTag conn name
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.tagExists)
-            Right [] -> return $ (status400, errorResponse Err.smth)
-            Right [Only id] -> return $ (status200, idResponse id)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, name] = requiredValues
+  let [] = optionalMaybeValues
+  DB.adminGuard conn token
+  id <- DB.addTag conn name
+  return $ idResponse id
   where
     requiredNames = ["token", "name"]
     requiredChecks = [isNotEmpty, isNotEmpty]
@@ -43,3 +33,4 @@ createTag conn queryString = do
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters404 required optional queryString

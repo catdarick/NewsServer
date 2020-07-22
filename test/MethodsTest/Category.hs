@@ -32,7 +32,10 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
+import Control.Exception (try)
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import           MethodsTest.Helper
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Category: " $ do
@@ -56,8 +59,8 @@ createCategoryByUser =
   itDB "user can't create category" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createCategory conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("name", Just "someName"), ("token", Just token)]
 
@@ -66,8 +69,8 @@ createCategoryByAdmin =
   itDB "admin can create category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createCategory conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName"), ("token", Just token)]
 
@@ -76,8 +79,8 @@ createChildCategoryByAdmin =
   itDB "admin can create child category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createCategory conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("name", Just "someName2")
@@ -90,8 +93,8 @@ createMissingName =
   itDB "admin can't create category without required 'name'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createCategory conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
 
@@ -99,8 +102,8 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create category without required 'token'" $ do
     conn <- getConnection
-    (status, resp) <- lift $ createCategory conn query 
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createCategory conn query 
+    withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query  = [("name", Just "someName")]
 

@@ -41,7 +41,7 @@ insert :: SpecWith TestDB
 insert =
   itDB "can insert (category)" $ do
     conn <- getConnection
-    [Only id] <- lift $ addCategory conn "testName" Nothing
+    id <- lift $ addCategory conn "testName" Nothing
     category <- lift $ getRootCategoriesTree conn
     category `shouldBe` [testCategory]
 
@@ -57,7 +57,7 @@ addChildAndGet :: SpecWith TestDB
 addChildAndGet =
   itDB "can add and get child" $ do
     conn <- getConnection
-    [Only id] <- lift $ addCategory conn "testChildName" (Just 1)
+    id <- lift $ addCategory conn "testChildName" (Just 1)
     category <- lift $ getRootCategoriesTree conn
     category `shouldBe` [testParentCategory]
 edit :: SpecWith TestDB

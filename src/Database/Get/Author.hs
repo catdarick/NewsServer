@@ -11,6 +11,10 @@ import           Database.Get.User
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import Control.Monad.Catch (MonadThrow(throwM))
+import Network.HTTP.Types (status403)
 
 getAuthors ::
      Connection
@@ -42,14 +46,18 @@ getAuthors conn mbAuthorId mbUserId mbLogin mbFName mbLName mbLimit mbOffset = d
       (mbAuthorId, mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset)
   return $ map tupleToAuthor res
 
-getAuthorId :: Connection -> Token -> IO [Only AuthorId]
-getAuthorId conn token =
-  query
-    conn
-    [sql|
-        SELECT author.id FROM user_token, user_account, author
-        WHERE user_token.token = ?
-        AND user_account.id = user_token.user_id
-        AND author.user_id = user_account.id
-        |]
-    (Only token)
+getAuthorIdOrThrow :: Connection -> Token -> IO AuthorId
+getAuthorIdOrThrow conn token = do
+  res <- 
+    query
+      conn
+      [sql|
+          SELECT author.id FROM user_token, user_account, author
+          WHERE user_token.token = ?
+          AND user_account.id = user_token.user_id
+          AND author.user_id = user_account.id
+          |]
+      (Only token)
+  case res of
+    [] -> throwM $ ErrorException status403 Err.notAuthor
+    [Only id] -> return id

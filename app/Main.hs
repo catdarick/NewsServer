@@ -28,48 +28,49 @@ import State.Types
 import           Data.Function               ((&))
 import Control.Monad.Trans.State (StateT(runStateT))
 import Control.Monad.Trans.Class (MonadTrans(lift))
+import           Api.ErrorException
+import Control.Monad.Catch (MonadThrow(throwM))
+import Control.Monad.Catch (MonadCatch(catch))
+import Data.ByteString (ByteString)
+callMethod conn config query path =  do
+  res <- case path of
+      ["createAccount"]  -> encode <$> createAccount conn config query
+      -- ["logIn"]          -> encode <$> getToken conn query
+      ["createAuthor"]   -> encode <$> createAuthor conn query
+      ["createCategory"] -> encode <$> createCategory conn query
+      ["createTag"]      -> encode <$> createTag conn query
+      ["createDraft"]    -> encode <$> createDraft conn query
+      -- ["postDraft"]      -> encode <$> postDraft conn queryString_
+      -- ["postComment"]    -> encode $ postComment conn queryString_
+      -- ["editAuthor"]     -> encode $ editAuthor conn queryString_
+      -- ["editCategory"]   -> encoded $ editCategory conn queryString_
+      -- ["editTag"]        -> encoded $ editTag conn queryString_
+      -- ["editDraft"]      -> encoded $ editDraft conn queryString_
+      ["deleteUser"]     -> encode <$> deleteUser conn query
+      -- ["deleteTag"]      -> encoded $ deleteTag conn queryString_
+      -- ["deleteDraft"]    -> encoded $ deleteDraft conn queryString_
+      -- ["deleteComment"]  -> encoded $ deleteComment conn queryString_
+      -- ["deleteCategory"] -> encoded $ deleteCategory conn queryString_
+      ["deleteAuthor"]   -> encode <$> deleteAuthor conn query
+      -- ["getUsers"]       -> encoded $ getUsers conn queryString_
+      -- ["getCategories"]  -> encoded $ getCategories conn queryString_
+      -- ["getTags"]        -> encoded $ getTags conn queryString_
+      -- ["getAuthors"]     -> encoded $ getAuthors conn queryString_
+      -- ["getNews"]        -> encoded $ getNews conn queryString_
+      -- ["getDrafts"]      -> encoded $ getDrafts conn queryString_
+      -- ["getComments"]    -> encoded $ getComments conn queryString_
+      smth               -> throwM $ ErrorException status404 ""
+  return (status200, res)
+
+
 application conn config request respond = do
-  --print request
-  let queryString_ = request & queryString
+  let query = request & queryString
   let path = request & pathInfo
-  (status, bsResponse) <-
-    case path of
-      ["createAccount"]  -> encoded $ createAccount conn config queryString_
-      ["logIn"]          -> encoded $ getToken conn queryString_
-      ["createAuthor"]   -> encoded $ createAuthor conn queryString_
-      ["createCategory"] -> encoded $ createCategory conn queryString_
-      ["createTag"]      -> encoded $ createTag conn queryString_
-      ["createDraft"]    -> encoded $ createDraft conn queryString_
-      ["postDraft"]      -> encoded $ postDraft conn queryString_
-      ["postComment"]    -> encoded $ postComment conn queryString_
-      ["editAuthor"]     -> encoded $ editAuthor conn queryString_
-      ["editCategory"]   -> encoded $ editCategory conn queryString_
-      ["editTag"]        -> encoded $ editTag conn queryString_
-      ["editDraft"]      -> encoded $ editDraft conn queryString_
-      ["deleteUser"]     -> encoded $ deleteUser conn queryString_
-      ["deleteTag"]      -> encoded $ deleteTag conn queryString_
-      ["deleteDraft"]    -> encoded $ deleteDraft conn queryString_
-      ["deleteComment"]  -> encoded $ deleteComment conn queryString_
-      ["deleteCategory"] -> encoded $ deleteCategory conn queryString_
-      ["deleteAuthor"]   -> encoded $ deleteAuthor conn queryString_
-      ["getUsers"]       -> encoded $ getUsers conn queryString_
-      ["getCategories"]  -> encoded $ getCategories conn queryString_
-      ["getTags"]        -> encoded $ getTags conn queryString_
-      ["getAuthors"]     -> encoded $ getAuthors conn queryString_
-      ["getNews"]        -> encoded $ getNews conn queryString_
-      ["getDrafts"]      -> encoded $ getDrafts conn queryString_
-      ["getComments"]    -> encoded $ getComments conn queryString_
-      smth               -> return (status404, "")
+  (status, bsResponse) <- catch (callMethod conn config query path) errorHandler
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse
-    --if (status == status404)
-    --  then ""
-    --  else bsResponse
-
   where
-    encoded f = do
-      (status, response) <- f
-      return (status, encode response)
+    errorHandler (ErrorException status error) = return $ (status, encode $ errorResponse2 error)
 
 main = do
   eitherCfg <- try $ load [Required "$(PWD)/app/server.cfg"]
@@ -77,19 +78,19 @@ main = do
     Left (e :: SomeException) -> print "Can't find config file" >> print e
     Right handleConfig -> do
       config <- parseConfig handleConfig
-      
+
       conn <-
         connectPostgreSQL $ connectString config
 
-      run 3000 $ (application conn config)  
-      
-  
-  
+      run 3000 $ (application conn config)
+
+
+
   --initDatabase conn
 
-  
+
   return ()
-  where 
-    connectString config="host='" <> (config & dbHost) <> "' port=" <> (config & dbPort) <> 
-        " dbname='" <> (config & dbName) <> "' user='" <> (config&dbUsername) <> "' password='" 
-        <> (config&dbUserPass) <> "'" 
+  where
+    connectString config="host='" <> (config & dbHost) <> "' port=" <> (config & dbPort) <>
+        " dbname='" <> (config & dbName) <> "' user='" <> (config&dbUsername) <> "' password='"
+        <> (config&dbUserPass) <> "'"

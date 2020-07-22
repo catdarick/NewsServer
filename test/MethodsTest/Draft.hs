@@ -37,7 +37,10 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
+import Control.Exception (try)
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import           MethodsTest.Helper
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Draft: " $ do
@@ -69,8 +72,8 @@ createDraftByUser =
   itDB "user can't create draft" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createDraft conn (query token)
+    res `shouldBe` (Left $ ErrorException status403 Err.notAuthor)
   where
     query token =
       [ ("title", Just "someTitle1")
@@ -85,8 +88,8 @@ createDraftByAuthor1 =
   itDB "author1 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("title", Just "someTitle1")
@@ -101,8 +104,8 @@ createDraftByAuthor2 =
   itDB "author2 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("title", Just "someTitle2")
@@ -117,8 +120,8 @@ createDraftMissingTitle =
   itDB "can't create draft without required 'title'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createDraft conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
       [ ("content", Just "someContent2")
@@ -132,8 +135,8 @@ createDraftMissingContent =
   itDB "can't create draft without required 'content'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createDraft conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
       [ ("title", Just "someTitle2")
@@ -147,8 +150,8 @@ createDraftMissingCategory =
   itDB "can't create draft without required 'category_id'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createDraft conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
       [ ("title", Just "someTitle2")
@@ -162,8 +165,8 @@ createDraftMissingToken =
   itDB "can't create draft without required 'token'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createDraft conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
       [ ("title", Just "someTitle2")

@@ -41,7 +41,7 @@ insert :: SpecWith TestDB
 insert =
   itDB "can insert" $ do
     conn <- getConnection
-    [Only id] <- lift $ addTestUser conn
+    id <- lift $ addTestUser conn
     user <- lift $ getUsers conn Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime  <$> user) `shouldBe` [testUser]
 
@@ -119,21 +119,5 @@ delete :: SpecWith TestDB
 delete =
   itDB "delete" $ do
     conn <- getConnection
-    amount <- lift $ deleteUser conn 1
-    amount `shouldBe` 1
-
-getBy =
-  itDB "can get by login" $ do
-    conn <- getConnection
-    user <-
-      lift $
-      getUsers conn Nothing (Just "testLogin") Nothing Nothing Nothing Nothing
-    user `shouldBe` [testUser]
-
-getByBad =
-  itDB "get empty with incorrect login" $ do
-    conn <- getConnection
-    user <-
-      lift $
-      getUsers conn Nothing (Just "badLogin") Nothing Nothing Nothing Nothing
-    user `shouldBe` []
+    res <- lift $ deleteUser conn 1
+    res `shouldBe` ()

@@ -6,11 +6,11 @@ import           Data.ByteString           (ByteString)
 import           Network.HTTP.Types.Status (Status)
 
 data ErrorException =
-  MyException
+  ErrorException
     { status   :: Status
     , excError :: ByteString
     }
-  deriving (Show)
+  deriving (Eq,Show)
 
 instance Exception ErrorException
 
@@ -18,4 +18,4 @@ fromException :: ErrorException -> (Status, ByteString)
 fromException exc = (status exc, excError exc)
 
 toException :: (Status, ByteString) -> ErrorException
-toException (status, err) = MyException {status=status, excError = err}
+toException (status, err) = ErrorException {status=status, excError = err}

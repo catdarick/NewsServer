@@ -1,20 +1,31 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Database.Create.Tag where
 
+import           Api.ErrorException
+import qualified Api.Methods.Errors               as Err
+import           Api.Types
+import           Control.Exception                (SomeException, try)
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Api.Types
+import           Network.HTTP.Types               (status400)
 
-addTag :: Connection -> Name -> IO [Only TagId]
-addTag conn name =
-  query
-    conn
-    [sql|
-              INSERT INTO tag (name)
-              VALUES (?) RETURNING id
-              |]
-    (Only name)
+addTag :: Connection -> Name -> IO TagId
+addTag conn name = do
+  res <-
+    try $
+    query
+      conn
+      [sql|
+       INSERT INTO tag (name)
+       VALUES (?) RETURNING id
+       |]
+      (Only name)
+  case res of
+    Left (e :: SomeException) -> throwM $ ErrorException status400 Err.tagExists
+    Right [Only id] -> return id

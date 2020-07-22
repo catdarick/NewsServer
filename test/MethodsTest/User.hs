@@ -2,13 +2,19 @@
 
 module MethodsTest.User where
 
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import           MethodsTest.Helper
+
 import           Api.Methods.Create.Account
 import           Api.Methods.Delete.User
 import           Api.Methods.Get.Token
 import           Api.Methods.Get.User
 import           Api.Types.Response
+import           Api.Types.Response
 import           Api.Types.User
 import           Config
+import           Control.Exception              (try)
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.ByteString.Char8          (ByteString, pack)
@@ -54,8 +60,8 @@ createUser =
   itDB "can create user" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAccount conn config query
+    (resp & responseSuccess) `shouldBe` True
   where
     query =
       [ ("login", Just "user1")
@@ -69,8 +75,8 @@ createAuthor1Account =
   itDB "can create author1 account" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAccount conn config query
+    (resp & responseSuccess) `shouldBe` True
   where
     query =
       [ ("login", Just "author1")
@@ -84,8 +90,8 @@ createAuthor2Account =
   itDB "can create author2 account" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAccount conn config query
+    (resp & responseSuccess) `shouldBe` True
   where
     query =
       [ ("login", Just "author2")
@@ -105,8 +111,8 @@ createAdmin =
   itDB "can create admin" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config (query config)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAccount conn config (query config)
+    (resp & responseSuccess) `shouldBe` True
   where
     query config =
       [ ("login", Just "admin")
@@ -121,8 +127,8 @@ createUserDuplicate =
   itDB "can't create user with duplicate login" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config query
+    res `shouldBe` (Left $ ErrorException status400 Err.loginBusy)
   where
     query =
       [ ("login", Just "user1")
@@ -136,8 +142,8 @@ createMissingLogin =
   itDB "can't create without required 'login' field" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config query
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query =
       [ ("password", Just "testPass")
@@ -150,8 +156,8 @@ createMissingPassword =
   itDB "can't create without required 'password' field" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config query
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query =
       [ ("login", Just "user3")
@@ -164,8 +170,8 @@ createMissingFName =
   itDB "can't create without required 'first_name' field" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config query
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query =
       [ ("login", Just "user3")
@@ -178,8 +184,8 @@ createMissingLName =
   itDB "can't create without required 'last_name' field" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config query
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config query
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query =
       [ ("login", Just "user3")
@@ -192,8 +198,8 @@ createAdminWithBadPass =
   itDB "can't create admin with bad pass" $ do
     conn <- getConnection
     config <- getConfig
-    (status, resp) <- lift $ createAccount conn config (query config)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createAccount conn config (query config)
+    withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query config =
       [ ("login", Just "admin")
@@ -267,8 +273,8 @@ deleteByUser =
   itDB "user can't delete account" $ do
     conn <- getConnection
     token <- getUserToken conn
-    (status, resp) <- lift $ deleteUser conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ deleteUser conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("user_id", Just "2"), ("token", Just token)]
 
@@ -277,8 +283,8 @@ deleteByAdmin =
   itDB "admin can delete account" $ do
     conn <- getConnection
     token <- getAdminToken conn
-    (status, resp) <- lift $ deleteUser conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteUser conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("user_id", Just "1"), ("token", Just token)]
 
@@ -319,7 +325,6 @@ getAuthor2Token conn = do
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "author2"), ("password", Just "testPass")]
-
 
 defTime = (LocalTime (ModifiedJulianDay 0) midnight)
 

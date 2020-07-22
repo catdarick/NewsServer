@@ -18,24 +18,14 @@ import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
 deleteUser ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 deleteUser conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
-  case eitherParameters of
-    Left error -> return (status404, badResoponse)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, userId] = requiredValues
-      let [] = optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
-      if not isAdmin
-        then return (status404, badResoponse)
-        else do
-          res <- try $ DB.deleteUser conn (toInt userId)
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.smth)
-            Right 0 -> return (status400, errorResponse Err.noUser)
-            Right 1 -> return (status200, okResponse)
+   (requiredValues, optionalMaybeValues) <- parameters
+   let [token, userId] = requiredValues
+   let [] = optionalMaybeValues
+   DB.adminGuard conn token
+   DB.deleteUser conn (toInt userId)
+   return okResponse
   where
     requiredNames = ["token", "user_id"]
     requiredChecks = [isNotEmpty, isInt]
@@ -43,3 +33,4 @@ deleteUser conn queryString = do
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters404 required optional queryString

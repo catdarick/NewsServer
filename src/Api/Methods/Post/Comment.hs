@@ -20,7 +20,7 @@ import           Network.HTTP.Types               (status200, Status, status400)
 postComment ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
 postComment conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
+  let eitherParameters = checkAndGetParametersEither required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do

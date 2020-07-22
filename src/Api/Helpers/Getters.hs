@@ -3,7 +3,7 @@
 module Api.Helpers.Getters where
 
 import           Api.Helpers.Checks
-
+import           Api.ErrorException
 import           Api.Types
 import           Data.ByteString       (ByteString, length)
 import           Data.ByteString.Char8 (unpack)
@@ -12,13 +12,24 @@ import           Data.Maybe            (fromMaybe, isJust, isNothing)
 import           Data.Text.Encoding    (decodeUtf8)
 import           Data.Time.LocalTime   (LocalTime)
 import           System.Random         (Random (randomRIO))
-
-checkAndGetParameters ::
+import Control.Monad.Catch (MonadThrow(throwM))
+import Network.HTTP.Types (status404, status400)
+checkAndGetParameters required optional query = do
+  let res =  checkAndGetParametersEither required optional query
+  case res of
+    Left error -> throwM $ ErrorException status400 error
+    Right values -> return values
+checkAndGetParameters404 required optional query = do
+  let res =  checkAndGetParametersEither required optional query
+  case res of
+    Left error -> throwM $ ErrorException status404 ""
+    Right values -> return values
+checkAndGetParametersEither ::
      ([FieldName], [CheckPredicat])
   -> ([FieldName], [CheckPredicat])
   -> [(FieldName, Maybe ByteString)]
   -> Either Error ([RequiredParam], [OptionalParam])
-checkAndGetParameters (requiredNames, requiredChecks) (optionalNames, optionalChecks) queryString = do
+checkAndGetParametersEither (requiredNames, requiredChecks) (optionalNames, optionalChecks) queryString = do
   requiredValues <- getRequiredParams requiredNames queryString
   let optionalMaybeValues = getOptionalParams optionalNames queryString
   let requiredPair = zip requiredNames requiredValues

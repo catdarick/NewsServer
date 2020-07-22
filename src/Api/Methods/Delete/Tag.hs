@@ -20,15 +20,15 @@ import           Network.HTTP.Types               (Status, status200, status400,
 deleteTag ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
 deleteTag conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
+  let eitherParameters = checkAndGetParametersEither required optional queryString
   case eitherParameters of
-    Left error -> return (status404, badResoponse)
+    Left error -> return (status404, badResponse)
     Right (requiredValues, optionalMaybeValues) -> do
       let [token, tagId] = requiredValues
       let [] = optionalMaybeValues
       isAdmin <- DB.isAdminToken conn token
       if not isAdmin
-        then return (status404, badResoponse)
+        then return (status404, badResponse)
         else do
           res <- try $ DB.deleteTag conn (toInt tagId)
           case res of

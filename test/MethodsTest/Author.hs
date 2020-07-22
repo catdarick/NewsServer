@@ -32,7 +32,10 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
+import Control.Exception (try)
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import           MethodsTest.Helper
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Author: " $ do
@@ -57,8 +60,8 @@ createAuthorByUser =
   itDB "user can't create author" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createAuthor conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("user_id", Just "3"), ("token", Just token)]
 
@@ -67,8 +70,8 @@ createAuthor1ByAdmin =
   itDB "admin can create author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAuthor conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("user_id", Just "3")
@@ -81,8 +84,8 @@ createAuthor2ByAdmin =
   itDB "admin can make himsel an author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createAuthor conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("user_id", Just "4")
@@ -95,8 +98,8 @@ createMissingUserId =
   itDB "admin can't create author without required 'user_id'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createAuthor conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
 
@@ -104,8 +107,8 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create author without required 'token'" $ do
     conn <- getConnection
-    (status, resp) <- lift $ createAuthor conn query
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createAuthor conn query
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query = [("user_id", Just "1")]
 
@@ -174,8 +177,8 @@ deleteByUser =
   itDB "user can't delete author" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ deleteAuthor conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("author_id", Just "1"), ("token", Just token)]
 
@@ -184,8 +187,8 @@ deleteByAdmin =
   itDB "admin can delete account" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ deleteAuthor conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteAuthor conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("author_id", Just "1"), ("token", Just token)]
 

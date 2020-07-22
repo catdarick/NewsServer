@@ -18,23 +18,14 @@ import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
 createAuthor ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 createAuthor conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
-  case eitherParameters of
-    Left error -> return (status404, badResoponse)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, userId] = requiredValues
-      let [description] = optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
-      if not isAdmin
-        then return (status404, badResoponse)
-        else do
-          res <- try $ DB.addAuthor conn (toInt userId) description
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.alreadyAuthor)
-            Right [Only id] -> return (status200, idResponse id)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, userId] = requiredValues
+  let [description] = optionalMaybeValues
+  DB.adminGuard conn token
+  id <- DB.addAuthor conn (toInt userId) description
+  return $ idResponse id
   where
     requiredNames = ["token", "user_id"]
     requiredChecks = [isNotEmpty, isInt]
@@ -42,3 +33,4 @@ createAuthor conn queryString = do
     optionalNames = ["description"]
     optionalChecks = [isNotEmpty]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters404 required optional queryString

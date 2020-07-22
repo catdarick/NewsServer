@@ -47,6 +47,7 @@ dependencies:
 - hspec
 - hspec-expectations
 - hspec-expectations-lifted
+- exceptions
 library:
   source-dirs: src
 

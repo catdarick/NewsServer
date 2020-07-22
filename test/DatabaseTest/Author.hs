@@ -46,7 +46,7 @@ insert :: SpecWith TestDB
 insert =
   itDB "can insert (author)" $ do
     conn <- getConnection
-    [Only id] <- addTestUser conn
+    addTestUser conn
     addTestAuthor conn
     author <-
       lift $
@@ -205,7 +205,7 @@ delete =
   itDB "delete" $ do
     conn <- getConnection
     amount <- lift $ deleteAuthor conn 1
-    amount `shouldBe` 1
+    amount `shouldBe` ()
 
 
 defTime = LocalTime (ModifiedJulianDay 0) midnight

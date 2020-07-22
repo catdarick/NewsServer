@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 216cca4167cdddf2f477cdbb548c710e89ac0df0c24271020e32b31d781b6c9c
+-- hash: 33c0bdc13073720d85a6f296ab1bd3514eeba9cf9ac04b8ede7225f4f4524994
 
 name:           NewsServer
 version:        0.1.0.0
@@ -112,6 +112,7 @@ library
     , configurator
     , containers
     , cryptohash
+    , exceptions
     , hspec
     , hspec-expectations
     , hspec-expectations-lifted
@@ -149,6 +150,7 @@ executable NewsServer-exe
     , configurator
     , containers
     , cryptohash
+    , exceptions
     , hspec
     , hspec-expectations
     , hspec-expectations-lifted
@@ -183,6 +185,7 @@ test-suite NewsServer-test
       MethodsTest.Category
       MethodsTest.Comment
       MethodsTest.Draft
+      MethodsTest.Helper
       MethodsTest.News
       MethodsTest.Tag
       MethodsTest.User
@@ -201,6 +204,7 @@ test-suite NewsServer-test
     , configurator
     , containers
     , cryptohash
+    , exceptions
     , hspec
     , hspec-expectations
     , hspec-expectations-lifted

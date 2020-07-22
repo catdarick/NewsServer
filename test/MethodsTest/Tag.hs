@@ -32,7 +32,10 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
+import Control.Exception (try)
+import           Api.ErrorException
+import qualified Api.Methods.Errors             as Err
+import           MethodsTest.Helper
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Tag: " $ do
@@ -56,8 +59,8 @@ createTagByUser =
   itDB "user can't create tag" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ createTag conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createTag conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("name", Just "someName1"), ("token", Just token)]
 
@@ -66,8 +69,8 @@ createFirstTagByAdmin =
   itDB "admin can create tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createTag conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName1"), ("token", Just token)]
 
@@ -76,8 +79,8 @@ createSecondTagByAdmin =
   itDB "admin can create one more tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ createTag conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("name", Just "someName2")
@@ -89,8 +92,8 @@ createDuplicateTag =
   itDB "admin can't create duplicate tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- lift $ try $ createTag conn (query token)
+    res `shouldBe` (Left $ ErrorException status400 Err.tagExists)
   where
     query token =
       [ ("name", Just "someName2")
@@ -101,8 +104,8 @@ createMissingName =
   itDB "admin can't create tag without required 'name'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createTag conn (query token)
+    withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
 
@@ -110,8 +113,8 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create tag without required 'token'" $ do
     conn <- getConnection
-    (status, resp) <- lift $ createTag conn query 
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ createTag conn query
+    withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query  = [("name", Just "someName3")]
 

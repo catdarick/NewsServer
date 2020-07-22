@@ -22,7 +22,7 @@ getDrafts ::
   -> [(ByteString, Maybe ByteString)]
   -> IO (Status, Response [News])
 getDrafts conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
+  let eitherParameters = checkAndGetParametersEither required optional queryString
   case eitherParameters of
     Left error -> return (status400, errorResponse error)
     Right (requiredValues, optionalMaybeValues) -> do

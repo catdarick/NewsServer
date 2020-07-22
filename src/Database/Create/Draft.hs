@@ -5,9 +5,11 @@
 
 module Database.Create.Draft where
 
+import           Api.ErrorException
 import qualified Api.Methods.Errors               as Err
 import           Api.Types
 import           Control.Exception                (SomeException, try)
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Data.ByteString                  (ByteString)
 import           Data.Int                         (Int64)
 import           Data.Vector                      (fromList)
@@ -15,6 +17,7 @@ import           Database.Delete.Draft
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, executeMany, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           Network.HTTP.Types.Status        (status400)
 
 addDraftWithTags ::
      Connection
@@ -25,19 +28,15 @@ addDraftWithTags ::
   -> Maybe Picture
   -> Maybe [Picture]
   -> Maybe [TagId]
-  -> IO (Either ByteString [Only NewsId])
+  -> IO NewsId
 addDraftWithTags conn authorId title content caregoryId mbPicture mbPictures mbTagsId = do
-  resAddNews <-
-    try $ addDraft conn authorId title content caregoryId mbPicture mbPictures
-  case resAddNews of
-    Left (e :: SomeException) -> return $ Left Err.noCategory
-    Right [Only id] -> do
-      resAddTags <- try $ addDraftTags conn id mbTagsId
-      case resAddTags of
-        Left (e :: SomeException) -> do
-          deleteDraft conn id
-          return $ Left Err.badTags
-        Right _ -> return $ Right [Only id]
+  id <- addDraft conn authorId title content caregoryId mbPicture mbPictures
+  resAddTags <- try $ addDraftTags conn id mbTagsId
+  case resAddTags of
+    Left (e :: ErrorException) -> do
+      deleteDraft conn id
+      throwM e
+    Right _ -> return id
 
 addDraft ::
      Connection
@@ -47,29 +46,41 @@ addDraft ::
   -> CategoryId
   -> Maybe Picture
   -> Maybe [Picture]
-  -> IO [Only NewsId]
-addDraft conn authorId title content caregoryId mbPicture mbPictures =
-  query
-    conn
-    [sql|
-        INSERT INTO news
-        (author_id, title, content, category_id, main_picture, pictures, is_published)
-        VALUES (?,?,?,?,?,?, false) RETURNING id|]
-    (authorId, title, content, caregoryId, mbPicture, fromList <$> mbPictures)
+  -> IO NewsId
+addDraft conn authorId title content caregoryId mbPicture mbPictures = do
+  res <-
+    try $
+    query
+      conn
+      [sql|
+          INSERT INTO news
+          (author_id, title, content, category_id, main_picture, pictures, is_published)
+          VALUES (?,?,?,?,?,?, false) RETURNING id|]
+      (authorId, title, content, caregoryId, mbPicture, fromList <$> mbPictures)
+  case res of
+    Left (e :: SomeException) ->
+      throwM $ ErrorException status400 Err.noCategory
+    Right [Only id] -> return id
 
-addDraftTags :: Connection -> NewsId -> Maybe [TagId] -> IO Int64
+addDraftTags :: Connection -> NewsId -> Maybe [TagId] -> IO ()
 addDraftTags conn news_id mbTagsId =
   case mbTagsId of
-    Nothing -> return 1
+    Nothing -> return ()
     Just tagsId -> do
       let rows = map (news_id, ) tagsId
-      executeMany
-        conn
-        [sql|
-              INSERT INTO news_tag
-              (news_id, tag_id)
-              VALUES (?,?)|]
-        rows
+      res <-
+        try $
+        executeMany
+          conn
+          [sql|
+                  INSERT INTO news_tag
+                  (news_id, tag_id)
+                  VALUES (?,?)|]
+          rows
+      case res of
+        Left (e :: SomeException) ->
+          throwM $ ErrorException status400 Err.badTags
+        Right _ -> return ()
 
 publishDraft :: Connection -> NewsId -> IO Int64
 publishDraft conn newsId =

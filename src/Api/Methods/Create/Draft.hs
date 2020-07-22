@@ -13,35 +13,25 @@ import qualified Database.Create.Draft            as DB
 import qualified Database.Get.Author              as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (status200, Status, status400)
+import           Network.HTTP.Types               (Status, status200, status400)
 
-createDraft ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+createDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 createDraft conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, title, content, categoryId] = requiredValues
-      let [tagsId, mainPicture, pictures] = optionalMaybeValues
-      maybeAuthorId <- DB.getAuthorId conn token
-      --print maybeAuthorId
-      case maybeAuthorId of
-        [] -> return (status400, errorResponse Err.notAuthor)
-        [Only authorId] -> do
-          res <-
-            DB.addDraftWithTags
-              conn
-              authorId
-              title
-              content
-              (toInt categoryId)
-              mainPicture
-              (toStringList <$> pictures)
-              (toIntList <$> tagsId)
-          case res of
-            Left err        -> return (status400, errorResponse err)
-            Right [Only id] -> return (status200, idResponse id)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, title, content, categoryId] = requiredValues
+  let [tagsId, mainPicture, pictures] = optionalMaybeValues
+  authorId <- DB.getAuthorIdOrThrow conn token
+  id <-
+    DB.addDraftWithTags
+      conn
+      authorId
+      title
+      content
+      (toInt categoryId)
+      mainPicture
+      (toStringList <$> pictures)
+      (toIntList <$> tagsId)
+  return $ idResponse id
   where
     requiredNames = ["token", "title", "content", "category_id"]
     requiredChecks =
@@ -50,3 +40,4 @@ createDraft conn queryString = do
     optionalNames = ["tags_id", "main_picture", "pictures"]
     optionalChecks = [isIntList, isNotEmpty, isNotEmptyTextList]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

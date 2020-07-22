@@ -18,24 +18,14 @@ import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
 createCategory ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 createCategory conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
-  case eitherParameters of
-    Left error -> return (status404, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, name] = requiredValues
-      let [parentId] = optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
-      if not isAdmin
-        then return (status404, badResoponse)
-        else do
-          res <- try $ DB.addCategory conn name (toInt <$> parentId)
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.smth)
-            Right [] -> return $ (status400, errorResponse Err.noParrent)
-            Right [Only id] -> return $ (status200, idResponse id)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, name] = requiredValues
+  let [parentId] = optionalMaybeValues
+  DB.adminGuard conn token
+  id <- DB.addCategory conn name (toInt <$> parentId)
+  return $ idResponse id
   where
     requiredNames = ["token", "name"]
     requiredChecks = [isNotEmpty, isNotEmpty]
@@ -43,3 +33,4 @@ createCategory conn queryString = do
     optionalNames = ["parent_id"]
     optionalChecks = [isInt]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters404 required optional queryString

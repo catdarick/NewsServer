@@ -20,15 +20,15 @@ import           Network.HTTP.Types               (Status, status200, status400,
 editAuthor ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
 editAuthor conn queryString = do
-  let eitherParameters = checkAndGetParameters required optional queryString
+  let eitherParameters = checkAndGetParametersEither required optional queryString
   case eitherParameters of
-    Left error -> return (status404, badResoponse)
+    Left error -> return (status404, badResponse)
     Right (requiredValues, optionalMaybeValues) -> do
       let [token, authorId] = requiredValues
       let [description] = optionalMaybeValues
       isAdmin <- DB.isAdminToken conn token
       if not isAdmin
-        then return (status404, badResoponse)
+        then return (status404, badResponse)
         else do
           res <- try $ DB.editAuthor conn (toInt authorId) description
           case res of

@@ -15,26 +15,16 @@ import qualified Database.Create.Comment          as DB
 import qualified Database.Get.User                as DB
 import           Database.PostgreSQL.Simple       (Connection)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (status200, Status, status400)
+import           Network.HTTP.Types               (Status, status200, status400)
 
-postComment ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+postComment :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 postComment conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, newsId, content] = requiredValues
-      let [] = optionalMaybeValues
-      maybeUserIdAndPriv <- DB.getMaybeUserIdAndPriv conn token
-      case maybeUserIdAndPriv of
-        [] -> return (status400, errorResponse Err.badToken)
-        [(userId, _)] -> do
-          res <- try $ DB.addComment conn (toInt newsId) userId content
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.noNews)
-            Right [Only commentId] -> return (status200, idResponse commentId)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, newsId, content] = requiredValues
+  let [] = optionalMaybeValues
+  userId <- DB.getUserId conn token
+  id <- DB.addComment conn (toInt newsId) userId content
+  return $ idResponse id
   where
     requiredNames = ["token", "news_id", "content"]
     requiredChecks = [isNotEmpty, isInt, isNotEmpty]
@@ -42,3 +32,4 @@ postComment conn queryString = do
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

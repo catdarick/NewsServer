@@ -18,23 +18,14 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
 getComments ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Comment])
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Comment])
 getComments conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [newsId] = requiredValues
-      let [mbLimit, mbOffset] = optionalMaybeValues
-      comments <-
-        DB.getComments
-          conn
-          (toInt newsId)
-          (toInt <$> mbLimit)
-          (toInt <$> mbOffset)
-      return (status200, payloadResponse comments)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [newsId] = requiredValues
+  let [mbLimit, mbOffset] = optionalMaybeValues
+  comments <-
+    DB.getComments conn (toInt newsId) (toInt <$> mbLimit) (toInt <$> mbOffset)
+  return $ payloadResponse comments
   where
     requiredNames = ["news_id"]
     requiredChecks = [isInt]
@@ -42,3 +33,4 @@ getComments conn queryString = do
     optionalNames = ["limit", "offset"]
     optionalChecks = [isIntBetween 1 200, isInt]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

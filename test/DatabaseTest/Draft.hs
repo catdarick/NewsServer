@@ -52,7 +52,7 @@ spec =
     getByBadContentSearch
     edit
     post
-    delete
+  
 
 insert :: SpecWith TestDB
 insert =
@@ -211,7 +211,7 @@ delete =
   itDB "delete" $ do
     conn <- getConnection
     amount <- lift $ deleteDraft conn 1
-    amount `shouldBe` 1
+    amount `shouldBe` ()
 
 getAllDrafts conn a b c d e f =
   lift $getDrafts conn "token" a b c d e f Nothing Nothing

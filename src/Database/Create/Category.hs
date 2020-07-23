@@ -36,5 +36,5 @@ addCategory conn name parentId = do
           |]
           (name, parentId, parentId)
   case res of
-    []        -> throwM $ ErrorException status400 Err.noParrent
+    []        -> throwM $ ErrorException status400 Err.noParent
     [Only id] -> return id

@@ -83,4 +83,4 @@ delete =
   itDB "delete" $ do
     conn <- getConnection
     amount <- lift $ deleteTag conn 1
-    amount `shouldBe` 1
+    amount `shouldBe` ()

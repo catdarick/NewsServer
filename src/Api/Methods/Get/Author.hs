@@ -17,28 +17,23 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
 getAuthors ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Author])
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Author])
 getAuthors conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [] = requiredValues
-      let [mbAuthorId, mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset] =
-            optionalMaybeValues
-      authors <-
-        DB.getAuthors
-          conn
-          (toInt <$> mbAuthorId)
-          (toInt <$> mbUserId)
-          mbLogin
-          mbFName
-          mbLName
-          (toInt <$> mbLimit)
-          (toInt <$> mbOffset)
-      return (status200, payloadResponse authors)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [] = requiredValues
+  let [mbAuthorId, mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset] =
+        optionalMaybeValues
+  authors <-
+    DB.getAuthors
+      conn
+      (toInt <$> mbAuthorId)
+      (toInt <$> mbUserId)
+      mbLogin
+      mbFName
+      mbLName
+      (toInt <$> mbLimit)
+      (toInt <$> mbOffset)
+  return $ payloadResponse authors
   where
     requiredNames = []
     requiredChecks = []
@@ -62,3 +57,4 @@ getAuthors conn queryString = do
       , isInt
       ]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

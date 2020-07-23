@@ -1,8 +1,9 @@
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
+import           Api.ErrorException
 import           Api.Methods.Create
 import           Api.Methods.Delete
 import           Api.Methods.Edit
@@ -10,8 +11,18 @@ import           Api.Methods.Get
 import           Api.Methods.Post.Comment
 import           Api.Methods.Post.Draft
 import           Api.Types.Response
+import           Config
+import           Control.Exception          (SomeException, try)
 import           Control.Monad              (void, when)
+import           Control.Monad.Catch        (MonadThrow (throwM))
+import           Control.Monad.Catch        (MonadCatch (catch))
+import           Control.Monad.Trans.Class  (MonadTrans (lift))
+import           Control.Monad.Trans.State  (StateT (runStateT))
 import           Data.Aeson                 (encode)
+import           Data.ByteString            (ByteString)
+import           Data.Configurator          (load)
+import           Data.Configurator.Types    (Worth (Required))
+import           Data.Function              ((&))
 import           Data.Function              ((&))
 import           Data.Text.Encoding         (decodeUtf8)
 import           Database.PostgreSQL.Simple (connectPostgreSQL,
@@ -20,20 +31,11 @@ import           Migration.Create
 import           Network.HTTP.Types.Status
 import           Network.Wai
 import           Network.Wai.Handler.Warp   (run)
-import Control.Exception (try, SomeException)
-import Data.Configurator.Types (Worth(Required))
-import Data.Configurator (load)
-import Config
-import State.Types
-import           Data.Function               ((&))
-import Control.Monad.Trans.State (StateT(runStateT))
-import Control.Monad.Trans.Class (MonadTrans(lift))
-import           Api.ErrorException
-import Control.Monad.Catch (MonadThrow(throwM))
-import Control.Monad.Catch (MonadCatch(catch))
-import Data.ByteString (ByteString)
-callMethod conn config query path =  do
-  res <- case path of
+import           State.Types
+
+callMethod conn config query path = do
+  res <-
+    case path of
       ["createAccount"]  -> encode <$> createAccount conn config query
       -- ["logIn"]          -> encode <$> getToken conn query
       ["createAuthor"]   -> encode <$> createAuthor conn query
@@ -47,10 +49,10 @@ callMethod conn config query path =  do
       -- ["editTag"]        -> encoded $ editTag conn queryString_
       -- ["editDraft"]      -> encoded $ editDraft conn queryString_
       ["deleteUser"]     -> encode <$> deleteUser conn query
-      -- ["deleteTag"]      -> encoded $ deleteTag conn queryString_
+      ["deleteTag"]      -> encode <$> deleteTag conn query
       -- ["deleteDraft"]    -> encoded $ deleteDraft conn queryString_
       -- ["deleteComment"]  -> encoded $ deleteComment conn queryString_
-      -- ["deleteCategory"] -> encoded $ deleteCategory conn queryString_
+      ["deleteCategory"] -> encode <$> deleteCategory conn query
       ["deleteAuthor"]   -> encode <$> deleteAuthor conn query
       -- ["getUsers"]       -> encoded $ getUsers conn queryString_
       -- ["getCategories"]  -> encoded $ getCategories conn queryString_
@@ -62,7 +64,6 @@ callMethod conn config query path =  do
       smth               -> throwM $ ErrorException status404 ""
   return (status200, res)
 
-
 application conn config request respond = do
   let query = request & queryString
   let path = request & pathInfo
@@ -70,7 +71,8 @@ application conn config request respond = do
   respond $
     responseLBS status [("Content-Type", "application/json")] $ bsResponse
   where
-    errorHandler (ErrorException status error) = return $ (status, encode $ errorResponse2 error)
+    errorHandler (ErrorException status error) =
+      return $ (status, encode $ errorResponse2 error)
 
 main = do
   eitherCfg <- try $ load [Required "$(PWD)/app/server.cfg"]
@@ -78,19 +80,17 @@ main = do
     Left (e :: SomeException) -> print "Can't find config file" >> print e
     Right handleConfig -> do
       config <- parseConfig handleConfig
-
-      conn <-
-        connectPostgreSQL $ connectString config
-
+      conn <- connectPostgreSQL $ connectString config
       run 3000 $ (application conn config)
-
-
-
   --initDatabase conn
-
-
   return ()
   where
-    connectString config="host='" <> (config & dbHost) <> "' port=" <> (config & dbPort) <>
-        " dbname='" <> (config & dbName) <> "' user='" <> (config&dbUsername) <> "' password='"
-        <> (config&dbUserPass) <> "'"
+    connectString config =
+      "host='" <>
+      (config & dbHost) <>
+      "' port=" <>
+      (config & dbPort) <>
+      " dbname='" <>
+      (config & dbName) <>
+      "' user='" <>
+      (config & dbUsername) <> "' password='" <> (config & dbUserPass) <> "'"

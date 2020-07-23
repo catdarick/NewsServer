@@ -223,8 +223,8 @@ getToken_ :: SpecWith TestDB
 getToken_ =
   itDB "can get token" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getToken conn query
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ getToken conn query
+    (resp & responseSuccess) `shouldBe` True
   where
     query = [("login", Just "user1"), ("password", Just "testPass")]
 
@@ -300,28 +300,28 @@ getUsersAfterDelete =
 
 getUserToken :: Connection -> DBT IO ByteString
 getUserToken conn = do
-  (_, respToken) <- lift $ getToken conn query
+  respToken <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "user1"), ("password", Just "testPass")]
 
 getAdminToken :: Connection -> DBT IO ByteString
 getAdminToken conn = do
-  (_, respToken) <- lift $ getToken conn query
+  respToken <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "admin"), ("password", Just "testPass")]
 
 getAuthor1Token :: Connection -> DBT IO ByteString
 getAuthor1Token conn = do
-  (_, respToken) <- lift $ getToken conn query
+  respToken <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "author1"), ("password", Just "testPass")]
 
 getAuthor2Token :: Connection -> DBT IO ByteString
 getAuthor2Token conn = do
-  (_, respToken) <- lift $ getToken conn query
+  respToken <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "author2"), ("password", Just "testPass")]

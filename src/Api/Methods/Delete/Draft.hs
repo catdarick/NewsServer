@@ -18,31 +18,19 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types               (Status, status200, status400,
                                                    status403, status404)
 
-deleteDraft ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+deleteDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
 deleteDraft conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, draftId] = requiredValues
-      let [title, content, categoryId, tagsId, mainPicture, pictures] =
-            optionalMaybeValues
-      mbAuthorToken <- DB.getDraftAuthorToken conn (toInt draftId)
-      case mbAuthorToken of
-        [] -> return (status400, errorResponse Err.noDraft)
-        [Only authorToken] ->
-          if authorToken == token
-            then do
-              DB.deleteDraft conn (toInt draftId)
-              return (status200, okResponse)
-            else return (status403, errorResponse Err.noPerms)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, draftId] = requiredValues
+  let [] = optionalMaybeValues
+  DB.draftAuthorGuard conn (toInt draftId) token
+  DB.deleteDraft conn (toInt draftId)
+  return okResponse
   where
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
-    optionalNames =
-      ["title", "content", "category_id", "tags_id", "main_picture", "pictures"]
-    optionalChecks =
-      [isNotEmpty, isNotEmpty, isInt, isIntList, isNotEmpty, isNotEmptyTextList]
+    optionalNames = []
+    optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

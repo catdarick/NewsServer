@@ -2,10 +2,12 @@
 
 module MethodsTest.Comment where
 
+import           Api.ErrorException
 import           Api.Methods.Create.Account
 import           Api.Methods.Delete.Comment
 import           Api.Methods.Delete.User
 import           Api.Methods.Edit.Draft
+import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Comment
 import           Api.Methods.Post.Comment
 import           Api.Methods.Post.Draft
@@ -13,11 +15,13 @@ import           Api.Types.Comment
 import           Api.Types.Response
 import           Api.Types.Tag
 import           Config
+import           Control.Exception              (try)
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.ByteString.Char8          (pack)
 import           Data.Configurator              (load)
 import           Data.Configurator.Types        (Worth (Required))
+import           Data.Either                    (fromRight)
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
@@ -28,6 +32,7 @@ import           Database.PostgreSQL.Transact   (DBT, getConnection)
 import qualified MethodsTest.Author             as Author
 import qualified MethodsTest.Category           as Category
 import qualified MethodsTest.Draft              as Draft
+import           MethodsTest.Helper
 import qualified MethodsTest.Tag                as Tag
 import qualified MethodsTest.User               as User
 import           Migration.Create
@@ -39,7 +44,7 @@ import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Methods.News: " $ do
+  describeDB initDatabase "Methods.Comment: " $ do
     User.createUserAdminAuthorAccounts
     Author.createAuthor1ByAdmin
     Tag.createFirstTagByAdmin
@@ -58,11 +63,10 @@ spec =
     deleteCommentByAdmin
     getCommentAfterDelete
 
-postCommentByUser :: DBT IO (Status, Response Idcont)
 postCommentByUser = do
   conn <- getConnection
   token <- User.getUserToken conn
-  lift $ postComment conn (query token)
+  lift $ try $ postComment conn (query token)
   where
     query token =
       [ ("news_id", Just "1")
@@ -73,22 +77,21 @@ postCommentByUser = do
 postCommentBeforePost :: SpecWith TestDB
 postCommentBeforePost =
   itDB "user can't post comment before draft is published" $ do
-    (status, resp) <- postCommentByUser
-    (status, resp & responseSuccess) `shouldBe` (status400, False)
+    res <- postCommentByUser
+    res `shouldBe` (Left $ ErrorException status400 Err.noNews)
 
 postCommentAfterPost :: SpecWith TestDB
 postCommentAfterPost =
   itDB "user can post comment after draft is published" $ do
-    (status, resp) <- postCommentByUser
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    res <- postCommentByUser
+    (responseSuccess <$> res) `shouldBe` Right True
 
 getComment :: SpecWith TestDB
 getComment =
   itDB "can get comment" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getComments conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testComment1])
+    resp <- lift $ getComments conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testComment1]
   where
     query = [("news_id", Just "1")]
 
@@ -97,8 +100,8 @@ deleteCommentByAuthor =
   itDB "non admin or creator account can't delete comment" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ deleteComment conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status403, False)
+    res <- lift $ try $ deleteComment conn (query token)
+    res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token = [("token", Just token), ("comment_id", Just "1")]
 
@@ -107,8 +110,8 @@ deleteCommentByUser =
   itDB "user can delete own comment" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteComment conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteComment conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("token", Just token), ("comment_id", Just "1")]
 
@@ -116,18 +119,18 @@ getCommentAfterDelete :: SpecWith TestDB
 getCommentAfterDelete =
   itDB "comment is deleted" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getComments conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [])
+    resp <- lift $ getComments conn query
+    (resp & responseResult) `shouldBe` Just []
   where
     query = [("news_id", Just "1")]
+
 deleteCommentByAdmin :: SpecWith TestDB
 deleteCommentByAdmin =
   itDB "admin can delete comment" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteComment conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteComment conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("token", Just token), ("comment_id", Just "2")]
 

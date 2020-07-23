@@ -18,37 +18,32 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
 getNews ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [News])
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [News])
 getNews conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [] = requiredValues
-      let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
-            optionalMaybeValues
-      news <-
-        DB.getNews
-          conn
-          (toInt <$> mbAuthorId)
-          mbLogin
-          mbFName
-          mbLName
-          (toInt <$> mbCategoryId)
-          (toInt <$> mbTagId)
-          (toIntList <$> mbTagsIdIn)
-          (toIntList <$> mbTagsIdAll)
-          mbTitle
-          mbContent
-          (toInt <$> mbSort)
-          (toDate <$> mbDate)
-          (toDate <$> mbBeforeDate)
-          (toDate <$> mbAfterDate)
-          (toInt <$> mbLimit)
-          (toInt <$> mbOffset)
-      return (status200, payloadResponse news)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [] = requiredValues
+  let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
+        optionalMaybeValues
+  news <-
+    DB.getNews
+      conn
+      (toInt <$> mbAuthorId)
+      mbLogin
+      mbFName
+      mbLName
+      (toInt <$> mbCategoryId)
+      (toInt <$> mbTagId)
+      (toIntList <$> mbTagsIdIn)
+      (toIntList <$> mbTagsIdAll)
+      mbTitle
+      mbContent
+      (toInt <$> mbSort)
+      (toDate <$> mbDate)
+      (toDate <$> mbBeforeDate)
+      (toDate <$> mbAfterDate)
+      (toInt <$> mbLimit)
+      (toInt <$> mbOffset)
+  return $ payloadResponse news
   where
     requiredNames = []
     requiredChecks = []
@@ -90,3 +85,4 @@ getNews conn queryString = do
       , isDate
       ]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

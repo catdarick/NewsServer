@@ -2,19 +2,22 @@
 
 module MethodsTest.Draft where
 
+import           Api.ErrorException
 import           Api.Methods.Create.Account
 import           Api.Methods.Create.Draft
 import           Api.Methods.Delete.Draft
-import           Api.Methods.Post.Draft
 import           Api.Methods.Delete.User
 import           Api.Methods.Edit.Draft
+import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Draft
 import           Api.Methods.Get.Token
 import           Api.Methods.Get.User
+import           Api.Methods.Post.Draft
 import           Api.Types.News
 import           Api.Types.Response
 import           Api.Types.Tag
 import           Config
+import           Control.Exception              (try)
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.ByteString.Char8          (pack)
@@ -29,6 +32,7 @@ import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified MethodsTest.Author             as Author
 import qualified MethodsTest.Category           as Category
+import           MethodsTest.Helper
 import qualified MethodsTest.Tag                as Tag
 import qualified MethodsTest.User               as User
 import           Migration.Create
@@ -37,10 +41,7 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-import Control.Exception (try)
-import           Api.ErrorException
-import qualified Api.Methods.Errors             as Err
-import           MethodsTest.Helper
+
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Draft: " $ do
@@ -176,21 +177,22 @@ createDraftMissingToken =
       ]
 
 postDraft1 :: SpecWith TestDB
-postDraft1 = 
+postDraft1 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ postDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ postDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
+
 postDraft2 :: SpecWith TestDB
-postDraft2 = 
+postDraft2 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ postDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ postDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "2"), ("token", Just token)]
 
@@ -199,9 +201,8 @@ getDraftBy1Author =
   itDB "can get 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testDraft1])
+    resp <- lift $ getDrafts conn (query token)
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft1]
   where
     query token = [("token", Just token)]
 
@@ -210,9 +211,8 @@ getDraftBy2Author =
   itDB "can get 2'st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testDraft2])
+    resp <- lift $ getDrafts conn (query token)
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft2]
   where
     query token = [("token", Just token)]
 
@@ -221,8 +221,8 @@ editDraftBy1Author =
   itDB "can edit 1st author's draft by himself" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ editDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ editDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token =
       [ ("draft_id", Just "1")
@@ -238,9 +238,8 @@ isDraftCorrectlyEdited =
   itDB "draft is correctly edited" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [editedDraft1])
+    resp <- lift $ getDrafts conn (query token)
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [editedDraft1]
   where
     query token = [("token", Just token)]
 
@@ -249,8 +248,8 @@ editDraftBy2Author =
   itDB "can't edit 1st author's draft by author2" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ editDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status403, False)
+    res <- lift $ try $ editDraft conn (query token)
+    res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token =
       [ ("draft_id", Just "1")
@@ -266,8 +265,8 @@ deleteDraftBy2Author =
   itDB "author2 can't delete 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ deleteDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status403, False)
+    res <- lift $ try $ deleteDraft conn (query token)
+    res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
 
@@ -276,8 +275,8 @@ deleteDraftBy1Author =
   itDB "author1 can delete 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ deleteDraft conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteDraft conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
 
@@ -286,8 +285,8 @@ isDraftDeleted =
   itDB "draft is deleted" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
-    (status, resp & responseResult) `shouldBe` (status200, Just [])
+    resp <- lift $ getDrafts conn (query token)
+    (resp & responseResult) `shouldBe` Just []
   where
     query token = [("token", Just token)]
 

@@ -5,37 +5,22 @@ module Api.Methods.Edit.Tag where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
+import qualified Api.Methods.Errors         as Err
 import           Api.Types
 import           Api.Types.Response
-import           Control.Exception                (SomeException, try)
-import           Data.ByteString                  (ByteString)
-import qualified Database.Checks.User             as DB
-import qualified Database.Edit.Tag                as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status200, status400,
-                                                   status404)
+import           Data.ByteString            (ByteString)
+import qualified Database.Checks.User       as DB
+import qualified Database.Edit.Tag          as DB
+import           Database.PostgreSQL.Simple (Connection)
 
-editTag ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+editTag :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 editTag conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status404, badResponse)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, tagId] = requiredValues
-      let [name] = optionalMaybeValues
-      isAdmin <- DB.isAdminToken conn token
-      if not isAdmin
-        then return (status404, badResponse)
-        else do
-          res <- try $ DB.editTag conn (toInt tagId) name
-          case res of
-            Left (e :: SomeException) ->
-              return (status400, errorResponse Err.smth)
-            Right 0 -> return $ (status400, errorResponse Err.noTag)
-            Right 1 -> return $ (status200, okResponse)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, tagId] = requiredValues
+  let [name] = optionalMaybeValues
+  DB.adminGuard conn token
+  DB.editTag conn (toInt tagId) name
+  return okResponse
   where
     requiredNames = ["token", "tag_id"]
     requiredChecks = [isNotEmpty, isInt]
@@ -43,3 +28,4 @@ editTag conn queryString = do
     optionalNames = ["name"]
     optionalChecks = [isNotEmpty]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters404 required optional queryString

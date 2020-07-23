@@ -20,23 +20,15 @@ import           Network.HTTP.Types.Status
 getToken ::
      Connection
   -> [(ByteString, Maybe Login)]
-  -> IO (Status, Response TokenString)
+  -> IO (Response TokenString)
 getToken conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [login, password] = requiredValues
-      let passHash = (hash password)
-      res <- try $ DB.getMaybeUserId conn login passHash
-      case res of
-        Left (e :: SomeException) -> return (status400, errorResponse Err.smth)
-        Right [] -> return (status400, errorResponse Err.badPassword)
-        Right [Only id] -> do
-          token <- genToken
-          DB.setToken conn id token
-          let response = okResponseWithResult token
-          return $ (status200, response)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [login, password] = requiredValues
+  let passHash = (hash password)
+  id <- DB.getUserIdByPass conn login passHash
+  token <- genToken
+  DB.setToken conn id token
+  return $ payloadResponse token
   where
     requiredNames = ["login", "password"]
     requiredChecks = [isCorrectLength 5 20, isCorrectLength 6 40]
@@ -44,3 +36,4 @@ getToken conn queryString = do
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

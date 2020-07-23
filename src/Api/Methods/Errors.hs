@@ -31,8 +31,8 @@ noUser = "User with this id doesnt exists"
 noComment :: ByteString
 noComment = "Comment with this id doesnt exists"
 
-noParrent :: ByteString
-noParrent = "Parrent with this id doesnt exists"
+noParent :: ByteString
+noParent = "Parent with this id doesnt exists"
 
 noCategory :: ByteString
 noCategory = "Category with this id doesnt exists"

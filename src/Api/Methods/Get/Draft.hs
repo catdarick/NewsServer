@@ -18,30 +18,25 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
 getDrafts ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [News])
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [News])
 getDrafts conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token] = requiredValues
-      let [mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
-            optionalMaybeValues
-      news <-
-        DB.getDrafts
-          conn
-          token
-          (toInt <$> mbCategoryId)
-          (toInt <$> mbTagId)
-          (toIntList <$> mbTagsIdIn)
-          (toIntList <$> mbTagsIdAll)
-          mbTitle
-          mbContent
-          (toInt <$> mbLimit)
-          (toInt <$> mbOffset)
-      return (status200, payloadResponse news)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token] = requiredValues
+  let [mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
+        optionalMaybeValues
+  news <-
+    DB.getDrafts
+      conn
+      token
+      (toInt <$> mbCategoryId)
+      (toInt <$> mbTagId)
+      (toIntList <$> mbTagsIdIn)
+      (toIntList <$> mbTagsIdAll)
+      mbTitle
+      mbContent
+      (toInt <$> mbLimit)
+      (toInt <$> mbOffset)
+  return $ payloadResponse news
   where
     requiredNames = ["token"]
     requiredChecks = [isNotEmpty]
@@ -67,3 +62,4 @@ getDrafts conn queryString = do
       , isInt
       ]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

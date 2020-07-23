@@ -52,7 +52,7 @@ create =
   itDB "create" $ do
     conn <- getConnection
     res <- lift $ addComment conn 1 1 "someText"
-    res `shouldBe` [Only 1]
+    res `shouldBe` 1
 
 get :: SpecWith TestDB
 get =

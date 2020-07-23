@@ -9,6 +9,7 @@ import qualified Api.Methods.Errors               as Err
 import           Api.Types
 import           Api.Types.Response
 import           Data.ByteString                  (ByteString)
+import qualified Database.Checks.Draft            as DB
 import qualified Database.Checks.User             as DB
 import qualified Database.Edit.Draft              as DB
 import qualified Database.Get.Draft               as DB
@@ -17,33 +18,23 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types               (Status, status200, status400,
                                                    status403, status404)
 
-editDraft ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+editDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 editDraft conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [token, draftId] = requiredValues
-      let [title, content, categoryId, tagsId, mainPicture, pictures] =
-            optionalMaybeValues
-      mbAuthorToken <- DB.getDraftAuthorToken conn (toInt draftId)
-      case mbAuthorToken of
-        [] -> return (status400, errorResponse Err.noDraft)
-        [Only authorToken] ->
-          if authorToken == token 
-            then do
-              DB.editDraft
-                conn
-                (toInt draftId)
-                title
-                content
-                (toInt <$> categoryId)
-                mainPicture
-                (toStringList <$> pictures)
-                (toIntList <$> tagsId)
-              return (status200, okResponse)
-            else return (status403, errorResponse Err.noPerms)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [token, draftId] = requiredValues
+  let [title, content, categoryId, tagsId, mainPicture, pictures] =
+        optionalMaybeValues
+  DB.draftAuthorGuard conn (toInt draftId) token
+  DB.editDraft
+    conn
+    (toInt draftId)
+    title
+    content
+    (toInt <$> categoryId)
+    mainPicture
+    (toStringList <$> pictures)
+    (toIntList <$> tagsId)
+  return okResponse
   where
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]
@@ -53,3 +44,4 @@ editDraft conn queryString = do
     optionalChecks =
       [isNotEmpty, isNotEmpty, isInt, isIntList, isNotEmpty, isNotEmptyTextList]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

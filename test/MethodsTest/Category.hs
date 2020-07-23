@@ -111,9 +111,9 @@ getCategories_ :: SpecWith TestDB
 getCategories_ =
   itDB "can get category with child" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [testCategory])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just [testCategory]
   where
     query = []
 
@@ -121,9 +121,9 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get category by id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [testCategory])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just [testCategory]
   where
     query = [("category_id", Just "1")]
 
@@ -131,9 +131,9 @@ getChildById :: SpecWith TestDB
 getChildById =
   itDB "can get child category" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [testChildCategory])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just [testChildCategory]
   where
     query = [("category_id", Just "2")]
 
@@ -141,9 +141,9 @@ getChildByName :: SpecWith TestDB
 getChildByName =
   itDB "can get child by name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [testChildCategory])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just [testChildCategory]
   where
     query = [("name", Just "someName2")]
 
@@ -151,9 +151,9 @@ getChildByParentId :: SpecWith TestDB
 getChildByParentId =
   itDB "can get child by parent_id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [testChildCategory])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just [testChildCategory]
   where
     query = [("parent_id", Just "1")]
 
@@ -162,8 +162,8 @@ deleteByUser =
   itDB "user can't delete category" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status404, False)
+    res <- lift $ try $ deleteCategory conn (query token)
+    res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("category_id", Just "1"), ("token", Just token)]
 
@@ -172,8 +172,8 @@ deleteByAdmin =
   itDB "admin can delete category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ deleteCategory conn (query token)
-    (status, resp & responseSuccess) `shouldBe` (status200, True)
+    resp <- lift $ deleteCategory conn (query token)
+    (resp & responseSuccess) `shouldBe` True
   where
     query token = [("category_id", Just "1"), ("token", Just token)]
 
@@ -181,9 +181,9 @@ getAfterDelete :: SpecWith TestDB
 getAfterDelete =
   itDB "result list is empty after delete parent category" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
-    (status, resp & responseResult) `shouldBe`
-      (status200, Just [])
+    resp <- lift $ getCategories conn query
+    (resp & responseResult) `shouldBe`
+      Just []
   where
     query = []
 

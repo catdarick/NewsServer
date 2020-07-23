@@ -18,7 +18,7 @@ import           Network.HTTP.Types               (Status, status200, status400,
                                                    status404)
 
 createAuthor ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response Idcont)
 createAuthor conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, userId] = requiredValues

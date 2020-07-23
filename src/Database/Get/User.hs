@@ -5,12 +5,16 @@
 
 module Database.Get.User where
 
+import           Api.ErrorException
+import qualified Api.Methods.Errors               as Err
 import           Api.Types
 import           Api.Types.User
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
+import           Network.HTTP.Types               (status400)
 
 getUsers ::
      Connection
@@ -48,12 +52,30 @@ getMaybeUserIdAndPriv conn token =
         |]
     (Only token)
 
-getMaybeUserId :: Connection -> Login -> PassHash -> IO [Only Int]
-getMaybeUserId conn login passHash =
-  query
-    conn
-    [sql|
-        SELECT id FROM user_account
-        WHERE login = ? AND password_hash = ?
-        |]
-    (login, Binary passHash)
+getUserId :: Connection -> Token -> IO UserId
+getUserId conn token = do
+  res <-
+    query
+      conn
+      [sql|
+          SELECT user_id FROM user_token
+          WHERE token = ?
+          |]
+      (Only token)
+  case res of
+    []        -> throwM $ ErrorException status400 Err.badToken
+    [Only id] -> return id
+
+getUserIdByPass :: Connection -> Login -> PassHash -> IO Int
+getUserIdByPass conn login passHash = do
+  res <-
+    query
+      conn
+      [sql|
+          SELECT id FROM user_account
+          WHERE login = ? AND password_hash = ?
+          |]
+      (login, Binary passHash)
+  case res of
+    []        -> throwM $ ErrorException status400 Err.badPassword
+    [Only id] -> return id

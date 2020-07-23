@@ -18,25 +18,20 @@ import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types.Status
 
 getCategories ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Category])
+     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Category])
 getCategories conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [] = requiredValues
-      let [categoryId, parentId, name] = optionalMaybeValues
-      categories <-
-        if isJust categoryId || isJust parentId || isJust name
-          then DB.getCategoriesTreeFromTop
-                 conn
-                 (toInt <$> categoryId)
-                 (toInt <$> parentId)
-                 name
-          else DB.getRootCategoriesTree conn
-      return (status200, payloadResponse categories)
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [] = requiredValues
+  let [categoryId, parentId, name] = optionalMaybeValues
+  categories <-
+    if isJust categoryId || isJust parentId || isJust name
+      then DB.getCategoriesTreeFromTop
+             conn
+             (toInt <$> categoryId)
+             (toInt <$> parentId)
+             name
+      else DB.getRootCategoriesTree conn
+  return $ payloadResponse categories
   where
     requiredNames = []
     requiredChecks = []
@@ -44,3 +39,4 @@ getCategories conn queryString = do
     optionalNames = ["category_id", "parent_id", "name"]
     optionalChecks = [isInt, isInt, isNotEmpty]
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

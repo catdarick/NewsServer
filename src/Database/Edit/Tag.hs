@@ -3,17 +3,25 @@
 
 module Database.Edit.Tag where
 
+import           Api.ErrorException
+import qualified Api.Methods.Errors               as Err
+import           Api.Types
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Api.Types
+import           Network.HTTP.Types.Status        (status400)
 
-editTag :: Connection -> TagId -> Maybe Name -> IO Int64
-editTag conn tagId mbName =
-  execute
-    conn
-    [sql|
-      UPDATE tag
-      SET name = COALESCE(?, name)
-      WHERE id=?|]
-    (mbName, tagId)
+editTag :: Connection -> TagId -> Maybe Name -> IO ()
+editTag conn tagId mbName = do
+  res <-
+    execute
+      conn
+      [sql|
+        UPDATE tag
+        SET name = COALESCE(?, name)
+        WHERE id=?|]
+      (mbName, tagId)
+  case res of
+    0 -> throwM $ ErrorException status400 Err.noTag
+    1 -> return ()

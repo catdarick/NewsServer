@@ -3,6 +3,7 @@
 
 module Database.Edit.Draft where
 
+import           Api.Types.Synonyms
 import           Control.Monad                    (void, when)
 import           Data.Maybe                       (isJust)
 import           Data.Vector                      (fromList)
@@ -10,7 +11,6 @@ import           Database.Create.Draft
 import           Database.Delete.Draft
 import           Database.PostgreSQL.Simple       (Connection, execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Api.Types
 
 editDraft ::
      Connection

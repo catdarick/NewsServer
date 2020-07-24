@@ -3,14 +3,11 @@
 module MethodsTest.User where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors             as Err
-import           MethodsTest.Helper
-
+import qualified Api.Errors                     as Err
 import           Api.Methods.Create.Account
 import           Api.Methods.Delete.User
 import           Api.Methods.Get.Token
 import           Api.Methods.Get.User
-import           Api.Types.Response
 import           Api.Types.Response
 import           Api.Types.User
 import           Config
@@ -27,6 +24,7 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (DBT, getConnection)
+import           MethodsTest.Helper
 import           Migration.Create
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
@@ -213,9 +211,8 @@ getUsers_ :: SpecWith TestDB
 getUsers_ =
   itDB "can get only two accounts (user and admin)" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testUser, testAdmin])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser, testAdmin]
   where
     query = []
 
@@ -232,9 +229,8 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get by id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testUser])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("user_id", Just "1")]
 
@@ -242,9 +238,8 @@ getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testUser])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("login", Just "user1")]
 
@@ -252,9 +247,8 @@ getByFName :: SpecWith TestDB
 getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testUser])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("first_name", Just "userFName")]
 
@@ -262,9 +256,8 @@ getByLName :: SpecWith TestDB
 getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testUser])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("last_name", Just "userLName")]
 
@@ -292,9 +285,8 @@ getUsersAfterDelete :: SpecWith TestDB
 getUsersAfterDelete =
   itDB "can get only one account after delete (admin)" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getUsers conn query
-    (status, withDefTime_ (resp & responseResult)) `shouldBe`
-      (status200, Just [testAdmin])
+    resp <- lift $ getUsers conn query
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAdmin]
   where
     query = []
 
@@ -326,20 +318,25 @@ getAuthor2Token conn = do
   where
     query = [("login", Just "author2"), ("password", Just "testPass")]
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-
+withDefTime :: User -> User
 withDefTime user = user {userCreationTime = defTime}
 
+withDefTime_ :: Maybe [User] -> Maybe [User]
 withDefTime_ = (fmap . fmap) withDefTime
 
+testUser :: User
 testUser = User 1 "user1" "userFName" "userLName" Nothing defTime False
 
+testAdmin :: User
 testAdmin = User 2 "admin" "adminFName" "adminLName" Nothing defTime True
 
+author1 :: User
 author1 = User 3 "author1" "author1FName" "author1LName" Nothing defTime False
 
+author2 :: User
 author2 = User 4 "author2" "author2FName" "author2LName" Nothing defTime False
 
+getConfig :: DBT IO Config
 getConfig = do
   cfgHandle <- lift $ load [Required "$(PWD)/app/server.cfg"]
   lift $ parseConfig cfgHandle

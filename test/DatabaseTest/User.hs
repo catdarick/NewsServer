@@ -2,10 +2,14 @@
 
 module DatabaseTest.User where
 
+import           Api.Types.Synonyms
 import           Api.Types.User
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.Function                  ((&))
+import           Data.Time.Calendar             (Day (ModifiedJulianDay))
+import           Data.Time.LocalTime            (LocalTime (LocalTime),
+                                                 midnight)
 import           Database.Create.User
 import           Database.Delete.User
 import           Database.Get.User
@@ -15,14 +19,7 @@ import           Migration.Create
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-import Data.Time.Calendar (Day(ModifiedJulianDay))
-import Data.Time.LocalTime (midnight, LocalTime(LocalTime))
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-testUser = User 1 "testLogin" "testName" "testLName" Nothing defTime False
-withDefTime user= user{ userCreationTime = defTime}
-addTestUser conn =
-  addUser conn "testLogin" "" "testName" "testLName" Nothing False
 spec :: Spec
 spec =
   describeDB initDatabase "User: " $ do
@@ -43,7 +40,7 @@ insert =
     conn <- getConnection
     id <- lift $ addTestUser conn
     user <- lift $ getUsers conn Nothing Nothing Nothing Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` [testUser]
+    (withDefTime <$> user) `shouldBe` [testUser]
 
 getById :: SpecWith TestDB
 getById =
@@ -51,7 +48,7 @@ getById =
     conn <- getConnection
     user <-
       lift $ getUsers conn (Just 1) Nothing Nothing Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` [testUser]
+    (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadId :: SpecWith TestDB
 getByBadId =
@@ -59,7 +56,7 @@ getByBadId =
     conn <- getConnection
     user <-
       lift $ getUsers conn (Just 2) Nothing Nothing Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` []
+    (withDefTime <$> user) `shouldBe` []
 
 getByLogin :: SpecWith TestDB
 getByLogin =
@@ -68,7 +65,7 @@ getByLogin =
     user <-
       lift $
       getUsers conn Nothing (Just "testLogin") Nothing Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` [testUser]
+    (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadLogin :: SpecWith TestDB
 getByBadLogin =
@@ -77,7 +74,7 @@ getByBadLogin =
     user <-
       lift $
       getUsers conn Nothing (Just "badLogin") Nothing Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` []
+    (withDefTime <$> user) `shouldBe` []
 
 getByFName :: SpecWith TestDB
 getByFName =
@@ -86,7 +83,7 @@ getByFName =
     user <-
       lift $
       getUsers conn Nothing Nothing (Just "testName") Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` [testUser]
+    (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadFName :: SpecWith TestDB
 getByBadFName =
@@ -95,7 +92,7 @@ getByBadFName =
     user <-
       lift $
       getUsers conn Nothing Nothing (Just "badName") Nothing Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` []
+    (withDefTime <$> user) `shouldBe` []
 
 getByLName :: SpecWith TestDB
 getByLName =
@@ -104,7 +101,7 @@ getByLName =
     user <-
       lift $
       getUsers conn Nothing Nothing Nothing (Just "testLName") Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` [testUser]
+    (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadLName :: SpecWith TestDB
 getByBadLName =
@@ -113,7 +110,7 @@ getByBadLName =
     user <-
       lift $
       getUsers conn Nothing Nothing Nothing (Just "badLName") Nothing Nothing
-    (withDefTime  <$> user) `shouldBe` []
+    (withDefTime <$> user) `shouldBe` []
 
 delete :: SpecWith TestDB
 delete =
@@ -121,3 +118,16 @@ delete =
     conn <- getConnection
     res <- lift $ deleteUser conn 1
     res `shouldBe` ()
+
+defTime :: LocalTime
+
+
+testUser :: User
+testUser = User 1 "testLogin" "testName" "testLName" Nothing defTime False
+
+withDefTime :: User -> User
+withDefTime user = user {userCreationTime = defTime}
+
+addTestUser :: Connection -> IO UserId
+addTestUser conn =
+  addUser conn "testLogin" "" "testName" "testLName" Nothing False

@@ -4,10 +4,9 @@
 module Database.Edit.Author where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
-import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Only (Only))

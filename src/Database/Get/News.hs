@@ -6,9 +6,9 @@
 
 module Database.Get.News where
 
-import           Api.Types
 import           Api.Types.Author
 import           Api.Types.News
+import           Api.Types.Synonyms
 import           Data.Time                        (LocalTime)
 import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category

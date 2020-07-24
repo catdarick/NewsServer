@@ -2,22 +2,11 @@
 
 module MethodsTest.News where
 
-import           Api.Methods.Create.Account
-import           Api.Methods.Delete.Draft
-import           Api.Methods.Delete.User
-import           Api.Methods.Edit.Draft
 import           Api.Methods.Get.News
-import           Api.Methods.Post.Draft
-import           Api.Methods.Post.Comment
 import           Api.Types.News
 import           Api.Types.Response
-import           Api.Types.Tag
-import           Config
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
-import           Data.Configurator.Types        (Worth (Required))
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
@@ -28,6 +17,7 @@ import           Database.PostgreSQL.Transact   (getConnection)
 import qualified MethodsTest.Author             as Author
 import qualified MethodsTest.Category           as Category
 import qualified MethodsTest.Draft              as Draft
+import           MethodsTest.Helper
 import qualified MethodsTest.Tag                as Tag
 import qualified MethodsTest.User               as User
 import           Migration.Create
@@ -67,7 +57,6 @@ spec =
     getNewsWithSort3
     getNewsWithSort4
 
-
 getNewsByUser :: SpecWith TestDB
 getNewsByUser =
   itDB "user can get news" $ do
@@ -83,19 +72,16 @@ getByAuthorId =
   itDB "can get by author id" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews1]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("author_id", Just "1")]
-
 
 getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews1]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("login", Just "author1")]
 
@@ -104,8 +90,7 @@ getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews1]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("first_name", Just "author1FName")]
 
@@ -114,8 +99,7 @@ getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews1]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("last_name", Just "author1LName")]
 
@@ -128,16 +112,17 @@ getNewsByCategoryId =
       [testNews1, testNews2]
   where
     query = [("category_id", Just "2")]
+
 getNewsByTagId :: SpecWith TestDB
 getNewsByTagId =
   itDB "can get by tag id name" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews2]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("tag_id", Just "2")]
-getNewsByTagsIdIn:: SpecWith TestDB
+
+getNewsByTagsIdIn :: SpecWith TestDB
 getNewsByTagsIdIn =
   itDB "can get by tags_in" $ do
     conn <- getConnection
@@ -146,15 +131,16 @@ getNewsByTagsIdIn =
       [testNews1, testNews2]
   where
     query = [("tags_id_in", Just "[1,2,3]")]
+
 getNewsByTagsIdAll :: SpecWith TestDB
 getNewsByTagsIdAll =
   itDB "can get by tags_all" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews2]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("tags_id_all", Just "[1,2]")]
+
 getNewsByTitleSearch1 :: SpecWith TestDB
 getNewsByTitleSearch1 =
   itDB "get both news by title search" $ do
@@ -164,15 +150,16 @@ getNewsByTitleSearch1 =
       [testNews1, testNews2]
   where
     query = [("title", Just "some")]
+
 getNewsByTitleSearch2 :: SpecWith TestDB
 getNewsByTitleSearch2 =
   itDB "get only one news by title search" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews2]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("title", Just "Title2")]
+
 getNewsByContentSearch1 :: SpecWith TestDB
 getNewsByContentSearch1 =
   itDB "get both news by content search" $ do
@@ -182,17 +169,17 @@ getNewsByContentSearch1 =
       [testNews1, testNews2]
   where
     query = [("content", Just "some")]
+
 getNewsByContentSearch2 :: SpecWith TestDB
 getNewsByContentSearch2 =
   itDB "get only one news by content search" $ do
     conn <- getConnection
     resp <- lift $ getNews conn query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
-      Just [testNews2]
+    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("content", Just "Content2")]
 
-getNewsWithSort3:: SpecWith TestDB
+getNewsWithSort3 :: SpecWith TestDB
 getNewsWithSort3 =
   itDB "correctly sorted by author name DESC" $ do
     conn <- getConnection
@@ -201,7 +188,8 @@ getNewsWithSort3 =
       Just [testNews1, testNews2]
   where
     query = [("sort", Just "3")]
-getNewsWithSort4:: SpecWith TestDB
+
+getNewsWithSort4 :: SpecWith TestDB
 getNewsWithSort4 =
   itDB "correctly sorted by author name ASC" $ do
     conn <- getConnection
@@ -211,13 +199,14 @@ getNewsWithSort4 =
   where
     query = [("sort", Just "4")]
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-
+withDefTime :: News -> News
 withDefTime draft@News {newsAuthor = author} =
   draft {newsCreationTime = defTime, newsAuthor = Author.withDefTime <$> author}
 
+withDefTime_ :: Maybe [News] -> Maybe [News]
 withDefTime_ = (fmap . fmap) withDefTime
 
+testNews1 :: News
 testNews1 =
   News
     { newsId = 1
@@ -231,6 +220,7 @@ testNews1 =
     , newsAuthor = Just Author.testAuthor1
     }
 
+testNews2 :: News
 testNews2 =
   News
     { newsId = 2

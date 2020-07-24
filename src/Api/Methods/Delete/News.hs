@@ -1,30 +1,32 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.Delete.Tag where
+module Api.Methods.Delete.News where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import           Api.Types.Response
 import           Api.Types.Synonyms
 import           Data.ByteString            (ByteString)
+import qualified Database.Checks.Draft      as DB
 import qualified Database.Checks.User       as DB
-import qualified Database.Delete.Tag        as DB
+import qualified Database.Delete.News       as DB
+import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
 
-deleteTag :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
-deleteTag conn queryString = do
+deleteNews :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
+deleteNews conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
-  let [token, tagId] = requiredValues
+  let [token, newsId] = requiredValues
   let [] = optionalMaybeValues
-  DB.adminGuard conn token
-  DB.deleteTag conn (toInt tagId)
+  DB.adminOrAuthorGuard conn (toInt newsId) token
+  DB.deleteNews conn (toInt newsId)
   return okResponse
   where
-    requiredNames = ["token", "tag_id"]
+    requiredNames = ["token", "news_id"]
     requiredChecks = [isNotEmpty, isInt]
     required = (requiredNames, requiredChecks)
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
-    parameters = checkAndGetParameters404 required optional queryString
+    parameters = checkAndGetParameters required optional queryString

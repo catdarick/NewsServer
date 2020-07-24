@@ -4,24 +4,15 @@ module DatabaseTest.News where
 
 import           Api.Types.Author
 import           Api.Types.News
+import           Api.Types.Synonyms
 import           Api.Types.User
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.Function                  ((&))
 import           Data.Time                      (Day (ModifiedJulianDay),
                                                  LocalTime (LocalTime),
                                                  midnight)
-import           Database.Create.Author
-import           Database.Create.Category
-import           Database.Create.Draft
-import           Database.Create.Tag
-import           Database.Create.User
-import           Database.Delete.Draft
-import           Database.Edit.Draft
-import           Database.Get.Author
-import           Database.Get.Draft
+import           Database.Delete.News
 import           Database.Get.News
-import           Database.Get.User
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
@@ -53,6 +44,7 @@ spec =
     getByBadTitleSearch
     getByContentSearch
     getByBadContentSearch
+    delete
 
 getById :: SpecWith TestDB
 getById =
@@ -141,7 +133,24 @@ getByBadContentSearch =
       getNews1 conn Nothing Nothing Nothing Nothing Nothing (Just "badContent")
     (withDefTime <$> news) `shouldBe` []
 
-getNews1 conn a b c d e f =
+delete :: SpecWith TestDB
+delete =
+  itDB "can delete" $ do
+    conn <- getConnection
+    amount <- lift $ deleteNews conn 1
+    amount `shouldBe` ()
+
+getNews1 ::
+     MonadTrans t
+  => Connection
+  -> Maybe CategoryId
+  -> Maybe TagId
+  -> Maybe [TagId]
+  -> Maybe [TagId]
+  -> Maybe Title
+  -> Maybe Content
+  -> t IO [News]
+getNews1 conn categoryId tagId tagsInId tagsAllId title content =
   lift $
   getNews
     conn
@@ -149,12 +158,12 @@ getNews1 conn a b c d e f =
     Nothing
     Nothing
     Nothing
-    a
-    b
-    c
-    d
-    e
-    f
+    categoryId
+    tagId
+    tagsInId
+    tagsAllId
+    title
+    content
     Nothing
     Nothing
     Nothing
@@ -162,11 +171,14 @@ getNews1 conn a b c d e f =
     Nothing
     Nothing
 
+defTime :: LocalTime
 defTime = LocalTime (ModifiedJulianDay 0) midnight
 
+withDefTime :: News -> News
 withDefTime news@News {newsAuthor = author} =
   news {newsCreationTime = defTime, newsAuthor = Author.withDefTime <$> author}
 
+testNews :: News
 testNews =
   News
     1
@@ -178,4 +190,3 @@ testNews =
     Nothing
     Nothing
     Category.testCategory
-

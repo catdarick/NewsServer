@@ -4,8 +4,8 @@
 module Database.Delete.Category where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),

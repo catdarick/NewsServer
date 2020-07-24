@@ -3,24 +3,14 @@
 module MethodsTest.Comment where
 
 import           Api.ErrorException
-import           Api.Methods.Create.Account
+import qualified Api.Errors                     as Err
 import           Api.Methods.Delete.Comment
-import           Api.Methods.Delete.User
-import           Api.Methods.Edit.Draft
-import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Comment
 import           Api.Methods.Post.Comment
-import           Api.Methods.Post.Draft
 import           Api.Types.Comment
 import           Api.Types.Response
-import           Api.Types.Tag
-import           Config
 import           Control.Exception              (try)
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
-import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
-import           Data.Configurator.Types        (Worth (Required))
 import           Data.Either                    (fromRight)
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
@@ -138,10 +128,11 @@ withDefTime :: Comment -> Comment
 withDefTime comment@Comment {commentUser = user} =
   comment {commentCreationTime = defTime, commentUser = User.withDefTime user}
 
+withDefTime_ :: Maybe [Comment] -> Maybe [Comment]
 withDefTime_ = (fmap . fmap) withDefTime
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-
+testComment1 :: Comment
 testComment1 = Comment 1 User.testUser defTime "someContent1"
 
+testComment2 :: Comment
 testComment2 = Comment 2 User.testUser defTime "someContent1"

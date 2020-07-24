@@ -6,7 +6,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Text         (Text)
 import           Data.Time         (LocalTime, UTCTime)
-import           Api.Types
+import           Api.Types.Synonyms
 import           GHC.Generics      (Generic)
 
 data User =

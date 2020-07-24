@@ -6,8 +6,8 @@
 module Database.Get.User where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
 import           Api.Types.User
 import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),

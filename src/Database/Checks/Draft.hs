@@ -5,9 +5,10 @@
 module Database.Checks.Draft where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Database.Checks.User
 import           Database.Get.Draft
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
@@ -65,5 +66,13 @@ draftAuthorGuard :: Connection -> NewsId -> Token -> IO ()
 draftAuthorGuard conn draftId token = do
   isDraftAuthor <- isDraftAuthorToken conn draftId token
   if isDraftAuthor
+    then return ()
+    else throwM $ ErrorException status403 Err.noPerms
+
+adminOrAuthorGuard :: Connection -> NewsId -> Token -> IO ()
+adminOrAuthorGuard conn draftId token = do
+  isAdmin <- isAdminToken conn token
+  isDraftAuthor <- isDraftAuthorToken conn draftId token
+  if isDraftAuthor || isAdmin
     then return ()
     else throwM $ ErrorException status403 Err.noPerms

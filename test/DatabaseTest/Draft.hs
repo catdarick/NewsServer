@@ -2,25 +2,18 @@
 
 module DatabaseTest.Draft where
 
-import           Api.Types.Author
 import           Api.Types.News
-import           Api.Types.User
-import           Control.Monad
+import           Api.Types.Synonyms
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.Function                  ((&))
 import           Data.Time                      (Day (ModifiedJulianDay),
                                                  LocalTime (LocalTime),
                                                  midnight)
-import           Database.Create.Author
-import           Database.Create.Category
 import           Database.Create.Draft
-import           Database.Create.Tag
 import           Database.Create.User
 import           Database.Delete.Draft
 import           Database.Edit.Draft
-import           Database.Get.Author
 import           Database.Get.Draft
-import           Database.Get.User
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
@@ -52,7 +45,6 @@ spec =
     getByBadContentSearch
     edit
     post
-  
 
 insert :: SpecWith TestDB
 insert =
@@ -181,12 +173,14 @@ getByBadContentSearch =
         (Just "badContent")
     (withDefTime <$> draft) `shouldBe` []
 
+post :: SpecWith TestDB
 post =
   itDB "post" $ do
     conn <- getConnection
     res <- lift $ publishDraft conn 1
     res `shouldBe` 1
 
+edit :: SpecWith TestDB
 edit =
   itDB "edit" $ do
     conn <- getConnection
@@ -206,20 +200,26 @@ edit =
         Nothing
         Nothing
 
-delete :: SpecWith TestDB
-delete =
-  itDB "delete" $ do
-    conn <- getConnection
-    amount <- lift $ deleteDraft conn 1
-    amount `shouldBe` ()
-
+getAllDrafts ::
+     MonadTrans t
+  => Connection
+  -> Maybe CategoryId
+  -> Maybe TagId
+  -> Maybe [TagId]
+  -> Maybe [TagId]
+  -> Maybe Title
+  -> Maybe Content
+  -> t IO [News]
 getAllDrafts conn a b c d e f =
   lift $getDrafts conn "token" a b c d e f Nothing Nothing
 
+defTime :: LocalTime
 defTime = LocalTime (ModifiedJulianDay 0) midnight
 
+withDefTime :: News -> News
 withDefTime draft = draft {newsCreationTime = defTime}
 
+testDraft :: News
 testDraft =
   News
     1
@@ -232,6 +232,7 @@ testDraft =
     Nothing
     Category.testCategory
 
+editedDraft :: News
 editedDraft =
   News
     1

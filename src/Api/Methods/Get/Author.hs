@@ -6,15 +6,12 @@ module Api.Methods.Get.Author where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Author
 import           Api.Types.Response
-import           Data.ByteString                  (ByteString)
-import qualified Database.Get.Author              as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types.Status
+import           Api.Types.Synonyms
+import           Data.ByteString            (ByteString)
+import qualified Database.Get.Author        as DB
+import           Database.PostgreSQL.Simple (Connection)
 
 getAuthors ::
      Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Author])

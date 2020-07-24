@@ -5,8 +5,8 @@
 
 module Database.Get.Comment where
 
-import           Api.Types
 import           Api.Types.Comment
+import           Api.Types.Synonyms
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)

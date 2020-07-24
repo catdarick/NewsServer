@@ -3,17 +3,15 @@
 module DatabaseTest.Tag where
 
 import           Api.Types.Tag
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.Function                  ((&))
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.Create.Tag
-import           Database.Create.User
 import           Database.Delete.Tag
-import           Database.Get.Tag
 import           Database.Edit.Tag
+import           Database.Get.Tag
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import           Migration.Create
@@ -21,8 +19,6 @@ import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
-testTag = Tag 1 "testName"
-testEditedTag = Tag 1 "newTestName"
 spec :: Spec
 spec =
   describeDB initDatabase "Tag: " $ do
@@ -71,16 +67,22 @@ getByBadName =
     tag `shouldBe` []
 
 edit :: SpecWith TestDB
-edit = 
+edit =
   itDB "edit" $ do
     conn <- getConnection
     lift $ editTag conn 1 (Just "newTestName")
     tag <- lift $ getTags conn Nothing Nothing Nothing Nothing Nothing
     tag `shouldBe` [testEditedTag]
-    
+
 delete :: SpecWith TestDB
 delete =
   itDB "delete" $ do
     conn <- getConnection
     amount <- lift $ deleteTag conn 1
     amount `shouldBe` ()
+
+testTag :: Tag
+testTag = Tag 1 "testName"
+
+testEditedTag :: Tag
+testEditedTag = Tag 1 "newTestName"

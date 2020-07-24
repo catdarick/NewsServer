@@ -5,16 +5,16 @@
 
 module Database.Get.Author where
 
-import           Api.Types
+import           Api.ErrorException
+import qualified Api.Errors                       as Err
 import           Api.Types.Author
+import           Api.Types.Synonyms
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Database.Get.User
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Api.ErrorException
-import qualified Api.Methods.Errors             as Err
-import Control.Monad.Catch (MonadThrow(throwM))
-import Network.HTTP.Types (status403)
+import           Network.HTTP.Types               (status403)
 
 getAuthors ::
      Connection
@@ -48,7 +48,7 @@ getAuthors conn mbAuthorId mbUserId mbLogin mbFName mbLName mbLimit mbOffset = d
 
 getAuthorIdOrThrow :: Connection -> Token -> IO AuthorId
 getAuthorIdOrThrow conn token = do
-  res <- 
+  res <-
     query
       conn
       [sql|
@@ -59,5 +59,5 @@ getAuthorIdOrThrow conn token = do
           |]
       (Only token)
   case res of
-    [] -> throwM $ ErrorException status403 Err.notAuthor
+    []        -> throwM $ ErrorException status403 Err.notAuthor
     [Only id] -> return id

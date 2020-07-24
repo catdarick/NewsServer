@@ -6,8 +6,8 @@
 module Database.Create.Draft where
 
 import           Api.ErrorException
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
 import           Control.Exception                (SomeException, try)
 import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Data.ByteString                  (ByteString)

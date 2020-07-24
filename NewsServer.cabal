@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 54f557f86452708ef3889975c56900ab5b7fe49c935fbc44f7326eaf99d2b624
+-- hash: bd3b5a31cdbc198835d3d1398c1b7e3631ee43df7e9764f37cd787ab3c4e101a
 
 name:           NewsServer
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Api.ErrorException
+      Api.Errors
       Api.Helpers.Checks
       Api.Helpers.Getters
       Api.Methods.Create
@@ -41,6 +42,7 @@ library
       Api.Methods.Delete.Category
       Api.Methods.Delete.Comment
       Api.Methods.Delete.Draft
+      Api.Methods.Delete.News
       Api.Methods.Delete.Tag
       Api.Methods.Delete.User
       Api.Methods.Edit
@@ -48,7 +50,6 @@ library
       Api.Methods.Edit.Category
       Api.Methods.Edit.Draft
       Api.Methods.Edit.Tag
-      Api.Methods.Errors
       Api.Methods.Get
       Api.Methods.Get.Author
       Api.Methods.Get.Category
@@ -60,12 +61,12 @@ library
       Api.Methods.Get.User
       Api.Methods.Post.Comment
       Api.Methods.Post.Draft
-      Api.Types
       Api.Types.Author
       Api.Types.Category
       Api.Types.Comment
       Api.Types.News
       Api.Types.Response
+      Api.Types.Synonyms
       Api.Types.Tag
       Api.Types.User
       Config
@@ -82,6 +83,7 @@ library
       Database.Delete.Category
       Database.Delete.Comment
       Database.Delete.Draft
+      Database.Delete.News
       Database.Delete.Tag
       Database.Delete.User
       Database.Edit.Author
@@ -95,9 +97,9 @@ library
       Database.Get.News
       Database.Get.Tag
       Database.Get.User
+      Database.Init
       Lib
-      Migration.Create
-      State.Types
+      RequestHandler
       Types.Picture
   other-modules:
       Paths_NewsServer

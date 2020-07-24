@@ -5,9 +5,8 @@ module Api.Methods.Edit.Category where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors         as Err
-import           Api.Types
 import           Api.Types.Response
+import           Api.Types.Synonyms
 import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Category     as DB

@@ -4,22 +4,18 @@
 module Api.Methods.Delete.Comment where
 
 import           Api.ErrorException
+import qualified Api.Errors                 as Err
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Response
-import           Control.Monad.Catch              (MonadThrow (throwM))
-import           Data.ByteString                  (ByteString)
-import qualified Database.Checks.Comment          as DB
-import qualified Database.Checks.User             as DB
-import qualified Database.Delete.Comment          as DB
-import qualified Database.Get.Comment             as DB
-import qualified Database.Get.User                as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status200, status400,
-                                                   status403)
+import           Api.Types.Synonyms
+import           Control.Monad.Catch        (MonadThrow (throwM))
+import           Data.ByteString            (ByteString)
+import qualified Database.Checks.Comment    as DB
+import qualified Database.Checks.User       as DB
+import qualified Database.Delete.Comment    as DB
+import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (status403)
 
 deleteComment :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 deleteComment conn queryString = do

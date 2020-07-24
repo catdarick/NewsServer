@@ -7,22 +7,17 @@ import           Api.Helpers.Checks
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors         as Err
 import           Api.Types.Response
-import           Control.Exception          (SomeException)
 import           Data.ByteString            (ByteString)
 import           Database.PostgreSQL.Simple (Connection)
-import           Api.Types
-import           Network.HTTP.Types         (Status, status400)
+import           Api.Types.Synonyms
 
 methodName ::
      Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Token)
 methodName conn queryString = do
-  let eitherParameters = checkAndGetParametersEither required optional queryString
-  case eitherParameters of
-    Left error -> return (status400, errorResponse error)
-    Right (requiredValues, optionalMaybeValues) -> do
-      let [] = requiredValues
-      let [] = optionalMaybeValues
-      undefined
+  (requiredValues, optionalMaybeValues) <- parameters
+  let [] = requiredValues
+  let [] = optionalMaybeValues
+  undefined
   where
     requiredNames = []
     requiredChecks = []
@@ -30,3 +25,4 @@ methodName conn queryString = do
     optionalNames = []
     optionalChecks = []
     optional = (optionalNames, optionalChecks)
+    parameters = checkAndGetParameters required optional queryString

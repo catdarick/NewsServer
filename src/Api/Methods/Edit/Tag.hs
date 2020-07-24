@@ -5,8 +5,7 @@ module Api.Methods.Edit.Tag where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors         as Err
-import           Api.Types
+import           Api.Types.Synonyms
 import           Api.Types.Response
 import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB

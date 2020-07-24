@@ -23,8 +23,8 @@ checkOptionalParamsForCorrect predicats values = do
   let eitherList = zipWith f predicats values
   sequence eitherList
   where
-    f pred (a, (Just x)) = pred (a, x)
-    f pred (_, Nothing)  = Right True
+    f pred (a, Just x)  = pred (a, x)
+    f pred (_, Nothing) = Right True
 
 isDate :: (ByteString, ByteString) -> Either ByteString Bool
 isDate (name, val)

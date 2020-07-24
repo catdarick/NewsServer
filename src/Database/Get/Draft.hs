@@ -5,9 +5,9 @@
 
 module Database.Get.Draft where
 
-import           Api.Types
 import           Api.Types.Author
 import           Api.Types.News
+import           Api.Types.Synonyms
 import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category
 import           Database.Get.Tag

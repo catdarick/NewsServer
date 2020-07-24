@@ -3,15 +3,16 @@
 
 module Database.Delete.Author where
 
+import           Api.ErrorException
+import qualified Api.Errors                       as Err
+import           Api.Types.Synonyms
+import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
-import           Api.Types
-import           Api.ErrorException
-import qualified Api.Methods.Errors             as Err
-import Control.Monad.Catch (MonadThrow(throwM))
-import Network.HTTP.Types.Status (status400)
+import           Network.HTTP.Types.Status        (status400)
+
 deleteAuthor :: Connection -> AuthorId -> IO ()
 deleteAuthor conn authorId = do
   res <-

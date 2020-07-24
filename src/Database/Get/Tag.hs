@@ -5,7 +5,7 @@
 
 module Database.Get.Tag where
 
-import           Api.Types
+import           Api.Types.Synonyms
 import           Api.Types.Tag
 import           Data.Vector                      (fromList)
 import           Database.PostgreSQL.Simple       (Connection, execute, query)

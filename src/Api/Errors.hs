@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Api.Methods.Errors where
+module Api.Errors where
 
 import           Data.ByteString (ByteString)
 
@@ -42,11 +42,12 @@ noDraft = "Draft with this id doesnt exists"
 
 noNews :: ByteString
 noNews = "News with this id doesnt exists"
+
 noPerms :: ByteString
 noPerms = "You do not have permission for this action"
 
 noTag :: ByteString
-noTag="Tag with this id doesnt exists"
+noTag = "Tag with this id doesnt exists"
 
 tagExists :: ByteString
 tagExists = "This tag already exists"

@@ -3,6 +3,7 @@
 module DatabaseTest.Author where
 
 import           Api.Types.Author
+import           Api.Types.Synonyms
 import           Api.Types.User
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
@@ -23,7 +24,6 @@ import           Migration.Create
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
 
 spec :: Spec
 spec =
@@ -207,19 +207,25 @@ delete =
     amount <- lift $ deleteAuthor conn 1
     amount `shouldBe` ()
 
-
+defTime :: LocalTime
 defTime = LocalTime (ModifiedJulianDay 0) midnight
 
+testUser :: User
 testUser = User 1 "testLogin" "testName" "testLName" Nothing defTime False
 
+testAuthor :: Author
 testAuthor = Author 1 testUser (Just "testDescription")
 
+editedAuthor :: Author
 editedAuthor = Author 1 testUser (Just "newTestDescription")
 
+withDefTime :: Author -> Author
 withDefTime author@Author {authorUser = user} =
   author {authorUser = user {userCreationTime = defTime}}
 
+addTestUser :: MonadTrans t => Connection -> t IO UserId
 addTestUser conn =
   lift $ addUser conn "testLogin" "" "testName" "testLName" Nothing False
 
+addTestAuthor :: MonadTrans t => Connection -> t IO AuthorId
 addTestAuthor conn = lift $ addAuthor conn 1 (Just "testDescription")

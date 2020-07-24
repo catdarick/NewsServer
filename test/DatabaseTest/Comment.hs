@@ -2,28 +2,15 @@
 
 module DatabaseTest.Comment where
 
-import           Api.Types.Author
 import           Api.Types.Comment
-import           Api.Types.User
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
 import           Data.Function                  ((&))
 import           Data.Time                      (Day (ModifiedJulianDay),
                                                  LocalTime (LocalTime),
                                                  midnight)
-import           Database.Create.Author
-import           Database.Create.Category
 import           Database.Create.Comment
-import           Database.Create.Draft
-import           Database.Create.Tag
-import           Database.Create.User
-import           Database.Delete.Draft
-import           Database.Edit.Draft
-import           Database.Get.Author
 import           Database.Get.Comment
-import           Database.Get.Draft
-import           Database.Get.News
-import           Database.Get.User
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
@@ -61,9 +48,12 @@ get =
     res <- lift $ getComments conn 1 Nothing Nothing
     (withDefTime <$> res) `shouldBe` [testComment]
 
+testComment :: Comment
 testComment = Comment 1 Author.testUser defTime "someText"
 
+defTime :: LocalTime
 defTime = LocalTime (ModifiedJulianDay 0) midnight
 
+withDefTime :: Comment -> Comment
 withDefTime comment@Comment {commentUser = user} =
   comment {commentCreationTime = defTime, commentUser = User.withDefTime user}

@@ -6,21 +6,16 @@ module Api.Methods.Get.Token where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors         as Err
-import           Api.Types
 import           Api.Types.Response
-import           Control.Exception          (SomeException, try)
+import           Api.Types.Synonyms
 import           Crypto.Hash.MD5            (hash)
 import           Data.ByteString            (ByteString)
 import qualified Database.Create.User       as DB
 import qualified Database.Get.User          as DB
-import           Database.PostgreSQL.Simple (Connection, Only (Only))
-import           Network.HTTP.Types.Status
+import           Database.PostgreSQL.Simple (Connection)
 
 getToken ::
-     Connection
-  -> [(ByteString, Maybe Login)]
-  -> IO (Response TokenString)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Response TokenString)
 getToken conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [login, password] = requiredValues

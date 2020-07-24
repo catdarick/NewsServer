@@ -6,16 +6,13 @@ module Api.Methods.Get.Draft where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.News
 import           Api.Types.Response
-import           Data.ByteString                  (ByteString)
-import qualified Database.Get.Draft               as DB
-import qualified Database.Get.User                as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types.Status
+import           Api.Types.Synonyms
+import           Data.ByteString            (ByteString)
+import qualified Database.Get.Draft         as DB
+import qualified Database.Get.User          as DB
+import           Database.PostgreSQL.Simple (Connection)
 
 getDrafts ::
      Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [News])

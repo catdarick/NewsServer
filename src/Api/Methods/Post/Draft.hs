@@ -5,18 +5,13 @@ module Api.Methods.Post.Draft where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Response
-import           Data.ByteString                  (ByteString)
-import qualified Database.Checks.Draft            as DB
-import qualified Database.Create.Draft            as DB
-import qualified Database.Get.Draft               as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status200, status400,
-                                                   status403)
+import           Api.Types.Synonyms
+import           Data.ByteString            (ByteString)
+import qualified Database.Checks.Draft      as DB
+import qualified Database.Create.Draft      as DB
+import qualified Database.Get.Draft         as DB
+import           Database.PostgreSQL.Simple (Connection)
 
 postDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 postDraft conn queryString = do

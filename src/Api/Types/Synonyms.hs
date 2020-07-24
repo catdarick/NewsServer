@@ -1,4 +1,4 @@
-module Api.Types where
+module Api.Types.Synonyms where
 
 import           Data.ByteString (ByteString, length)
 import           Data.Text       (Text)

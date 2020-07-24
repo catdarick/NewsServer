@@ -2,22 +2,15 @@
 
 module MethodsTest.Category where
 
-import           Api.Methods.Create.Account
+import           Api.ErrorException
+import qualified Api.Errors                     as Err
 import           Api.Methods.Create.Category
 import           Api.Methods.Delete.Category
-import           Api.Methods.Delete.User
 import           Api.Methods.Get.Category
-import           Api.Methods.Get.Token
-import           Api.Methods.Get.User
 import           Api.Types.Category
 import           Api.Types.Response
-import           Api.Types.User
-import           Config
-import           Control.Monad
+import           Control.Exception              (try)
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
-import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
-import           Data.Configurator.Types        (Worth (Required))
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
@@ -25,6 +18,7 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
+import           MethodsTest.Helper
 import qualified MethodsTest.User               as User
 import           Migration.Create
 import           Network.HTTP.Types.Status      (status200, status400,
@@ -32,10 +26,7 @@ import           Network.HTTP.Types.Status      (status200, status400,
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-import Control.Exception (try)
-import           Api.ErrorException
-import qualified Api.Methods.Errors             as Err
-import           MethodsTest.Helper
+
 spec :: Spec
 spec =
   describeDB initDatabase "Methods.Category: " $ do
@@ -102,18 +93,17 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create category without required 'token'" $ do
     conn <- getConnection
-    res <- lift $ try $ createCategory conn query 
+    res <- lift $ try $ createCategory conn query
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
-    query  = [("name", Just "someName")]
+    query = [("name", Just "someName")]
 
 getCategories_ :: SpecWith TestDB
 getCategories_ =
   itDB "can get category with child" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just [testCategory]
+    (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = []
 
@@ -122,8 +112,7 @@ getById =
   itDB "can get category by id" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just [testCategory]
+    (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = [("category_id", Just "1")]
 
@@ -132,8 +121,7 @@ getChildById =
   itDB "can get child category" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just [testChildCategory]
+    (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("category_id", Just "2")]
 
@@ -142,8 +130,7 @@ getChildByName =
   itDB "can get child by name" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just [testChildCategory]
+    (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("name", Just "someName2")]
 
@@ -152,8 +139,7 @@ getChildByParentId =
   itDB "can get child by parent_id" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just [testChildCategory]
+    (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("parent_id", Just "1")]
 
@@ -182,10 +168,12 @@ getAfterDelete =
   itDB "result list is empty after delete parent category" $ do
     conn <- getConnection
     resp <- lift $ getCategories conn query
-    (resp & responseResult) `shouldBe`
-      Just []
+    (resp & responseResult) `shouldBe` Just []
   where
     query = []
 
+testCategory :: Category
 testCategory = Category 1 "someName" (Just [testChildCategory])
+
+testChildCategory :: Category
 testChildCategory = Category 2 "someName2" Nothing

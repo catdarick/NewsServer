@@ -4,23 +4,17 @@
 
 module Api.Methods.Create.Account where
 
-import           Api.ErrorException
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Response
+import           Api.Types.Synonyms
 import           Config
-import           Control.Exception                (SomeException, try)
-import           Control.Monad.Catch              (MonadThrow (throwM))
-import           Crypto.Hash.MD5                  (hash)
-import           Data.ByteString                  (ByteString)
-import           Data.Function                    ((&))
-import           Data.Maybe                       (isJust, isNothing)
-import qualified Database.Create.User             as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types.Status
+import           Crypto.Hash.MD5            (hash)
+import           Data.ByteString            (ByteString)
+import           Data.Function              ((&))
+import           Data.Maybe                 (isJust)
+import qualified Database.Create.User       as DB
+import           Database.PostgreSQL.Simple (Connection)
 
 createAccount ::
      Connection

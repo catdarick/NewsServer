@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Database.Delete.Draft where
+module Database.Delete.News where
 
 import           Api.ErrorException
 import qualified Api.Errors                       as Err
@@ -13,25 +13,16 @@ import           Database.PostgreSQL.Simple       (Connection, Only (Only),
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types.Status        (status400)
 
-deleteDraft :: Connection -> NewsId -> IO ()
-deleteDraft conn newsId = do
+deleteNews :: Connection -> NewsId -> IO ()
+deleteNews conn newsId = do
   res <-
     execute
       conn
       [sql|
     DELETE FROM news
     WHERE id=?
-    AND is_published = false|]
+    AND is_published = true|]
       (Only newsId)
   case res of
-    0 -> throwM $ ErrorException status400 Err.noDraft
+    0 -> throwM $ ErrorException status400 Err.noNews
     1 -> return ()
-
-deleteDraftTags :: Connection -> NewsId -> IO Int64
-deleteDraftTags conn draftId =
-  execute
-    conn
-    [sql|
-          DELETE FROM news_tag
-          WHERE news_id=?|]
-    (Only draftId)

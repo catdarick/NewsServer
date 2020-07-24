@@ -5,8 +5,8 @@
 
 module Database.Get.Category where
 
-import           Api.Types
 import           Api.Types.Category
+import           Api.Types.Synonyms
 import           Data.List                        (find)
 import           Data.Maybe                       (fromJust, isNothing)
 import           Data.Text                        (Text)

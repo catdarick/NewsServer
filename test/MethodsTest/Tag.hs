@@ -3,26 +3,18 @@
 module MethodsTest.Tag where
 
 import           Api.ErrorException
-import           Api.Methods.Create.Account
+import qualified Api.Errors                     as Err
 import           Api.Methods.Create.Tag
 import           Api.Methods.Delete.Tag
-import           Api.Methods.Delete.User
-import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Tag
-import           Api.Methods.Get.Token
-import           Api.Methods.Get.User
 import           Api.Types.Response
 import           Api.Types.Tag
 import           Api.Types.User
 import           Config
 import           Control.Exception              (try)
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
-import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
 import           Data.Configurator.Types        (Worth (Required))
 import           Data.Function                  ((&))
-import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
@@ -170,6 +162,8 @@ getAfterDelete =
   where
     query = []
 
+testTag1 :: Tag
 testTag1 = Tag 1 "someName1"
 
+testTag2 :: Tag
 testTag2 = Tag 2 "someName2"

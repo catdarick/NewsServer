@@ -6,16 +6,13 @@ module Api.Methods.Get.Category where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Category
 import           Api.Types.Response
-import           Data.ByteString                  (ByteString)
-import           Data.Maybe                       (isJust)
-import qualified Database.Get.Category            as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types.Status
+import           Api.Types.Synonyms
+import           Data.ByteString            (ByteString)
+import           Data.Maybe                 (isJust)
+import qualified Database.Get.Category      as DB
+import           Database.PostgreSQL.Simple (Connection)
 
 getCategories ::
      Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Category])

@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Migration.Create where
+module Database.Init where
 
 import           Database.PostgreSQL.Simple       (execute_)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
@@ -91,7 +91,7 @@ createCommentTable conn =
         )|]
 
 
-initDatabase conn = sequence_ $ 
+init conn = sequence_ $ 
   [ createUserTable
   , createAuthorTable
   , createUserTokenTable

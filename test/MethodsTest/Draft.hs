@@ -3,26 +3,18 @@
 module MethodsTest.Draft where
 
 import           Api.ErrorException
-import           Api.Methods.Create.Account
+import qualified Api.Errors                     as Err
 import           Api.Methods.Create.Draft
 import           Api.Methods.Delete.Draft
-import           Api.Methods.Delete.User
 import           Api.Methods.Edit.Draft
-import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Draft
 import           Api.Methods.Get.Token
-import           Api.Methods.Get.User
 import           Api.Methods.Post.Draft
 import           Api.Types.News
 import           Api.Types.Response
-import           Api.Types.Tag
-import           Config
 import           Control.Exception              (try)
 import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
-import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
-import           Data.Configurator.Types        (Worth (Required))
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
@@ -290,13 +282,14 @@ isDraftDeleted =
   where
     query token = [("token", Just token)]
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-
+withDefTime :: News -> News
 withDefTime draft@News {newsAuthor = author} =
   draft {newsCreationTime = defTime, newsAuthor = Author.withDefTime <$> author}
 
+withDefTime_ :: Maybe [News] -> Maybe [News]
 withDefTime_ = (fmap . fmap) withDefTime
 
+testDraft1 :: News
 testDraft1 =
   News
     { newsId = 1
@@ -310,6 +303,7 @@ testDraft1 =
     , newsAuthor = Nothing
     }
 
+editedDraft1 :: News
 editedDraft1 =
   News
     { newsId = 1
@@ -323,6 +317,7 @@ editedDraft1 =
     , newsAuthor = Nothing
     }
 
+testDraft2 :: News
 testDraft2 =
   News
     { newsId = 2

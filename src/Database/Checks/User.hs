@@ -5,7 +5,7 @@
 module Database.Checks.User where
 
 import           Api.ErrorException
-import           Api.Types
+import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)

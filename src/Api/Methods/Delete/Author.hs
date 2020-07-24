@@ -5,20 +5,14 @@ module Api.Methods.Delete.Author where
 
 import           Api.Helpers.Checks
 import           Api.Helpers.Getters
-import qualified Api.Methods.Errors               as Err
-import           Api.Types
 import           Api.Types.Response
-import           Control.Exception                (SomeException, try)
-import           Data.ByteString                  (ByteString)
-import qualified Database.Checks.User             as DB
-import qualified Database.Delete.Author           as DB
-import           Database.PostgreSQL.Simple       (Connection)
-import           Database.PostgreSQL.Simple.Types (Only (Only))
-import           Network.HTTP.Types               (Status, status200, status400,
-                                                   status404)
+import           Api.Types.Synonyms
+import           Data.ByteString            (ByteString)
+import qualified Database.Checks.User       as DB
+import qualified Database.Delete.Author     as DB
+import           Database.PostgreSQL.Simple (Connection)
 
-deleteAuthor ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
+deleteAuthor :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
 deleteAuthor conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, authorId] = requiredValues

@@ -8,3 +8,4 @@ import           Api.Methods.Delete.Comment  as Delete
 import           Api.Methods.Delete.Draft    as Delete
 import           Api.Methods.Delete.Tag      as Delete
 import           Api.Methods.Delete.User     as Delete
+import           Api.Methods.Delete.News     as Delete

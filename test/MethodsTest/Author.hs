@@ -3,24 +3,14 @@
 module MethodsTest.Author where
 
 import           Api.ErrorException
-import           Api.Methods.Create.Account
+import qualified Api.Errors                     as Err
 import           Api.Methods.Create.Author
 import           Api.Methods.Delete.Author
-import           Api.Methods.Delete.User
-import qualified Api.Methods.Errors             as Err
 import           Api.Methods.Get.Author
-import           Api.Methods.Get.Token
-import           Api.Methods.Get.User
 import           Api.Types.Author
 import           Api.Types.Response
-import           Api.Types.User
-import           Config
 import           Control.Exception              (try)
-import           Control.Monad
 import           Control.Monad.Trans.Class      (MonadTrans (lift))
-import           Data.ByteString.Char8          (pack)
-import           Data.Configurator              (load)
-import           Data.Configurator.Types        (Worth (Required))
 import           Data.Function                  ((&))
 import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
@@ -197,13 +187,15 @@ getUsersAfterDelete =
   where
     query = []
 
-defTime = (LocalTime (ModifiedJulianDay 0) midnight)
-
+withDefTime :: Author -> Author
 withDefTime author@Author {authorUser = user} =
   author {authorUser = User.withDefTime user}
 
+withDefTime_ :: Maybe [Author] -> Maybe [Author]
 withDefTime_ = (fmap . fmap) withDefTime
 
+testAuthor1 :: Author
 testAuthor1 = Author 1 User.author1 (Just "someDescription")
 
+testAuthor2 :: Author
 testAuthor2 = Author 2 User.author2 (Just "someDescription2")

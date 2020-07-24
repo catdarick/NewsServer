@@ -2,28 +2,43 @@
 
 module Api.Helpers.Getters where
 
-import           Api.Helpers.Checks
 import           Api.ErrorException
-import           Api.Types
+import           Api.Helpers.Checks
+import           Api.Types.Synonyms
+import           Control.Monad.Catch   (MonadThrow (throwM))
 import           Data.ByteString       (ByteString, length)
 import           Data.ByteString.Char8 (unpack)
 import           Data.List             (find)
 import           Data.Maybe            (fromMaybe, isJust, isNothing)
 import           Data.Text.Encoding    (decodeUtf8)
 import           Data.Time.LocalTime   (LocalTime)
+import           Network.HTTP.Types    (status400, status404)
 import           System.Random         (Random (randomRIO))
-import Control.Monad.Catch (MonadThrow(throwM))
-import Network.HTTP.Types (status404, status400)
+
+checkAndGetParameters ::
+     MonadThrow m
+  => ([FieldName], [CheckPredicat])
+  -> ([FieldName], [CheckPredicat])
+  -> [(FieldName, Maybe ByteString)]
+  -> m ([RequiredParam], [OptionalParam])
 checkAndGetParameters required optional query = do
-  let res =  checkAndGetParametersEither required optional query
+  let res = checkAndGetParametersEither required optional query
   case res of
-    Left error -> throwM $ ErrorException status400 error
+    Left error   -> throwM $ ErrorException status400 error
     Right values -> return values
+
+checkAndGetParameters404 ::
+     MonadThrow m
+  => ([FieldName], [CheckPredicat])
+  -> ([FieldName], [CheckPredicat])
+  -> [(FieldName, Maybe ByteString)]
+  -> m ([RequiredParam], [OptionalParam])
 checkAndGetParameters404 required optional query = do
-  let res =  checkAndGetParametersEither required optional query
+  let res = checkAndGetParametersEither required optional query
   case res of
-    Left error -> throwM $ ErrorException status404 ""
+    Left error   -> throwM $ ErrorException status404 ""
     Right values -> return values
+
 checkAndGetParametersEither ::
      ([FieldName], [CheckPredicat])
   -> ([FieldName], [CheckPredicat])
@@ -51,7 +66,7 @@ getRequiredParams paramNames queryString = do
       let maybeListOfValues = sequence listOfMaybeValues
       case maybeListOfValues of
         Nothing -> Left $ "Missing required arguments: " <> missingArguments
-        Just listOfValues -> Right listOfValues --  map decodeUtf8 listOfValues
+        Just listOfValues -> Right listOfValues 
   where
     missingArguments = foldr1 ((<>) . (<> ", ")) byteStringArgs
     textArgs = map decodeUtf8 byteStringArgs

@@ -13,24 +13,16 @@ import           Database.Create.Category
 import           Database.Delete.Category
 import           Database.Edit.Category
 import           Database.Get.Category
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           Migration.Create
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
-testCategory = Category 1 "testName" Nothing
-
-testEditedCategory = Category 2 "newTestName" Nothing
-
-testChildCategory = Category 2 "testChildName" Nothing
-
-testParentCategory = testCategory {categoryChilds = Just [testChildCategory]}
-
 spec :: Spec
 spec =
-  describeDB initDatabase "Category: " $ do
+  describeDB DB.init "Category: " $ do
     insert
     getById
     addChildAndGet
@@ -76,3 +68,15 @@ delete =
     lift $ deleteCategory conn 2
     category <- lift $ getRootCategoriesTree conn
     category `shouldBe` []
+
+testCategory :: Category
+testCategory = Category 1 "testName" Nothing
+
+testEditedCategory :: Category
+testEditedCategory = Category 2 "newTestName" Nothing
+
+testChildCategory :: Category
+testChildCategory = Category 2 "testChildName" Nothing
+
+testParentCategory :: Category
+testParentCategory = testCategory {categoryChilds = Just [testChildCategory]}

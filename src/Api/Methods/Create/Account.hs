@@ -15,19 +15,20 @@ import           Data.Function              ((&))
 import           Data.Maybe                 (isJust)
 import qualified Database.Create.User       as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status201)
 
 createAccount ::
      Connection
   -> Config
   -> [(FieldName, Maybe ByteString)]
-  -> IO (Response Idcont)
+  -> IO (Status, Response Idcont)
 createAccount conn config queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [login, password, fName, lName] = requiredValues
   let [adminPass, picture] = optionalMaybeValues
   let passHash = hash password
   id <- DB.addUser conn login passHash fName lName picture (isJust adminPass)
-  return $ idResponse id
+  return (status201, idResponse id)
   where
     requiredNames = ["login", "password", "first_name", "last_name"]
     requiredChecks =

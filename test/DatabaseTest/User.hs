@@ -15,14 +15,14 @@ import           Database.Delete.User
 import           Database.Get.User
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
-
+import           TestHelper
 spec :: Spec
 spec =
-  describeDB initDatabase "User: " $ do
+  describeDB DB.init "User: " $ do
     insert
     getById
     getByBadId
@@ -119,7 +119,6 @@ delete =
     res <- lift $ deleteUser conn 1
     res `shouldBe` ()
 
-defTime :: LocalTime
 
 
 testUser :: User

@@ -13,16 +13,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.Comment       as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
 getComments ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Comment])
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [Comment])
 getComments conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [newsId] = requiredValues
   let [mbLimit, mbOffset] = optionalMaybeValues
   comments <-
     DB.getComments conn (toInt newsId) (toInt <$> mbLimit) (toInt <$> mbOffset)
-  return $ payloadResponse comments
+  return (status200, payloadResponse comments)
   where
     requiredNames = ["news_id"]
     requiredChecks = [isInt]

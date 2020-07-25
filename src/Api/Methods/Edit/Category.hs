@@ -11,15 +11,17 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Category     as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
-editCategory :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
+editCategory ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
 editCategory conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, categoryId] = requiredValues
   let [name, parentId] = optionalMaybeValues
   DB.adminGuard conn token
   DB.editCategory conn (toInt categoryId) name (toInt <$> parentId)
-  return okResponse
+  return (status200, okResponse)
   where
     requiredNames = ["token", "category_id"]
     requiredChecks = [isNotEmpty, isInt]

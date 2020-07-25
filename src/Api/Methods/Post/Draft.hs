@@ -4,6 +4,7 @@
 module Api.Methods.Post.Draft where
 
 import           Api.Helpers.Checks
+import           Network.HTTP.Types         (Status, status200)
 import           Api.Helpers.Getters
 import           Api.Types.Response
 import           Api.Types.Synonyms
@@ -13,14 +14,14 @@ import qualified Database.Create.Draft      as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
 
-postDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
+postDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
 postDraft conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, draftId] = requiredValues
   let [] = optionalMaybeValues
   DB.draftAuthorGuard conn (toInt draftId) token
   DB.publishDraft conn (toInt draftId)
-  return okResponse
+  return (status200, okResponse)
   where
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]

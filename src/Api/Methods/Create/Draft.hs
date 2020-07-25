@@ -11,8 +11,10 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Create.Draft      as DB
 import qualified Database.Get.Author        as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status201)
 
-createDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
+createDraft ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
 createDraft conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, title, content, categoryId] = requiredValues
@@ -28,7 +30,7 @@ createDraft conn queryString = do
       mainPicture
       (toStringList <$> pictures)
       (toIntList <$> tagsId)
-  return $ idResponse id
+  return (status201, idResponse id)
   where
     requiredNames = ["token", "title", "content", "category_id"]
     requiredChecks =

@@ -6,7 +6,7 @@ then
     token=$(<admin.token)
 fi
 query="http://localhost:3000/deleteComment?comment_id=$id&token=$token"
-curl $query
+curl -X DELETE $query
 
 echo ''
 

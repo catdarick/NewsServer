@@ -2,7 +2,7 @@
 token=$(<user.token)
 newsId=$(<draft.id)
 query="http://localhost:3000/postComment?&token=$token&news_id=$newsId&content=content"
-result=$(curl $query)
+result=$(curl -X POST $query)
 echo $result > tmp
 echo $result
 id=$(jq -r '.result.id' tmp)

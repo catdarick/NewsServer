@@ -13,8 +13,10 @@ import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Draft        as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
-editDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
+editDraft ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
 editDraft conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, draftId] = requiredValues
@@ -30,7 +32,7 @@ editDraft conn queryString = do
     mainPicture
     (toStringList <$> pictures)
     (toIntList <$> tagsId)
-  return okResponse
+  return (status200, okResponse)
   where
     requiredNames = ["token", "draft_id"]
     requiredChecks = [isNotEmpty, isInt]

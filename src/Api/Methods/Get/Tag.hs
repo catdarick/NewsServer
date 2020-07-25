@@ -12,8 +12,12 @@ import           Api.Types.Tag
 import           Data.ByteString            (ByteString)
 import qualified Database.Get.Tag           as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
-getTags :: Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Tag])
+getTags ::
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [Tag])
 getTags conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
@@ -26,7 +30,7 @@ getTags conn queryString = do
       mbName
       (toInt <$> mbLimit)
       (toInt <$> mbOffset)
-  return $ payloadResponse tags
+  return (status200, payloadResponse tags)
   where
     requiredNames = []
     requiredChecks = []

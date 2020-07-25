@@ -20,9 +20,9 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           MethodsTest.Helper
+import           TestHelper
 import qualified MethodsTest.User               as User
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
@@ -31,7 +31,7 @@ import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Methods.Tag: " $ do
+  describeDB DB.init "Methods.Tag: " $ do
     User.createUser
     User.createAdmin
     createTagByUser
@@ -62,7 +62,7 @@ createFirstTagByAdmin =
   itDB "admin can create tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createTag conn (query token)
+    (status, resp) <- lift $ createTag conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName1"), ("token", Just token)]
@@ -72,7 +72,7 @@ createSecondTagByAdmin =
   itDB "admin can create one more tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createTag conn (query token)
+    (status, resp) <- lift $ createTag conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName2"), ("token", Just token)]
@@ -110,7 +110,7 @@ getTags_ :: SpecWith TestDB
 getTags_ =
   itDB "can get tag with child" $ do
     conn <- getConnection
-    resp <- lift $ getTags conn query
+    (status, resp) <- lift $ getTags conn query
     (resp & responseResult) `shouldBe` Just [testTag1, testTag2]
   where
     query = []
@@ -119,7 +119,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get tag by id" $ do
     conn <- getConnection
-    resp <- lift $ getTags conn query
+    (status, resp) <- lift $ getTags conn query
     (resp & responseResult) `shouldBe` Just [testTag1]
   where
     query = [("tag_id", Just "1")]
@@ -128,7 +128,7 @@ getByName :: SpecWith TestDB
 getByName =
   itDB "can get tag by name" $ do
     conn <- getConnection
-    resp <- lift $ getTags conn query
+    (status, resp) <- lift $ getTags conn query
     (resp & responseResult) `shouldBe` Just [testTag1]
   where
     query = [("name", Just "someName1")]
@@ -148,7 +148,7 @@ deleteByAdmin =
   itDB "admin can delete tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ deleteTag conn (query token)
+    (status, resp) <- lift $ deleteTag conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("tag_id", Just "1"), ("token", Just token)]
@@ -157,7 +157,7 @@ getAfterDelete :: SpecWith TestDB
 getAfterDelete =
   itDB "is only 1 tag exists after delete" $ do
     conn <- getConnection
-    resp <- lift $ getTags conn query
+    (status, resp) <- lift $ getTags conn query
     (resp & responseResult) `shouldBe` Just [testTag2]
   where
     query = []

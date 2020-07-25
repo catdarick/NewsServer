@@ -6,7 +6,7 @@ then
     token=$(<user.token)
 fi
 query="http://localhost:3000/deleteTag?tag_id=$id&token=$token"
-curl $query
+curl -X DELETE $query
 
 
 echo ''

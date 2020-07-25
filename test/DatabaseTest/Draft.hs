@@ -19,14 +19,14 @@ import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
 import qualified DatabaseTest.Category          as Category
 import qualified DatabaseTest.Tag               as Tag
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Draft: " $ do
+  describeDB DB.init "Draft: " $ do
     Author.insert
     Category.insert
     Tag.insert

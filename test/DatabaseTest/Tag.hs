@@ -14,14 +14,14 @@ import           Database.Edit.Tag
 import           Database.Get.Tag
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Tag: " $ do
+  describeDB DB.init "Tag: " $ do
     insert
     getById
     getByBadId

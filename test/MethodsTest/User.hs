@@ -22,11 +22,11 @@ import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (DBT, getConnection)
-import           MethodsTest.Helper
-import           Migration.Create
-import           Network.HTTP.Types.Status      (status200, status400,
+import           TestHelper
+import           Network.HTTP.Types.Status      (status201, status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
@@ -34,7 +34,7 @@ import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Methods.User: " $ do
+  describeDB DB.init "Methods.User: " $ do
     createUser
     createAdmin
     createUserDuplicate
@@ -58,8 +58,8 @@ createUser =
   itDB "can create user" $ do
     conn <- getConnection
     config <- getConfig
-    resp <- lift $ createAccount conn config query
-    (resp & responseSuccess) `shouldBe` True
+    (status, resp) <- lift $ createAccount conn config query
+    (status,(resp & responseSuccess)) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "user1")
@@ -73,8 +73,8 @@ createAuthor1Account =
   itDB "can create author1 account" $ do
     conn <- getConnection
     config <- getConfig
-    resp <- lift $ createAccount conn config query
-    (resp & responseSuccess) `shouldBe` True
+    (status, resp) <- lift $ createAccount conn config query
+    (status,(resp & responseSuccess)) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "author1")
@@ -88,8 +88,8 @@ createAuthor2Account =
   itDB "can create author2 account" $ do
     conn <- getConnection
     config <- getConfig
-    resp <- lift $ createAccount conn config query
-    (resp & responseSuccess) `shouldBe` True
+    (status, resp) <- lift $ createAccount conn config query
+    (status,(resp & responseSuccess)) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "author2")
@@ -109,8 +109,8 @@ createAdmin =
   itDB "can create admin" $ do
     conn <- getConnection
     config <- getConfig
-    resp <- lift $ createAccount conn config (query config)
-    (resp & responseSuccess) `shouldBe` True
+    (status, resp) <- lift $ createAccount conn config (query config)
+    (status,(resp & responseSuccess)) `shouldBe` (status201, True)
   where
     query config =
       [ ("login", Just "admin")
@@ -211,7 +211,7 @@ getUsers_ :: SpecWith TestDB
 getUsers_ =
   itDB "can get only two accounts (user and admin)" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser, testAdmin]
   where
     query = []
@@ -220,7 +220,7 @@ getToken_ :: SpecWith TestDB
 getToken_ =
   itDB "can get token" $ do
     conn <- getConnection
-    resp <- lift $ getToken conn query
+    (status, resp) <- lift $ getToken conn query
     (resp & responseSuccess) `shouldBe` True
   where
     query = [("login", Just "user1"), ("password", Just "testPass")]
@@ -229,7 +229,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get by id" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("user_id", Just "1")]
@@ -238,7 +238,7 @@ getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("login", Just "user1")]
@@ -247,7 +247,7 @@ getByFName :: SpecWith TestDB
 getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("first_name", Just "userFName")]
@@ -256,7 +256,7 @@ getByLName :: SpecWith TestDB
 getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
   where
     query = [("last_name", Just "userLName")]
@@ -276,7 +276,7 @@ deleteByAdmin =
   itDB "admin can delete account" $ do
     conn <- getConnection
     token <- getAdminToken conn
-    resp <- lift $ deleteUser conn (query token)
+    (status, resp) <- lift $ deleteUser conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("user_id", Just "1"), ("token", Just token)]
@@ -285,35 +285,35 @@ getUsersAfterDelete :: SpecWith TestDB
 getUsersAfterDelete =
   itDB "can get only one account after delete (admin)" $ do
     conn <- getConnection
-    resp <- lift $ getUsers conn query
+    (status, resp) <- lift $ getUsers conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAdmin]
   where
     query = []
 
 getUserToken :: Connection -> DBT IO ByteString
 getUserToken conn = do
-  respToken <- lift $ getToken conn query
+  (status, respToken) <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "user1"), ("password", Just "testPass")]
 
 getAdminToken :: Connection -> DBT IO ByteString
 getAdminToken conn = do
-  respToken <- lift $ getToken conn query
+  (status, respToken) <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "admin"), ("password", Just "testPass")]
 
 getAuthor1Token :: Connection -> DBT IO ByteString
 getAuthor1Token conn = do
-  respToken <- lift $ getToken conn query
+  (status, respToken) <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "author1"), ("password", Just "testPass")]
 
 getAuthor2Token :: Connection -> DBT IO ByteString
 getAuthor2Token conn = do
-  respToken <- lift $ getToken conn query
+  (status, respToken) <- lift $ getToken conn query
   return $ pack $ fromJust $respToken & responseResult
   where
     query = [("login", Just "author2"), ("password", Just "testPass")]

@@ -38,9 +38,9 @@ defaultResponse success =
     , responseResult = Nothing
     }
 
+
+errorResponse :: ByteString -> Response ()
 errorResponse error = (defaultResponse False)  {responseError = Just $ decodeUtf8 error} 
-errorResponse2 :: ByteString -> Response ()
-errorResponse2 error = (defaultResponse False)  {responseError = Just $ decodeUtf8 error} 
 okResponse = (defaultResponse True)
 
 okResponseWithResult result = (defaultResponse True) {responseResult = Just result}

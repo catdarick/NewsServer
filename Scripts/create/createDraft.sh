@@ -6,7 +6,7 @@ then
 fi
 categoryId=$(<category.id)
 query="http://localhost:3000/createDraft?&token=$token&title=title&content=content&category_id=$categoryId"
-result=$(curl $query)
+result=$(curl -X POST $query)
 echo $result > tmp
 id=$(jq -r '.result.id' tmp)
 echo $result

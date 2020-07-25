@@ -20,14 +20,14 @@ import           Database.Get.Author
 import           Database.Get.User
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Author: " $ do
+  describeDB DB.init "Author: " $ do
     insert
     getById
     getByBadId

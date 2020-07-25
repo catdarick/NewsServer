@@ -10,7 +10,7 @@ then
     token=$(<admin.token)
 fi
 query="http://localhost:3000/deleteDraft?draft_id=$id&token=$token"
-curl $query
+curl -X DELETE $query
 
 
 echo ''

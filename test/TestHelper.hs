@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module MethodsTest.Helper where
+module TestHelper where
 
 import           Api.ErrorException
 import           Data.Time           (LocalTime)

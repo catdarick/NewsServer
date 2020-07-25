@@ -13,9 +13,12 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.News          as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
 getNews ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [News])
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [News])
 getNews conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
@@ -40,7 +43,7 @@ getNews conn queryString = do
       (toDate <$> mbAfterDate)
       (toInt <$> mbLimit)
       (toInt <$> mbOffset)
-  return $ payloadResponse news
+  return (status200, payloadResponse news)
   where
     requiredNames = []
     requiredChecks = []

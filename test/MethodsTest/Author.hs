@@ -18,9 +18,9 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           MethodsTest.Helper
+import           TestHelper
 import qualified MethodsTest.User               as User
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
@@ -29,7 +29,7 @@ import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Methods.Author: " $ do
+  describeDB DB.init "Methods.Author: " $ do
     User.createUserAdminAuthorAccounts
     createAuthorByUser
     createAuthor1ByAdmin
@@ -61,7 +61,7 @@ createAuthor1ByAdmin =
   itDB "admin can create author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createAuthor conn (query token)
+    (status, resp) <- lift $ createAuthor conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -75,7 +75,7 @@ createAuthor2ByAdmin =
   itDB "admin can make himsel an author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createAuthor conn (query token)
+    (status, resp) <- lift $ createAuthor conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -107,7 +107,7 @@ getAuthors_ :: SpecWith TestDB
 getAuthors_ =
   itDB "get only two aauthors" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testAuthor1, testAuthor2]
   where
@@ -117,7 +117,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get by id" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("author_id", Just "1")]
@@ -126,7 +126,7 @@ getByUserId :: SpecWith TestDB
 getByUserId =
   itDB "can get by user id" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("user_id", Just "3")]
@@ -135,7 +135,7 @@ getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("login", Just "author1")]
@@ -144,7 +144,7 @@ getByFName :: SpecWith TestDB
 getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("first_name", Just "author1FName")]
@@ -153,7 +153,7 @@ getByLName :: SpecWith TestDB
 getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("last_name", Just "author1LName")]
@@ -173,7 +173,7 @@ deleteByAdmin =
   itDB "admin can delete account" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ deleteAuthor conn (query token)
+    (status, resp) <- lift $ deleteAuthor conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("author_id", Just "1"), ("token", Just token)]
@@ -182,7 +182,7 @@ getUsersAfterDelete :: SpecWith TestDB
 getUsersAfterDelete =
   itDB "get only one author after delete (author2)" $ do
     conn <- getConnection
-    resp <- lift $ getAuthors conn query
+    (status, resp) <- lift $ getAuthors conn query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor2]
   where
     query = []

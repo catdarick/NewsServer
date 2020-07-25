@@ -4,6 +4,7 @@ module Api.Helpers.Getters where
 
 import           Api.ErrorException
 import           Api.Helpers.Checks
+import           Network.HTTP.Types         (Status, status200)
 import           Api.Types.Synonyms
 import           Control.Monad.Catch   (MonadThrow (throwM))
 import           Data.ByteString       (ByteString, length)

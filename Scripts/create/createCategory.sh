@@ -12,7 +12,7 @@ then
     name="child_of_$id"
     query="http://localhost:3000/createCategory?&token=$token&name=$name&parent_id=$id"
 fi
-result=$(curl $query)
+result=$(curl -X POST $query)
 echo $result > tmp
 id=$(jq -r '.result.id' tmp)
 echo $result

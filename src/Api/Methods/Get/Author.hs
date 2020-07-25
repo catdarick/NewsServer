@@ -12,9 +12,12 @@ import           Api.Types.Synonyms
 import           Data.ByteString            (ByteString)
 import qualified Database.Get.Author        as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
 getAuthors ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Author])
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [Author])
 getAuthors conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
@@ -30,7 +33,7 @@ getAuthors conn queryString = do
       mbLName
       (toInt <$> mbLimit)
       (toInt <$> mbOffset)
-  return $ payloadResponse authors
+  return (status200, payloadResponse authors)
   where
     requiredNames = []
     requiredChecks = []

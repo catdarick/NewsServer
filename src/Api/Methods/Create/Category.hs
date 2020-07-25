@@ -11,16 +11,17 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Create.Category   as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status201)
 
 createCategory ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Response Idcont)
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
 createCategory conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, name] = requiredValues
   let [parentId] = optionalMaybeValues
   DB.adminGuard conn token
   id <- DB.addCategory conn name (toInt <$> parentId)
-  return $ idResponse id
+  return (status201, idResponse id)
   where
     requiredNames = ["token", "name"]
     requiredChecks = [isNotEmpty, isNotEmpty]

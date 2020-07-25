@@ -12,9 +12,12 @@ import           Api.Types.User
 import           Data.ByteString            (ByteString)
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
 getUsers ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [User])
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [User])
 getUsers conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
@@ -29,7 +32,7 @@ getUsers conn queryString = do
       mbLName
       (toInt <$> mbLimit)
       (toInt <$> mbOffset)
-  return $ payloadResponse users
+  return (status200, payloadResponse users)
   where
     requiredNames = []
     requiredChecks = [isInt]

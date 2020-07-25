@@ -4,6 +4,7 @@
 module Api.Methods.Method where
 
 import           Api.Helpers.Checks
+import           Network.HTTP.Types         (Status, status200)
 import           Api.Helpers.Getters
 import qualified Api.Methods.Errors         as Err
 import           Api.Types.Response

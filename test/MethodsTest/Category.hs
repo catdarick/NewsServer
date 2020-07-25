@@ -18,9 +18,9 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           MethodsTest.Helper
+import           TestHelper
 import qualified MethodsTest.User               as User
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
@@ -29,7 +29,7 @@ import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Methods.Category: " $ do
+  describeDB DB.init "Methods.Category: " $ do
     User.createUser
     User.createAdmin
     createCategoryByUser
@@ -60,7 +60,7 @@ createCategoryByAdmin =
   itDB "admin can create category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createCategory conn (query token)
+    (status, resp) <- lift $ createCategory conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName"), ("token", Just token)]
@@ -70,7 +70,7 @@ createChildCategoryByAdmin =
   itDB "admin can create child category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ createCategory conn (query token)
+    (status, resp) <- lift $ createCategory conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -102,7 +102,7 @@ getCategories_ :: SpecWith TestDB
 getCategories_ =
   itDB "can get category with child" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = []
@@ -111,7 +111,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get category by id" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = [("category_id", Just "1")]
@@ -120,7 +120,7 @@ getChildById :: SpecWith TestDB
 getChildById =
   itDB "can get child category" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("category_id", Just "2")]
@@ -129,7 +129,7 @@ getChildByName :: SpecWith TestDB
 getChildByName =
   itDB "can get child by name" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("name", Just "someName2")]
@@ -138,7 +138,7 @@ getChildByParentId :: SpecWith TestDB
 getChildByParentId =
   itDB "can get child by parent_id" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("parent_id", Just "1")]
@@ -158,7 +158,7 @@ deleteByAdmin =
   itDB "admin can delete category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    resp <- lift $ deleteCategory conn (query token)
+    (status, resp) <- lift $ deleteCategory conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("category_id", Just "1"), ("token", Just token)]
@@ -167,7 +167,7 @@ getAfterDelete :: SpecWith TestDB
 getAfterDelete =
   itDB "result list is empty after delete parent category" $ do
     conn <- getConnection
-    resp <- lift $ getCategories conn query
+    (status, resp) <- lift $ getCategories conn query
     (resp & responseResult) `shouldBe` Just []
   where
     query = []

@@ -15,9 +15,10 @@ import qualified Database.Checks.Comment    as DB
 import qualified Database.Checks.User       as DB
 import qualified Database.Delete.Comment    as DB
 import           Database.PostgreSQL.Simple (Connection)
-import           Network.HTTP.Types         (status403)
+import           Network.HTTP.Types         (Status, status200, status403)
 
-deleteComment :: Connection -> [(ByteString, Maybe Login)] -> IO (Response ())
+deleteComment ::
+     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
 deleteComment conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, commentId] = requiredValues
@@ -27,7 +28,7 @@ deleteComment conn queryString = do
   if isCommentCreator || isAdmin
     then DB.deleteComment conn (toInt commentId)
     else throwM $ ErrorException status403 Err.noPerms
-  return okResponse
+  return (status200, okResponse)
   where
     requiredNames = ["token", "comment_id"]
     requiredChecks = [isNotEmpty, isInt]

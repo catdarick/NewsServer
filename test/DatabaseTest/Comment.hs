@@ -18,14 +18,14 @@ import qualified DatabaseTest.Category          as Category
 import qualified DatabaseTest.Draft             as Draft
 import qualified DatabaseTest.Tag               as Tag
 import qualified DatabaseTest.User              as User
-import           Migration.Create
+import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 
 spec :: Spec
 spec =
-  describeDB initDatabase "Comment: " $ do
+  describeDB DB.init "Comment: " $ do
     Author.insert
     Category.insert
     Tag.insert

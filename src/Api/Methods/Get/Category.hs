@@ -13,9 +13,12 @@ import           Data.ByteString            (ByteString)
 import           Data.Maybe                 (isJust)
 import qualified Database.Get.Category      as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status200)
 
 getCategories ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response [Category])
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response [Category])
 getCategories conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
@@ -28,7 +31,7 @@ getCategories conn queryString = do
              (toInt <$> parentId)
              name
       else DB.getRootCategoriesTree conn
-  return $ payloadResponse categories
+  return (status200, payloadResponse categories)
   where
     requiredNames = []
     requiredChecks = []

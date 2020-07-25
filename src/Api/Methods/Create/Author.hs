@@ -11,16 +11,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Create.Author     as DB
 import           Database.PostgreSQL.Simple (Connection)
+import           Network.HTTP.Types         (Status, status201)
 
 createAuthor ::
-     Connection -> [(ByteString, Maybe ByteString)] -> IO (Response Idcont)
+     Connection
+  -> [(ByteString, Maybe ByteString)]
+  -> IO (Status, Response Idcont)
 createAuthor conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, userId] = requiredValues
   let [description] = optionalMaybeValues
   DB.adminGuard conn token
   id <- DB.addAuthor conn (toInt userId) description
-  return $ idResponse id
+  return (status201, idResponse id)
   where
     requiredNames = ["token", "user_id"]
     requiredChecks = [isNotEmpty, isInt]

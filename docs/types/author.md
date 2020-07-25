@@ -5,7 +5,7 @@ Data type that describing the author.
 Field | Type |Description
 ---------- | ------------- | ---------
 __id__ | integer | Author's ID
-__user__ | [User](docs/types/user.md) | Author's user profile
+__user__ | [User](user.md) | Author's user profile
 description |string | Author's description
 
 

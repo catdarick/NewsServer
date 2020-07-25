@@ -26,7 +26,7 @@ admin_pass | string | Global admin password
 
 **Code** : `201`
 
-**Content:** [Response](docs/types/response.md) with created user [id container](docs/types/idcont.md) in result field.
+**Content:** [Response](../types/response.md) with created user [id container](../types/idcont.md) in result field.
 
 
 
@@ -36,7 +36,7 @@ admin_pass | string | Global admin password
 
 **Code** : `400  BAD REQUEST`
 
-**Content:** [Response](docs/types/response.md) with description in error field.
+**Content:** [Response](../types/response.md) with description in error field.
 
 ### Or
 

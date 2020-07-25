@@ -26,7 +26,7 @@ NewsServer-exe
 
 Closed endpoints require a valid Token to be included in the header of the
 request. A Token can be acquired from the Login view above.
-* [Create account](docs/create/account.md) : `POST /createAccount`
+* [Create account](docs/create/user.md) : `POST /createAccount`
 * [Get token](docs/get/token.md) : `GET /getToken`
 
 ##### Get methods
@@ -46,7 +46,7 @@ Each endpoint displays information related to some entity
 
 Each endpoint displays information related to some entity
 
-* [Create user](docs/create/user.md) : `PUT /createUser`
+* [Create account](docs/create/user.md) : `PUT /createUser`
 * [Create author](docs/create/author.md) : `POST /createAuthor`
 * [Create tag](docs/create/tag.md) : `POST /createTag`
 * [Create category](docs/create/category.md) : `POST /createCategory`

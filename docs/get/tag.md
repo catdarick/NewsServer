@@ -1,4 +1,4 @@
-# Get Tag
+# Get Tags
 
 Depending of which filters you choose, you will receive JSON-serialized [Response](../types/response.md) with [Tag](../types/tag.md) objects as a result.
 

@@ -1,4 +1,4 @@
-# Get Category
+# Get Categories
 
 Depending of which filters you choose, you will receive JSON-serialized [Response](../types/response.md) with [Category](../types/category.md) objects as a result.
 

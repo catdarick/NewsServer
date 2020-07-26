@@ -37,7 +37,7 @@ Each endpoint displays information related to some entity
 * [Get authors](docs/get/author.md) : `GET /getAuthors`
 * [Get tags](docs/get/tag.md) : `GET /getTags`
 * [Get categories](docs/get/category.md) : `GET /getCategories`
-* [Get drafts](docs/get/deaft.md) : `GET /getDrafts`
+* [Get drafts](docs/get/draft.md) : `GET /getDrafts`
 * [Get news](docs/get/news.md) : `GET /getNews`
 * [Get comments](docs/get/comment.md) : `GET /getComments`
 

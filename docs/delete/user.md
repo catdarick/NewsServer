@@ -1,17 +1,19 @@
-# Create Author
+# Delete User
 
-Grants author priveleges to any user.
+Deletes user.
 
-**URL** : `/createAuthor`
+**URL** : `/deleteUser`
 
 **Query Parameters:** 
 Field | Type |Description
 ---------- | ------------- | ---------
 __token__ | string | Access token
-__user_id__ | integer |User ID to be granted author privileges
-description | string | Author's description
+__user_id__ | integer | User ID to be deleted
 
-**Method** : `POST`
+**Note:**
+All child categories will also be deleted!
+
+**Method** : `DELETE`
 
 **Auth required** : Yes
 
@@ -19,12 +21,10 @@ description | string | Author's description
 
 ## Success Response
 
-**Content:** [Response](../types/response.md) with created author [id container](../types/idcont.md) in `result` field.
+**Content:** [Response](../types/response.md) with empty `result` field.
 
 * **Condition** : If everything is OK.  
-**Code** : `201 CREATED`
-
-
+**Code** : `200 OK`
 
 ## Error Responses
 
@@ -38,7 +38,7 @@ description | string | Author's description
 
 **Content:** [Response](../types/response.md) with error description in `error` field.
 
-* **Condition** : If user is already an author.  
+* **Condition** : If user with specified `user_id` does not exists.  
 **Code** : `400  BAD REQUEST`
 
 

@@ -33,7 +33,7 @@ News will have the same ID as a draft.
 
 **Content:** [Response](../types/response.md) with error description in `error` field.
 
-* **Condition** : If required fields are missed.  
+* **Condition** : If required fields are missed or incorrect.  
 **Code** : `400 BAD REQUEST`
 
 * **Condition** : If token does not belong to draft owner author.  

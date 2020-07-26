@@ -34,7 +34,7 @@ admin_pass | string | Global admin password
 * **Condition** : If login is busy.  
 **Code** : `400  BAD REQUEST`
 
-* **Condition** : If required fields are missed.  
+* **Condition** : If required fields are missed or incorrect.  
 **Code** : `400 BAD REQUEST`
 
 

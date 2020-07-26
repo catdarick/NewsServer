@@ -36,7 +36,7 @@ pictures | [string] | List with URLs of additional pictures
 * **Condition** : If tag with specified name already exists.  
 **Code** : `400  BAD REQUEST`
 
-* **Condition** : If required fields are missed.  
+* **Condition** : If required fields are missed or incorrect.  
 **Code** : `400 BAD REQUEST`
 
 * **Condition** : If category doesn't exists.  

@@ -5,12 +5,12 @@ Data type that describing the news.
 Field | Type |Description
 ---------- | ------------- | ---------
 __id__ | integer | News ID
-__author__ | [Author](author.md) | News author
 __title__ | string | News name
 __content__ | string | News content
 __tags__ | [[Tag](tag.md)] | News content
 __category__ | [[Category](category.md)] | News category
 __creation_time__ | string | News creation time
+author | [Author](author.md) | News author
 main_picture | string | News main picture URL
 additional_pictures | [string] | News additional pictures URL
 

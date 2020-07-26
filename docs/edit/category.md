@@ -36,7 +36,7 @@ If `parent_id` is `0` then the category will become the root.
 * **Condition** : If token does not belong to the administrator.  
 **Code** : `404 BAD REQUEST`
 
-* **Condition** : If required fields are missed.  
+* **Condition** : If required fields are missed or incorrect.  
 **Code** : `404 BAD REQUEST`
 
 

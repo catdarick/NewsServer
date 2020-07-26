@@ -71,6 +71,6 @@ Each endpoint displays information related to some entity
 * [Delete author](docs/delete/author.md) : `DELETE /deleteAuthor`
 * [Delete tag](docs/delete/tag.md) : `DELETE /deleteTag`
 * [Delete category](docs/delete/category.md) : `DELETE /deleteCategory`
-* [Delete draft](docs/delete/deaft.md) : `DELETE /deleteDraft`
-* [Delete news](docs/delete/draft.md) : `DELETE /deleteNews`
+* [Delete draft](docs/delete/draft.md) : `DELETE /deleteDraft`
+* [Delete news](docs/delete/news.md) : `DELETE /deleteNews`
 * [Delete comment](docs/delete/comment.md) : `DELETE /deleteComment`

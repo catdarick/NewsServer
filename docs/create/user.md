@@ -24,23 +24,20 @@ admin_pass | string | Global admin password
 
 **Condition** : If everything is OK and login is not busy.
 
-**Code** : `201`
+**Code** : `201 CREATED`
 
-**Content:** [Response](../types/response.md) with created user [id container](../types/idcont.md) in result field.
+**Content:** [Response](../types/response.md) with created user [id container](../types/idcont.md) in `result` field.
 
 
 
 ## Error Responses
+**Content:** [Response](../types/response.md) with error description in `error` field.
 
-**Condition** : If login is busy.
-
+* **Condition** : If login is busy.
 **Code** : `400  BAD REQUEST`
 
-**Content:** [Response](../types/response.md) with description in error field.
-
-### Or
-
-**Condition** : If required fields are missed.
-
+* **Condition** : If required fields are missed.
 **Code** : `400 BAD REQUEST`
+
+
 

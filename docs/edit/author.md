@@ -1,6 +1,6 @@
 # Edit Author
 
-Edites [author's](../types/author.md) fields.
+Edites [author](../types/author.md) fields.
 
 **URL** : `/editAuthor`
 

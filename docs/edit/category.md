@@ -11,6 +11,7 @@ __token__ | string | Access token
 __category_id__ | integer | Category ID to be changed
 name | string | New name
 parent_id | integer | ID of parent category
+
 **Note:**
 Fields not specified will not be affected.
 If `parent_id` is `0` then the category will become the root.

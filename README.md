@@ -61,7 +61,7 @@ Each endpoint displays information related to some entity
 * [Edit author](docs/edit/author.md) : `PUT /editAuthor`
 * [Edit tag](docs/edit/tag.md) : `PUT /editTag`
 * [Edit category](docs/edit/category.md) : `PUT /editCategory`
-* [Edit draft](docs/edit/deaft.md) : `PUT /editDraft`
+* [Edit draft](docs/edit/draft.md) : `PUT /editDraft`
 
 #### Delete methods
 

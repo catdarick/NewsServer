@@ -33,10 +33,10 @@ admin_pass | string | Global admin password
 ## Error Responses
 **Content:** [Response](../types/response.md) with error description in `error` field.
 
-* **Condition** : If login is busy.
+* **Condition** : If login is busy.  
 **Code** : `400  BAD REQUEST`
 
-* **Condition** : If required fields are missed.
+* **Condition** : If required fields are missed.  
 **Code** : `400 BAD REQUEST`
 
 

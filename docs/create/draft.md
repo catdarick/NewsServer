@@ -37,16 +37,16 @@ pictures | [string] | List with URLs of additional pictures
 * **Condition** : If tag with specified name already exists.  
 **Code** : `400  BAD REQUEST`
 
-* **Condition** : If required fields are missed.
+* **Condition** : If required fields are missed.  
 **Code** : `400 BAD REQUEST`
 
-* **Condition** : If category doesn't exists.
+* **Condition** : If category doesn't exists.  
 **Code** : `400 BAD REQUEST`
 
-* **Condition** : If one of tags doesn't exists.
+* **Condition** : If one of tags doesn't exists.  
 **Code** : `400 BAD REQUEST`
 
-* **Condition** : If token does not belong to author.
+* **Condition** : If token does not belong to author.  
 **Code** : `403 FORBIDDEN`
 
 

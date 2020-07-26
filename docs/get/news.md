@@ -24,7 +24,7 @@ sort | integer | To get ordered by * news. Defaults to `1`. Read note.
 limit | integer | Limits the number of objects to be retrieved. Defaults to `50`.
 offset | integer | Number of entities to skip. Used for pagination. Defaults to `0`.
 
-**Note:**
+**Note:**  
 `limit` must be from interval `(1-200)`
 Sort possible values:
 - `1` To sort from newest to oldest

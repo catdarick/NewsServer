@@ -13,7 +13,7 @@ name | string | To get categories with specified name
 limit | integer | Limits the number of objects to be retrieved. Defaults to `50`.
 offset | integer | Number of entities to skip. Used for pagination. Defaults to `0`.
 
-**Note:**
+**Note:**  
 `limit` must be from interval `(1-200)`
 
 **Method** : `GET`

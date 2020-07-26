@@ -18,7 +18,7 @@ content | string | To get drafts that contains specified substring in content
 limit | integer | Limits the number of objects to be retrieved. Defaults to `50`.
 offset | integer | Number of entities to skip. Used for pagination. Defaults to `0`.
 
-**Note:**
+**Note:**  
 `limit` must be from interval `(1-200)`
 The non-author can call this method, but will receive an empty list.
 

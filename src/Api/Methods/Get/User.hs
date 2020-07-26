@@ -35,7 +35,7 @@ getUsers conn queryString = do
   return (status200, payloadResponse users)
   where
     requiredNames = []
-    requiredChecks = [isInt]
+    requiredChecks = []
     required = (requiredNames, requiredChecks)
     optionalNames =
       ["user_id", "login", "first_name", "last_name", "limit", "offset"]

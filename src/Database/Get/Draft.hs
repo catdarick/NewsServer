@@ -18,6 +18,7 @@ import           Database.PostgreSQL.Simple.SqlQQ (sql)
 getDrafts ::
      Connection
   -> Token
+  -> Maybe NewsId
   -> Maybe CategoryId
   -> Maybe TagId
   -> Maybe [TagId]
@@ -27,7 +28,7 @@ getDrafts ::
   -> Maybe Limit
   -> Maybe Offset
   -> IO [News]
-getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbLimit mbOffset = do
+getDrafts conn token mbDraftId mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbLimit mbOffset = do
   res <-
     query
       conn
@@ -39,6 +40,7 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
           where news_tag.news_id = news.id)) as tagsId
         FROM news, author, user_token
         WHERE news.is_published = false
+        AND news.id =  COALESCE(?, news.id)
         AND user_token.user_id =  author.user_id
         AND news.author_id = author.id
         AND news.title LIKE ?
@@ -51,7 +53,8 @@ getDrafts conn token mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbConte
       AND (? IS NULL OR (? <@ (foo.tagsId)))
       AND (? IS NULL OR (? && (foo.tagsId)))
       |]
-      ( toTemplate mbTitle
+      ( mbDraftId
+      , toTemplate mbTitle
       , toTemplate mbContent
       , token
       , mbCategotyId

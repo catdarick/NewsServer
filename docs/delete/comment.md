@@ -11,7 +11,7 @@ __token__ | string | Access token
 __comment_id__ | integer | Comment ID to be deleted
 
 **Note:**
-User can only delete his own comment.
+User can only delete own comment.
 
 **Method** : `DELETE`
 

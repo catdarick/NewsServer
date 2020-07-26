@@ -22,12 +22,13 @@ getDrafts ::
 getDrafts conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token] = requiredValues
-  let [mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
+  let [mbDraftId, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
         optionalMaybeValues
   news <-
     DB.getDrafts
       conn
       token
+      (toInt <$> mbDraftId)
       (toInt <$> mbCategoryId)
       (toInt <$> mbTagId)
       (toIntList <$> mbTagsIdIn)
@@ -42,7 +43,8 @@ getDrafts conn queryString = do
     requiredChecks = [isNotEmpty]
     required = (requiredNames, requiredChecks)
     optionalNames =
-      [ "category_id"
+      [ "draft_id"
+      , "category_id"
       , "tag_id"
       , "tags_id_in"
       , "tags_id_all"
@@ -53,6 +55,7 @@ getDrafts conn queryString = do
       ]
     optionalChecks =
       [ isInt
+      , isInt
       , isInt
       , isIntList
       , isIntList

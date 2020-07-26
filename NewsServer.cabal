@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 043d49173dff0980f713dbab482270bb8039cc94cdef384695fac85a761e10fc
+-- hash: 336e1ef361003a1d067f232bb41fee8e1389b9ab4a7690072047938bb0174ea6
 
 name:           NewsServer
 version:        0.1.0.0
@@ -35,7 +35,9 @@ library
       Api.Methods.Create.Account
       Api.Methods.Create.Author
       Api.Methods.Create.Category
+      Api.Methods.Create.Comment
       Api.Methods.Create.Draft
+      Api.Methods.Create.News
       Api.Methods.Create.Tag
       Api.Methods.Delete
       Api.Methods.Delete.Author
@@ -59,8 +61,6 @@ library
       Api.Methods.Get.Tag
       Api.Methods.Get.Token
       Api.Methods.Get.User
-      Api.Methods.Post.Comment
-      Api.Methods.Post.Draft
       Api.Types.Author
       Api.Types.Category
       Api.Types.Comment

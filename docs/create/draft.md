@@ -27,7 +27,7 @@ pictures | [string] | List with URLs of additional pictures
 
 **Code** : `201 CREATED`
 
-**Content:** [Response](../types/response.md) with created tag [id container](../types/idcont.md) in `result` field.
+**Content:** [Response](../types/response.md) with created draft [id container](../types/idcont.md) in `result` field.
 
 
 

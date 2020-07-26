@@ -14,7 +14,7 @@ import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Network.HTTP.Types               (status400)
+import           Network.HTTP.Types               (status401, status400)
 
 getUsers ::
      Connection
@@ -63,7 +63,7 @@ getUserId conn token = do
           |]
       (Only token)
   case res of
-    []        -> throwM $ ErrorException status400 Err.badToken
+    []        -> throwM $ ErrorException status401 Err.badToken
     [Only id] -> return id
 
 getUserIdByPass :: Connection -> Login -> PassHash -> IO Int

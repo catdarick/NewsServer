@@ -6,7 +6,7 @@ then
 fi
 id=$(<draft.id)
 categoryId=$(<category.id)
-query="http://localhost:3000/postDraft?&token=$token&draft_id=$id"
+query="http://localhost:3000/publishDraft?&token=$token&draft_id=$id"
 result=$(curl -X POST $query)
 
 echo $result

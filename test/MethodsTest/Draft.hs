@@ -9,7 +9,7 @@ import           Api.Methods.Delete.Draft
 import           Api.Methods.Edit.Draft
 import           Api.Methods.Get.Draft
 import           Api.Methods.Get.Token
-import           Api.Methods.Post.Draft
+import           Api.Methods.Create.News
 import           Api.Types.News
 import           Api.Types.Response
 import           Control.Exception              (try)
@@ -168,22 +168,22 @@ createDraftMissingToken =
       , ("category_id", Just "1")
       ]
 
-postDraft1 :: SpecWith TestDB
-postDraft1 =
+publishDraft1 :: SpecWith TestDB
+publishDraft1 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ postDraft conn (query token)
+    (status, resp) <- lift $ publishDraft conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
 
-postDraft2 :: SpecWith TestDB
-postDraft2 =
+publishDraft2 :: SpecWith TestDB
+publishDraft2 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ postDraft conn (query token)
+    (status, resp) <- lift $ publishDraft conn (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "2"), ("token", Just token)]

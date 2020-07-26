@@ -7,8 +7,8 @@ import           Api.Methods.Create
 import           Api.Methods.Delete
 import           Api.Methods.Edit
 import           Api.Methods.Get
-import           Api.Methods.Post.Comment
-import           Api.Methods.Post.Draft
+import           Api.Methods.Create.Comment
+import           Api.Methods.Create.News
 import           Api.Types.Response
 import           Api.Types.Synonyms
 import           Config
@@ -57,8 +57,9 @@ callPostMethod conn config query path =
     ["createCategory"] -> encoded <$> createCategory conn query
     ["createTag"]      -> encoded <$> createTag conn query
     ["createDraft"]    -> encoded <$> createDraft conn query
-    ["postComment"]    -> encoded <$> postComment conn query
+    ["createComment"]    -> encoded <$> createComment conn query
     smth               -> return (status404, "")
+
 callPutMethod ::
      Connection
   -> Config
@@ -67,13 +68,14 @@ callPutMethod ::
   -> IO (Status, Lazy.ByteString)
 callPutMethod conn config query path =
   case path of
-    ["login"]          -> encoded <$> getToken conn query
-    ["postDraft"]      -> encoded <$> postDraft conn query
-    ["editAuthor"]     -> encoded <$> editAuthor conn query
-    ["editCategory"]   -> encoded <$> editCategory conn query
-    ["editTag"]        -> encoded <$> editTag conn query
-    ["editDraft"]      -> encoded <$> editDraft conn query
-    smth               -> return (status404, "")
+    ["login"]        -> encoded <$> getToken conn query
+    ["publishDraft"] -> encoded <$> publishDraft conn query
+    ["editAuthor"]   -> encoded <$> editAuthor conn query
+    ["editCategory"] -> encoded <$> editCategory conn query
+    ["editTag"]      -> encoded <$> editTag conn query
+    ["editDraft"]    -> encoded <$> editDraft conn query
+    smth             -> return (status404, "")
+
 callDeleteMethod ::
      Connection
   -> Config

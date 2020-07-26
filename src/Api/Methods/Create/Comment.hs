@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.Post.Comment where
+module Api.Methods.Create.Comment where
 
 import           Api.Helpers.Checks
 import           Network.HTTP.Types         (Status, status201)
@@ -14,8 +14,8 @@ import qualified Database.Create.Comment    as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
 
-postComment :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-postComment conn queryString = do
+createComment :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
+createComment conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, newsId, content] = requiredValues
   let [] = optionalMaybeValues

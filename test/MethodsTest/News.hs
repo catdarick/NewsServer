@@ -39,8 +39,8 @@ spec =
     Category.createChildCategoryByAdmin
     Draft.createDraftByAuthor1
     Draft.createDraftByAuthor2
-    Draft.postDraft1
-    Draft.postDraft2
+    Draft.publishDraft1
+    Draft.publishDraft2
     getNewsByUser
     getByAuthorId
     getByLogin

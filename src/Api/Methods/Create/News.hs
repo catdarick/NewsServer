@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Api.Methods.Post.Draft where
+module Api.Methods.Create.News where
 
 import           Api.Helpers.Checks
 import           Network.HTTP.Types         (Status, status200)
@@ -14,8 +14,8 @@ import qualified Database.Create.Draft      as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
 
-postDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-postDraft conn queryString = do
+publishDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
+publishDraft conn queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, draftId] = requiredValues
   let [] = optionalMaybeValues

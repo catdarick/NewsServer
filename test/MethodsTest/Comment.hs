@@ -6,7 +6,7 @@ import           Api.ErrorException
 import qualified Api.Errors                     as Err
 import           Api.Methods.Delete.Comment
 import           Api.Methods.Get.Comment
-import           Api.Methods.Post.Comment
+import           Api.Methods.Create.Comment
 import           Api.Types.Comment
 import           Api.Types.Response
 import           Control.Exception              (try)
@@ -42,21 +42,21 @@ spec =
     Category.createCategoryByAdmin
     Category.createChildCategoryByAdmin
     Draft.createDraftByAuthor1
-    postCommentBeforePost
-    Draft.postDraft1
-    postCommentAfterPost
+    createCommentBeforePost
+    Draft.publishDraft1
+    createCommentAfterPost
     getComment
     deleteCommentByAuthor
     deleteCommentByUser
     getCommentAfterDelete
-    postCommentAfterPost
+    createCommentAfterPost
     deleteCommentByAdmin
     getCommentAfterDelete
 
-postCommentByUser = do
+createCommentByUser = do
   conn <- getConnection
   token <- User.getUserToken conn
-  lift $ try $ postComment conn (query token)
+  lift $ try $ createComment conn (query token)
   where
     query token =
       [ ("news_id", Just "1")
@@ -64,16 +64,16 @@ postCommentByUser = do
       , ("token", Just token)
       ]
 
-postCommentBeforePost :: SpecWith TestDB
-postCommentBeforePost =
+createCommentBeforePost :: SpecWith TestDB
+createCommentBeforePost =
   itDB "user can't post comment before draft is published" $ do
-    res <- postCommentByUser
+    res <- createCommentByUser
     res `shouldBe` (Left $ ErrorException status400 Err.noNews)
 
-postCommentAfterPost :: SpecWith TestDB
-postCommentAfterPost =
+createCommentAfterPost :: SpecWith TestDB
+createCommentAfterPost =
   itDB "user can post comment after draft is published" $ do
-    res <- postCommentByUser
+    res <- createCommentByUser
     (responseSuccess.snd <$> res) `shouldBe` Right True
 
 getComment :: SpecWith TestDB

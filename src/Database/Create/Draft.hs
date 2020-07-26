@@ -82,12 +82,16 @@ addDraftTags conn news_id mbTagsId =
           throwM $ ErrorException status400 Err.badTags
         Right _ -> return ()
 
-publishDraft :: Connection -> NewsId -> IO Int64
-publishDraft conn newsId =
-  execute
-    conn
-    [sql|
-      UPDATE news
-      SET is_published = TRUE, creation_time = CURRENT_TIMESTAMP
-      WHERE id=?|]
-    (Only newsId)
+publishDraft :: Connection -> NewsId -> IO ()
+publishDraft conn newsId = do
+  res <-
+    execute
+      conn
+      [sql|
+        UPDATE news
+        SET is_published = TRUE, creation_time = CURRENT_TIMESTAMP
+        WHERE id=?|]
+      (Only newsId)
+  case res of
+    0 -> throwM $ ErrorException status400 Err.noDraft
+    1 -> return ()

@@ -46,13 +46,13 @@ Each endpoint displays information related to some entity
 
 Each endpoint displays information related to some entity
 
-* [Create account](docs/create/user.md) : `PUT /createUser`
+* [Create account](docs/create/user.md) : `POST /createUser`
 * [Create author](docs/create/author.md) : `POST /createAuthor`
 * [Create tag](docs/create/tag.md) : `POST /createTag`
 * [Create category](docs/create/category.md) : `POST /createCategory`
 * [Create draft](docs/create/draft.md) : `POST /createDraft`
-* [Create news by posting draft](docs/post/draft.md) : `PUT /postDraft`
-* [Create and post comment](docs/post/comment.md) : `POST /postComment`
+* [Create news by publishing draft](docs/create/news.md) : `PUT /publishDraft`
+* [Create comment](docs/create/comment.md) : `POST /createComment`
 
 ##### Edit methods
 

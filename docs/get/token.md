@@ -10,7 +10,7 @@ Field | Type |Description
 __login__ | string | Account login
 __password__ | string | Account password
 
-**Note:**
+**Note:**  
 After calling this method, all previously received tokens will be invalid.
 
 **Method** : `PUT`

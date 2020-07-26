@@ -1,20 +1,17 @@
-# Edit Author
+# Delete Tag
 
-Edites [author](../types/author.md) fields.
+Deletes tag.
 
-**URL** : `/editAuthor`
+**URL** : `/deleteTag`
 
 **Query Parameters:** 
 Field | Type |Description
 ---------- | ------------- | ---------
 __token__ | string | Access token
-__author_id__ | integer |Author ID to be changed
-description | string | New description
+__tag_id__ | integer | Tag ID to be deleted
 
-**Note:**
-Fields not specified will not be affected in draft.
 
-**Method** : `PUT`
+**Method** : `DELETE`
 
 **Auth required** : Yes
 
@@ -22,13 +19,12 @@ Fields not specified will not be affected in draft.
 
 ## Success Response
 
+
 **Content:** [Response](../types/response.md) with empty `result` field.
 
 * **Condition** : If everything is OK.  
 
 **Code** : `200 OK`
-
-
 
 ## Error Responses
 
@@ -42,7 +38,7 @@ Fields not specified will not be affected in draft.
 
 **Content:** [Response](../types/response.md) with error description in `error` field.
 
-* **Condition** : If author with specified ID does not exists.  
+* **Condition** : If tag with specified `tag_id` does not exists.  
 **Code** : `400  BAD REQUEST`
 
 

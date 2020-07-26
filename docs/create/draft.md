@@ -23,11 +23,11 @@ pictures | [string] | List with URLs of additional pictures
 
 ## Success Response
 
-**Condition** : If everything is OK.
+**Content:** [Response](../types/response.md) with created draft [id container](../types/idcont.md) in `result` field.
+
+* **Condition** : If everything is OK.  
 
 **Code** : `201 CREATED`
-
-**Content:** [Response](../types/response.md) with created draft [id container](../types/idcont.md) in `result` field.
 
 
 

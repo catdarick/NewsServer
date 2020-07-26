@@ -22,12 +22,11 @@ admin_pass | string | Global admin password
 
 ## Success Response
 
-**Condition** : If everything is OK and login is not busy.
-
-**Code** : `201 CREATED`
-
 **Content:** [Response](../types/response.md) with created user [id container](../types/idcont.md) in `result` field.
 
+* **Condition** : If everything is OK and login is not busy.  
+
+**Code** : `201 CREATED`
 
 
 ## Error Responses

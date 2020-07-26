@@ -24,11 +24,11 @@ If `parent_id` is `0` then the category will become the root.
 
 ## Success Response
 
-**Condition** : If everything is OK.
+**Content:** [Response](../types/response.md) with empty `result` field.
+
+* **Condition** : If everything is OK.  
 
 **Code** : `200 OK`
-
-**Content:** [Response](../types/response.md) with empty `result` field.
 
 
 ## Error Responses

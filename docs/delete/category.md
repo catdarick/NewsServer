@@ -1,20 +1,19 @@
-# Edit Author
+# Delete Category
 
-Edites [author](../types/author.md) fields.
+Deletes category.
 
-**URL** : `/editAuthor`
+**URL** : `/deleteCategory`
 
 **Query Parameters:** 
 Field | Type |Description
 ---------- | ------------- | ---------
 __token__ | string | Access token
-__author_id__ | integer |Author ID to be changed
-description | string | New description
+__category_id__ | integer | Category ID to be deleted
 
 **Note:**
-Fields not specified will not be affected in draft.
+All child categories will also be deleted!
 
-**Method** : `PUT`
+**Method** : `DELETE`
 
 **Auth required** : Yes
 
@@ -25,7 +24,6 @@ Fields not specified will not be affected in draft.
 **Content:** [Response](../types/response.md) with empty `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `200 OK`
 
 
@@ -36,13 +34,13 @@ Fields not specified will not be affected in draft.
 * **Condition** : If token does not belong to the administrator.  
 **Code** : `404 BAD REQUEST`
 
-* **Condition** : If required fields are missed.  
+* **Condition** : If required fields are missed or incorrect.  
 **Code** : `404 BAD REQUEST`
 
 
 **Content:** [Response](../types/response.md) with error description in `error` field.
 
-* **Condition** : If author with specified ID does not exists.  
+* **Condition** : If category with specified `category_id` does not exists.  
 **Code** : `400  BAD REQUEST`
 
 

@@ -22,11 +22,11 @@ News will have the same ID as a draft.
 
 ## Success Response
 
-**Condition** : If everything is OK.
+**Content:** [Response](../types/response.md) with empty `result` field.
+
+* **Condition** : If everything is OK.  
 
 **Code** : `200 OK`
-
-**Content:** [Response](../types/response.md) with empty `result` field.
 
 
 

@@ -24,7 +24,6 @@ Name must be unique.
 **Content:** [Response](../types/response.md) with created tag [id container](../types/idcont.md) in `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `201 CREATED`
 
 

@@ -25,7 +25,6 @@ News will have the same ID as a draft.
 **Content:** [Response](../types/response.md) with empty `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `200 OK`
 
 

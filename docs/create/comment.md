@@ -22,7 +22,6 @@ __content__ | string | Comment content
 **Content:** [Response](../types/response.md) with created comment [id container](../types/idcont.md) in `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `201 CREATED`
 
 

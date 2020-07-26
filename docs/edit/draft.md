@@ -32,7 +32,6 @@ Fields not specified will not be affected in draft.
 
 
 * **Condition** : If everything is OK.  
-
 **Code** : `200 OK`
 
 

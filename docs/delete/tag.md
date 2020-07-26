@@ -23,7 +23,6 @@ __tag_id__ | integer | Tag ID to be deleted
 **Content:** [Response](../types/response.md) with empty `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `200 OK`
 
 ## Error Responses

@@ -22,7 +22,6 @@ description | string | Author's description
 **Content:** [Response](../types/response.md) with created author [id container](../types/idcont.md) in `result` field.
 
 * **Condition** : If everything is OK.  
-
 **Code** : `201 CREATED`
 
 

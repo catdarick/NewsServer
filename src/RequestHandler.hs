@@ -107,18 +107,19 @@ handleRequest ::
 handleRequest conn config request respond = do
   let query = request & Wai.queryString
   let path = request & Wai.pathInfo
+  let rawPath = request & Wai.rawPathInfo
   let method = request & Wai.requestMethod
   let clientInfo = request & Wai.remoteHost
   let state = ServerState config conn clientInfo
   (status, bsResponse) <-
     evalStateT
-      (catch (callMethod query path method) (errorHandler method))
+      (catch (callMethod query path method) (errorHandler rawPath))
       state
   respond $
     Wai.responseLBS status [("Content-Type", "application/json")] bsResponse
   where
     callMethodWithState state query path method =
       evalStateT (callMethod query path method) state
-    errorHandler method (ErrorException status error) = do
-      Log.debug $ "Error response from " <> method <> ": " <> error
+    errorHandler path (ErrorException status error) = do
+      Log.debug $ "Error response from " <> path <> ": " <> error
       return (status, encode $ errorResponse error)

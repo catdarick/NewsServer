@@ -4,10 +4,12 @@
 
 module Database.Init where
 
-import           Database.PostgreSQL.Simple       (execute_)
+import           Data.Int                         (Int64)
+import           Database.PostgreSQL.Simple       (Connection, execute_)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 
-createUserTable conn =  
+createUserTable :: Connection -> IO Int64
+createUserTable conn =
   execute_
     conn
     [sql| CREATE TABLE user_account
@@ -21,16 +23,18 @@ createUserTable conn =
         , is_admin BOOL
         )|]
 
-createAuthorTable conn =  
+createAuthorTable :: Connection -> IO Int64
+createAuthorTable conn =
   execute_
     conn
-    [sql| CREATE TABLE author 
+    [sql| CREATE TABLE author
         ( id SERIAL UNIQUE PRIMARY KEY
         , user_id INTEGER UNIQUE REFERENCES user_account (id) ON DELETE CASCADE
         , description TEXT
         )|]
 
-createUserTokenTable conn =  
+createUserTokenTable :: Connection -> IO Int64
+createUserTokenTable conn =
   execute_
     conn
     [sql| CREATE TABLE user_token
@@ -38,7 +42,8 @@ createUserTokenTable conn =
         , token TEXT
         )|]
 
-createCategoryTable conn =  
+createCategoryTable :: Connection -> IO Int64
+createCategoryTable conn =
   execute_
     conn
     [sql| CREATE TABLE category
@@ -47,7 +52,8 @@ createCategoryTable conn =
         , name TEXT
         )|]
 
-createTagTable conn =  
+createTagTable :: Connection -> IO Int64
+createTagTable conn =
   execute_
     conn
     [sql| CREATE TABLE tag
@@ -55,7 +61,8 @@ createTagTable conn =
         , name TEXT UNIQUE
         )|]
 
-createNewsTable conn =  
+createNewsTable :: Connection -> IO Int64
+createNewsTable conn =
   execute_
     conn
     [sql| CREATE TABLE news
@@ -70,7 +77,8 @@ createNewsTable conn =
         , is_published BOOl
         )|]
 
-createNewsTagTable conn =  
+createNewsTagTable :: Connection -> IO Int64
+createNewsTagTable conn =
   execute_
     conn
     [sql| CREATE TABLE news_tag
@@ -79,19 +87,21 @@ createNewsTagTable conn =
         , PRIMARY KEY (news_id, tag_id)
         )|]
 
-createCommentTable conn =  
+createCommentTable :: Connection -> IO Int64
+createCommentTable conn =
   execute_
     conn
     [sql| CREATE TABLE comment
-        ( id SERIAL UNIQUE PRIMARY KEY 
+        ( id SERIAL UNIQUE PRIMARY KEY
         , user_id INTEGER REFERENCES user_account (id) ON DELETE CASCADE
         , news_id INTEGER REFERENCES news (id) ON DELETE CASCADE
         , creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         , content TEXT
         )|]
 
-
-init conn = sequence_ $ 
+init :: Connection -> IO ()
+init conn =
+  sequence_ $
   [ createUserTable
   , createAuthorTable
   , createUserTokenTable

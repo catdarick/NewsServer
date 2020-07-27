@@ -13,19 +13,20 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.News          as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
 import           State.Types
-import qualified Logger.Interact            as Log
 
 getNews ::
      [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response [News])
 getNews queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
-  let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
+  let [mbNewsId, mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
         optionalMaybeValues
   news <-
     DB.getNews
+      (toInt <$> mbNewsId)
       (toInt <$> mbAuthorId)
       mbLogin
       mbFName
@@ -48,7 +49,8 @@ getNews queryString = do
     requiredChecks = []
     required = (requiredNames, requiredChecks)
     optionalNames =
-      [ "author_id"
+      [ "news_id"
+      , "author_id"
       , "login"
       , "first_name"
       , "last_name"
@@ -67,6 +69,7 @@ getNews queryString = do
       ]
     optionalChecks =
       [ isInt
+      , isInt
       , isNotEmpty
       , isNotEmpty
       , isNotEmpty

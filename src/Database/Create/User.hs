@@ -11,6 +11,9 @@ import           Control.Exception                (SomeException, try)
 import           Control.Monad.Catch              (MonadThrow (throwM))
 import           Control.Monad.Trans.Class        (MonadTrans (lift))
 import           Control.Monad.Trans.State        (gets)
+import           Crypto.Hash.MD5                  (hash)
+import           Data.ByteString                  (ByteString)
+import           Data.ByteString.Char8            (pack)
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
@@ -42,6 +45,27 @@ addUser login passHash fName lName pictureId isAdmin = do
   case res of
     Left (e :: SomeException) -> throwM $ ErrorException status400 Err.loginBusy
     Right [Only id] -> return id
+
+addAdmin :: Connection -> String -> String -> String -> String -> IO ()
+addAdmin conn login pass fName lName = do
+  let passHash = hash (pack pass)
+  res <-
+    try $
+    query
+      conn
+      [sql|
+       INSERT INTO user_account
+       (login, password_hash, first_name, last_name, picture, is_admin)
+       VALUES (?,?,?,?,?,?) RETURNING id|]
+      ( login
+      , Binary passHash
+      , fName
+      , lName
+      , (Nothing :: Maybe ByteString)
+      , True)
+  case res of
+    Left (e :: SomeException) -> throwM $ ErrorException status400 Err.loginBusy
+    Right [Only (id :: Int)] -> return ()
 
 setToken :: UserId -> TokenString -> ServerStateIO Int64
 setToken userId token = do

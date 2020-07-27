@@ -17,6 +17,9 @@ Set PostgreSQL connection info in `/NewsServer/app/server.cfg`.
 # Needs to be done once
 NewsServer-exe -i
 
+#Create admin account if it's necessary
+NewsServer-exe -a login password firstName lastName
+
 # Run server
 NewsServer-exe
 ```
@@ -27,7 +30,7 @@ NewsServer-exe
 Closed endpoints require a valid Token to be included in the header of the
 request. A Token can be acquired from the Login view above.
 * [Create account](docs/create/user.md) : `POST /createAccount`
-* [Get token](docs/get/token.md) : `GET /getToken`
+* [Get token](docs/get/token.md) : `PUT /getToken`
 
 ##### Get methods
 

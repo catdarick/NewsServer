@@ -27,3 +27,4 @@ cabal.project.local~
 *.backup
 *.log
 *.cfg
+NewsServer/

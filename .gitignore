@@ -28,3 +28,5 @@ cabal.project.local~
 *.log
 *.cfg
 NewsServer/
+*.token
+*.id

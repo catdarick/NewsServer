@@ -18,12 +18,13 @@ import           Database.Delete.User
 import           Database.Edit.Author
 import           Database.Get.Author
 import           Database.Get.User
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -50,7 +51,8 @@ insert =
     addTestAuthor conn
     author <-
       lift $
-      getAuthors conn Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors Nothing Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` [testAuthor]
 
 getById :: SpecWith TestDB
@@ -59,7 +61,8 @@ getById =
     conn <- getConnection
     author <-
       lift $
-      getAuthors conn (Just 1) Nothing Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors (Just 1) Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` [testAuthor]
 
 getByBadId :: SpecWith TestDB
@@ -68,7 +71,8 @@ getByBadId =
     conn <- getConnection
     author <-
       lift $
-      getAuthors conn (Just 2) Nothing Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors (Just 2) Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` []
 
 getByUserId :: SpecWith TestDB
@@ -77,7 +81,8 @@ getByUserId =
     conn <- getConnection
     author <-
       lift $
-      getAuthors conn Nothing (Just 1) Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors Nothing (Just 1) Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` [testAuthor]
 
 getByBadUserId :: SpecWith TestDB
@@ -86,7 +91,8 @@ getByBadUserId =
     conn <- getConnection
     author <-
       lift $
-      getAuthors conn Nothing (Just 2) Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors Nothing (Just 2) Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` []
 
 getByLogin :: SpecWith TestDB
@@ -95,8 +101,8 @@ getByLogin =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         (Just "testLogin")
@@ -112,8 +118,8 @@ getByBadLogin =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         (Just "badLogin")
@@ -129,8 +135,8 @@ getByFName =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         Nothing
@@ -146,8 +152,8 @@ getByBadFName =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         Nothing
@@ -163,8 +169,8 @@ getByLName =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         Nothing
@@ -180,8 +186,8 @@ getByBadLName =
     conn <- getConnection
     author <-
       lift $
+      runWithState conn $
       getAuthors
-        conn
         Nothing
         Nothing
         Nothing
@@ -194,21 +200,19 @@ getByBadLName =
 edit =
   itDB "edit" $ do
     conn <- getConnection
-    lift $ editAuthor conn 1 (Just "newTestDescription")
+    lift $ runWithState conn $ editAuthor 1 (Just "newTestDescription")
     author <-
       lift $
-      getAuthors conn (Just 1) Nothing Nothing Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getAuthors (Just 1) Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> author) `shouldBe` [editedAuthor]
 
 delete :: SpecWith TestDB
 delete =
   itDB "delete" $ do
     conn <- getConnection
-    amount <- lift $ deleteAuthor conn 1
+    amount <- lift $ runWithState conn $ deleteAuthor 1
     amount `shouldBe` ()
-
-defTime :: LocalTime
-defTime = LocalTime (ModifiedJulianDay 0) midnight
 
 testUser :: User
 testUser = User 1 "testLogin" "testName" "testLName" Nothing defTime False
@@ -225,7 +229,10 @@ withDefTime author@Author {authorUser = user} =
 
 addTestUser :: MonadTrans t => Connection -> t IO UserId
 addTestUser conn =
-  lift $ addUser conn "testLogin" "" "testName" "testLName" Nothing False
+  lift $
+  runWithState conn $
+  addUser "testLogin" "" "testName" "testLName" Nothing False
 
 addTestAuthor :: MonadTrans t => Connection -> t IO AuthorId
-addTestAuthor conn = lift $ addAuthor conn 1 (Just "testDescription")
+addTestAuthor conn =
+  lift $ runWithState conn $ addAuthor 1 (Just "testDescription")

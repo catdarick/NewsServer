@@ -13,18 +13,17 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.Tag           as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getTags ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Tag])
-getTags conn queryString = do
+     [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response [Tag])
+getTags queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
   let [mbTagId, mbTagsId, mbName, mbLimit, mbOffset] = optionalMaybeValues
   tags <-
     DB.getTags
-      conn
       (toInt <$> mbTagId)
       (toIntList <$> mbTagsId)
       mbName

@@ -10,23 +10,27 @@ import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Api.Types.User
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
-import           Network.HTTP.Types               (status401, status400)
+import           Network.HTTP.Types               (status400, status401)
+import           State.Types
 
 getUsers ::
-     Connection
-  -> Maybe UserId
+     Maybe UserId
   -> Maybe Login
   -> Maybe FirstName
   -> Maybe LastName
   -> Maybe Limit
   -> Maybe Offset
-  -> IO [User]
-getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset = do
+  -> ServerStateIO [User]
+getUsers mbUserId mbLogin mbFName mbLName mbLimit mbOffset = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -42,19 +46,23 @@ getUsers conn mbUserId mbLogin mbFName mbLName mbLimit mbOffset = do
       (mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset)
   return $ map tupleToUser res
 
-getMaybeUserIdAndPriv :: Connection -> Token -> IO [(UserId, IsAdmin)]
-getMaybeUserIdAndPriv conn token =
-  query
-    conn
-    [sql|
+getMaybeUserIdAndPriv :: Token -> ServerStateIO [(UserId, IsAdmin)]
+getMaybeUserIdAndPriv token = do
+  conn <- gets conn
+  lift $
+    query
+      conn
+      [sql|
         SELECT user_token.user_id, user_account.is_admin FROM user_token, user_account
         WHERE user_token.token = ? AND user_account.id = user_token.user_id
         |]
-    (Only token)
+      (Only token)
 
-getUserId :: Connection -> Token -> IO UserId
-getUserId conn token = do
+getUserId :: Token -> ServerStateIO UserId
+getUserId token = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -66,9 +74,11 @@ getUserId conn token = do
     []        -> throwM $ ErrorException status401 Err.badToken
     [Only id] -> return id
 
-getUserIdByPass :: Connection -> Login -> PassHash -> IO Int
-getUserIdByPass conn login passHash = do
+getUserIdByPass :: Login -> PassHash -> ServerStateIO Int
+getUserIdByPass login passHash = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|

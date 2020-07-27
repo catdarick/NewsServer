@@ -5,19 +5,22 @@
 module Database.Edit.Category where
 
 import           Api.ErrorException
-import qualified Api.Errors               as Err
+import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Exception                (SomeException, try)
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types               (status400)
+import           State.Types
 
-editCategory ::
-     Connection -> CategoryId -> Maybe Name -> Maybe CategoryId -> IO ()
-editCategory conn categoryId mbName mbParentId = do
-  res <- try $ editCategoryLocal conn categoryId mbName mbParentId
+editCategory :: CategoryId -> Maybe Name -> Maybe CategoryId -> ServerStateIO ()
+editCategory categoryId mbName mbParentId = do
+  conn <- gets conn
+  res <- lift $ try $ editCategoryLocal conn categoryId mbName mbParentId
   case res of
     Left (e :: SomeException) -> throwM $ ErrorException status400 Err.noParent
     Right 0 -> throwM $ ErrorException status400 Err.noCategory

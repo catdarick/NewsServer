@@ -14,18 +14,18 @@ import qualified Database.Create.User       as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getToken ::
-     Connection
-  -> [(ByteString, Maybe Login)]
-  -> IO (Status, Response TokenString)
-getToken conn queryString = do
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response TokenString)
+getToken queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [login, password] = requiredValues
   let passHash = (hash password)
-  id <- DB.getUserIdByPass conn login passHash
+  id <- DB.getUserIdByPass login passHash
   token <- genToken
-  DB.setToken conn id token
+  DB.setToken id token
   return (status200, payloadResponse token)
   where
     requiredNames = ["login", "password"]

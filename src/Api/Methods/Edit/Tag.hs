@@ -11,15 +11,18 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Tag          as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
-editTag :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-editTag conn queryString = do
+editTag :: [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+editTag queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, tagId] = requiredValues
   let [name] = optionalMaybeValues
-  DB.adminGuard conn token
-  DB.editTag conn (toInt tagId) name
+  DB.adminGuard token
+  DB.editTag (toInt tagId) name
+  Log.info $ "Tag '" <> tagId <> "' successfully edited"
   return (status200, okResponse)
   where
     requiredNames = ["token", "tag_id"]

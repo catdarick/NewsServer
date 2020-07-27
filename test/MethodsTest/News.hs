@@ -12,20 +12,20 @@ import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified MethodsTest.Author             as Author
 import qualified MethodsTest.Category           as Category
 import qualified MethodsTest.Draft              as Draft
-import           TestHelper
 import qualified MethodsTest.Tag                as Tag
 import qualified MethodsTest.User               as User
-import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status403, status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -61,7 +61,7 @@ getNewsByUser :: SpecWith TestDB
 getNewsByUser =
   itDB "user can get news" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
@@ -71,7 +71,7 @@ getByAuthorId :: SpecWith TestDB
 getByAuthorId =
   itDB "can get by author id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("author_id", Just "1")]
@@ -80,7 +80,7 @@ getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("login", Just "author1")]
@@ -89,7 +89,7 @@ getByFName :: SpecWith TestDB
 getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("first_name", Just "author1FName")]
@@ -98,7 +98,7 @@ getByLName :: SpecWith TestDB
 getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
   where
     query = [("last_name", Just "author1LName")]
@@ -107,7 +107,7 @@ getNewsByCategoryId :: SpecWith TestDB
 getNewsByCategoryId =
   itDB "can get by category id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
@@ -117,7 +117,7 @@ getNewsByTagId :: SpecWith TestDB
 getNewsByTagId =
   itDB "can get by tag id name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("tag_id", Just "2")]
@@ -126,7 +126,7 @@ getNewsByTagsIdIn :: SpecWith TestDB
 getNewsByTagsIdIn =
   itDB "can get by tags_in" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
@@ -136,7 +136,7 @@ getNewsByTagsIdAll :: SpecWith TestDB
 getNewsByTagsIdAll =
   itDB "can get by tags_all" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("tags_id_all", Just "[1,2]")]
@@ -145,7 +145,7 @@ getNewsByTitleSearch1 :: SpecWith TestDB
 getNewsByTitleSearch1 =
   itDB "get both news by title search" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
@@ -155,7 +155,7 @@ getNewsByTitleSearch2 :: SpecWith TestDB
 getNewsByTitleSearch2 =
   itDB "get only one news by title search" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("title", Just "Title2")]
@@ -164,7 +164,7 @@ getNewsByContentSearch1 :: SpecWith TestDB
 getNewsByContentSearch1 =
   itDB "get both news by content search" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
@@ -174,16 +174,16 @@ getNewsByContentSearch2 :: SpecWith TestDB
 getNewsByContentSearch2 =
   itDB "get only one news by content search" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
   where
     query = [("content", Just "Content2")]
 
 getNewsWithSort3 :: SpecWith TestDB
 getNewsWithSort3 =
-  itDB "correctly sorted by author name DESC" $ do
+  itDB "correctly sorted by author name ASC" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe`
       Just [testNews1, testNews2]
   where
@@ -191,9 +191,9 @@ getNewsWithSort3 =
 
 getNewsWithSort4 :: SpecWith TestDB
 getNewsWithSort4 =
-  itDB "correctly sorted by author name ASC" $ do
+  itDB "correctly sorted by author name DESC" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getNews conn query
+    (status, resp) <- lift $ runWithState conn $ getNews query
     (withDefTime_ (resp & responseResult)) `shouldBe`
       Just [testNews2, testNews1]
   where

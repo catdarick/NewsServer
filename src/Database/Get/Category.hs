@@ -7,16 +7,21 @@ module Database.Get.Category where
 
 import           Api.Types.Category
 import           Api.Types.Synonyms
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.List                        (find)
 import           Data.Maybe                       (fromJust, isNothing)
 import           Data.Text                        (Text)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           State.Types
 
-getRootCategoriesTree :: Connection -> IO [Category]
-getRootCategoriesTree conn = do
+getRootCategoriesTree :: ServerStateIO [Category]
+getRootCategoriesTree = do
+  conn <- gets conn
   onlyRootCatgories <-
+    lift $
     query_
       conn
       [sql|
@@ -25,16 +30,17 @@ getRootCategoriesTree conn = do
                 WHERE parent_id IS NULL
                 |]
   let rootCatgories = map fromOnly onlyRootCatgories
-  mapM (getCategoryTreeFromTop conn) rootCatgories
+  mapM getCategoryTreeFromTop rootCatgories
 
 getCategoriesTreeFromTop ::
-     Connection
-  -> Maybe CategoryId
+     Maybe CategoryId
   -> Maybe CategoryId
   -> Maybe Name
-  -> IO [Category]
-getCategoriesTreeFromTop conn mbId mbParentId mbName = do
+  -> ServerStateIO [Category]
+getCategoriesTreeFromTop mbId mbParentId mbName = do
+  conn <- gets conn
   onlyRootCatgories <-
+    lift $
     query
       conn
       [sql|
@@ -46,11 +52,13 @@ getCategoriesTreeFromTop conn mbId mbParentId mbName = do
                 |]
       (mbId, mbParentId, mbName)
   let rootCatgories = map fromOnly onlyRootCatgories
-  mapM (getCategoryTreeFromTop conn) rootCatgories
+  mapM getCategoryTreeFromTop rootCatgories
 
-getCategoryTreeFromTop :: Connection -> Int -> IO Category
-getCategoryTreeFromTop conn categoryId = do
+getCategoryTreeFromTop :: Int -> ServerStateIO Category
+getCategoryTreeFromTop categoryId = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql| WITH RECURSIVE r AS (
@@ -70,9 +78,11 @@ getCategoryTreeFromTop conn categoryId = do
     (id, _, name):xs ->
       return $ getCategory id name (getCategoryChildsFromList id xs)
 
-getCategoryTreeFromBottom :: Connection -> Int -> IO Category
-getCategoryTreeFromBottom conn categoryId = do
+getCategoryTreeFromBottom :: Int -> ServerStateIO Category
+getCategoryTreeFromBottom categoryId = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql| WITH RECURSIVE r AS (

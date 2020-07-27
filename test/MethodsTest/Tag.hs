@@ -18,16 +18,16 @@ import           Data.Function                  ((&))
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           TestHelper
 import qualified MethodsTest.User               as User
-import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -52,7 +52,7 @@ createTagByUser =
   itDB "user can't create tag" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ createTag conn (query token)
+    res <- lift $ try $ runWithState conn $ createTag (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("name", Just "someName1"), ("token", Just token)]
@@ -62,7 +62,7 @@ createFirstTagByAdmin =
   itDB "admin can create tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createTag (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName1"), ("token", Just token)]
@@ -72,7 +72,7 @@ createSecondTagByAdmin =
   itDB "admin can create one more tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createTag conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createTag (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName2"), ("token", Just token)]
@@ -82,7 +82,7 @@ createDuplicateTag =
   itDB "admin can't create duplicate tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    res <- lift $ try $ createTag conn (query token)
+    res <- lift $ try $ runWithState conn $ createTag (query token)
     res `shouldBe` (Left $ ErrorException status400 Err.tagExists)
   where
     query token = [("name", Just "someName2"), ("token", Just token)]
@@ -92,7 +92,7 @@ createMissingName =
   itDB "admin can't create tag without required 'name'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    res <- lift $ try $ createTag conn (query token)
+    res <- lift $ try $ runWithState conn $ createTag (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
@@ -101,7 +101,7 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create tag without required 'token'" $ do
     conn <- getConnection
-    res <- lift $ try $ createTag conn query
+    res <- lift $ try $ runWithState conn $ createTag query
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query = [("name", Just "someName3")]
@@ -110,7 +110,7 @@ getTags_ :: SpecWith TestDB
 getTags_ =
   itDB "can get tag with child" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getTags conn query
+    (status, resp) <- lift $ runWithState conn $ getTags query
     (resp & responseResult) `shouldBe` Just [testTag1, testTag2]
   where
     query = []
@@ -119,7 +119,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get tag by id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getTags conn query
+    (status, resp) <- lift $ runWithState conn $ getTags query
     (resp & responseResult) `shouldBe` Just [testTag1]
   where
     query = [("tag_id", Just "1")]
@@ -128,7 +128,7 @@ getByName :: SpecWith TestDB
 getByName =
   itDB "can get tag by name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getTags conn query
+    (status, resp) <- lift $ runWithState conn $ getTags query
     (resp & responseResult) `shouldBe` Just [testTag1]
   where
     query = [("name", Just "someName1")]
@@ -138,7 +138,7 @@ deleteByUser =
   itDB "user can't delete tag" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ deleteTag conn (query token)
+    res <- lift $ try $ runWithState conn $ deleteTag (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("tag_id", Just "1"), ("token", Just token)]
@@ -148,7 +148,7 @@ deleteByAdmin =
   itDB "admin can delete tag" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ deleteTag conn (query token)
+    (status, resp) <- lift $ runWithState conn $ deleteTag (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("tag_id", Just "1"), ("token", Just token)]
@@ -157,7 +157,7 @@ getAfterDelete :: SpecWith TestDB
 getAfterDelete =
   itDB "is only 1 tag exists after delete" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getTags conn query
+    (status, resp) <- lift $ runWithState conn $ getTags query
     (resp & responseResult) `shouldBe` Just [testTag2]
   where
     query = []

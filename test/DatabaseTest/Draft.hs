@@ -14,15 +14,16 @@ import           Database.Create.User
 import           Database.Delete.Draft
 import           Database.Edit.Draft
 import           Database.Get.Draft
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
 import qualified DatabaseTest.Category          as Category
 import qualified DatabaseTest.Tag               as Tag
-import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -51,21 +52,14 @@ insert =
   itDB "can insert (draft)" $ do
     conn <- getConnection
     addTestDraft conn
-    lift $ setToken conn 1 "token"
+    lift $ runWithState conn $ setToken 1 "token"
     draft <- getAllDrafts conn Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> draft) `shouldBe` [testDraft]
   where
     addTestDraft conn =
       lift $
-      addDraftWithTags
-        conn
-        1
-        "testTitle"
-        "testContent"
-        1
-        Nothing
-        Nothing
-        (Just [1])
+      runWithState conn $
+      addDraftWithTags 1 "testTitle" "testContent" 1 Nothing Nothing (Just [1])
 
 getById :: SpecWith TestDB
 getById =
@@ -177,8 +171,8 @@ post :: SpecWith TestDB
 post =
   itDB "post" $ do
     conn <- getConnection
-    res <- lift $ publishDraft conn 1
-    res `shouldBe` 1
+    res <- lift $ runWithState conn $ publishDraft 1
+    res `shouldBe` ()
 
 edit :: SpecWith TestDB
 edit =
@@ -190,8 +184,8 @@ edit =
   where
     editDraft_ conn =
       lift $
+      runWithState conn $
       editDraft
-        conn
         1
         (Just "newTitle")
         (Just "newContent")
@@ -211,10 +205,8 @@ getAllDrafts ::
   -> Maybe Content
   -> t IO [News]
 getAllDrafts conn a b c d e f =
-  lift $getDrafts conn "token" a b c d e f Nothing Nothing
-
-defTime :: LocalTime
-defTime = LocalTime (ModifiedJulianDay 0) midnight
+  lift $
+  runWithState conn $ getDrafts "token" Nothing a b c d e f Nothing Nothing
 
 withDefTime :: News -> News
 withDefTime draft = draft {newsCreationTime = defTime}

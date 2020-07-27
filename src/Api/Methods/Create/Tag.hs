@@ -11,16 +11,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Create.Tag        as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status201)
+import           State.Types
 
 createTag ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-createTag conn queryString = do
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response Idcont)
+createTag queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, name] = requiredValues
   let [] = optionalMaybeValues
-  DB.adminGuard conn token
-  id <- DB.addTag conn name
+  DB.adminGuard token
+  id <- DB.addTag name
+  Log.info $ "Tag '" <> name <> "' successfully created"
   return (status201, idResponse id)
   where
     requiredNames = ["token", "name"]

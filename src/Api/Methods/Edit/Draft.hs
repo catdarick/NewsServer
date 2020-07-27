@@ -13,18 +13,18 @@ import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Draft        as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
-editDraft ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-editDraft conn queryString = do
+editDraft :: [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+editDraft queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, draftId] = requiredValues
   let [title, content, categoryId, tagsId, mainPicture, pictures] =
         optionalMaybeValues
-  DB.draftAuthorGuard conn (toInt draftId) token
+  DB.draftAuthorGuard (toInt draftId) token
   DB.editDraft
-    conn
     (toInt draftId)
     title
     content
@@ -32,6 +32,7 @@ editDraft conn queryString = do
     mainPicture
     (toStringList <$> pictures)
     (toIntList <$> tagsId)
+  Log.info $ "Draft '" <> draftId <> "' successfully edited"
   return (status200, okResponse)
   where
     requiredNames = ["token", "draft_id"]

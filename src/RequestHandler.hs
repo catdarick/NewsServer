@@ -4,107 +4,102 @@ module RequestHandler where
 
 import           Api.ErrorException
 import           Api.Methods.Create
+import           Api.Methods.Create.Comment
+import           Api.Methods.Create.News
 import           Api.Methods.Delete
 import           Api.Methods.Edit
 import           Api.Methods.Get
-import           Api.Methods.Create.Comment
-import           Api.Methods.Create.News
 import           Api.Types.Response
 import           Api.Types.Synonyms
 import           Config
 import           Control.Monad.Catch           (MonadCatch (catch),
                                                 MonadThrow (throwM))
-import           Data.Aeson                    (encode)
-
+import           Control.Monad.Trans.Class     (MonadTrans (lift))
+import           Control.Monad.Trans.State     (evalStateT)
+import           Data.Aeson                    (ToJSON, encode)
 import qualified Data.ByteString.Internal      as Strict
 import qualified Data.ByteString.Lazy.Internal as Lazy
 import           Data.Function                 ((&))
 import           Data.Text                     (Text)
 import           Database.PostgreSQL.Simple    (Connection)
+import qualified Logger.Interact               as Log
 import qualified Network.HTTP.Types.Method     as Wai
 import           Network.HTTP.Types.Status
 import qualified Network.Wai                   as Wai
+import           State.Types
 
+encoded :: ToJSON a1 => (a2, a1) -> (a2, Lazy.ByteString)
 encoded (status, response) = (status, encode response)
 
 callGetMethod ::
-     Connection
-  -> Config
-  -> [(FieldName, Maybe Strict.ByteString)]
+     [(FieldName, Maybe Strict.ByteString)]
   -> [Text]
-  -> IO (Status, Lazy.ByteString)
-callGetMethod conn config query path =
+  -> ServerStateIO (Status, Lazy.ByteString)
+callGetMethod query path =
   case path of
-    ["getUsers"]      -> encoded <$> getUsers conn query
-    ["getCategories"] -> encoded <$> getCategories conn query
-    ["getTags"]       -> encoded <$> getTags conn query
-    ["getAuthors"]    -> encoded <$> getAuthors conn query
-    ["getNews"]       -> encoded <$> getNews conn query
-    ["getDrafts"]     -> encoded <$> getDrafts conn query
-    ["getComments"]   -> encoded <$> getComments conn query
+    ["getUsers"]      -> encoded <$> getUsers query
+    ["getCategories"] -> encoded <$> getCategories query
+    ["getTags"]       -> encoded <$> getTags query
+    ["getAuthors"]    -> encoded <$> getAuthors query
+    ["getNews"]       -> encoded <$> getNews query
+    ["getDrafts"]     -> encoded <$> getDrafts query
+    ["getComments"]   -> encoded <$> getComments query
     smth              -> return (status404, "")
 
 callPostMethod ::
-     Connection
-  -> Config
-  -> [(FieldName, Maybe Strict.ByteString)]
+     [(FieldName, Maybe Strict.ByteString)]
   -> [Text]
-  -> IO (Status, Lazy.ByteString)
-callPostMethod conn config query path =
+  -> ServerStateIO (Status, Lazy.ByteString)
+callPostMethod query path =
   case path of
-    ["createAccount"]  -> encoded <$> createAccount conn config query
-    ["createAuthor"]   -> encoded <$> createAuthor conn query
-    ["createCategory"] -> encoded <$> createCategory conn query
-    ["createTag"]      -> encoded <$> createTag conn query
-    ["createDraft"]    -> encoded <$> createDraft conn query
-    ["createComment"]    -> encoded <$> createComment conn query
+    ["createAccount"]  -> encoded <$> createAccount query
+    ["createAuthor"]   -> encoded <$> createAuthor query
+    ["createCategory"] -> encoded <$> createCategory query
+    ["createTag"]      -> encoded <$> createTag query
+    ["createDraft"]    -> encoded <$> createDraft query
+    ["createComment"]  -> encoded <$> createComment query
     smth               -> return (status404, "")
 
 callPutMethod ::
-     Connection
-  -> Config
-  -> [(FieldName, Maybe Strict.ByteString)]
+     [(FieldName, Maybe Strict.ByteString)]
   -> [Text]
-  -> IO (Status, Lazy.ByteString)
-callPutMethod conn config query path =
+  -> ServerStateIO (Status, Lazy.ByteString)
+callPutMethod query path =
   case path of
-    ["login"]        -> encoded <$> getToken conn query
-    ["publishDraft"] -> encoded <$> publishDraft conn query
-    ["editAuthor"]   -> encoded <$> editAuthor conn query
-    ["editCategory"] -> encoded <$> editCategory conn query
-    ["editTag"]      -> encoded <$> editTag conn query
-    ["editDraft"]    -> encoded <$> editDraft conn query
+    ["getToken"]     -> encoded <$> getToken query
+    ["publishDraft"] -> encoded <$> publishDraft query
+    ["editAuthor"]   -> encoded <$> editAuthor query
+    ["editCategory"] -> encoded <$> editCategory query
+    ["editTag"]      -> encoded <$> editTag query
+    ["editDraft"]    -> encoded <$> editDraft query
     smth             -> return (status404, "")
 
 callDeleteMethod ::
-     Connection
-  -> Config
-  -> [(FieldName, Maybe Strict.ByteString)]
+     [(FieldName, Maybe Strict.ByteString)]
   -> [Text]
-  -> IO (Status, Lazy.ByteString)
-callDeleteMethod conn config query path =
+  -> ServerStateIO (Status, Lazy.ByteString)
+callDeleteMethod query path =
   case path of
-    ["deleteUser"]     -> encoded <$> deleteUser conn query
-    ["deleteTag"]      -> encoded <$> deleteTag conn query
-    ["deleteDraft"]    -> encoded <$> deleteDraft conn query
-    ["deleteNews"]     -> encoded <$> deleteNews conn query
-    ["deleteComment"]  -> encoded <$> deleteComment conn query
-    ["deleteCategory"] -> encoded <$> deleteCategory conn query
-    ["deleteAuthor"]   -> encoded <$> deleteAuthor conn query
+    ["deleteUser"]     -> encoded <$> deleteUser query
+    ["deleteTag"]      -> encoded <$> deleteTag query
+    ["deleteDraft"]    -> encoded <$> deleteDraft query
+    ["deleteNews"]     -> encoded <$> deleteNews query
+    ["deleteComment"]  -> encoded <$> deleteComment query
+    ["deleteCategory"] -> encoded <$> deleteCategory query
+    ["deleteAuthor"]   -> encoded <$> deleteAuthor query
     smth               -> return (status404, "")
 
 callMethod ::
-     Connection
-  -> Config
-  -> [(FieldName, Maybe Strict.ByteString)]
+     [(FieldName, Maybe Strict.ByteString)]
   -> [Text]
   -> Wai.Method
-  -> IO (Status, Lazy.ByteString)
-callMethod conn config query path method =
+  -> ServerStateIO (Status, Lazy.ByteString)
+callMethod query path method =
   case method of
-    "GET"    -> callGetMethod conn config query path
-    "POST"   -> callPostMethod conn config query path
-    "DELETE" -> callDeleteMethod conn config query path
+    "GET"    -> callGetMethod query path
+    "POST"   -> callPostMethod query path
+    "PUT"    -> callPutMethod query path
+    "DELETE" -> callDeleteMethod query path
     smth     -> return (status404, "")
 
 handleRequest ::
@@ -113,10 +108,17 @@ handleRequest conn config request respond = do
   let query = request & Wai.queryString
   let path = request & Wai.pathInfo
   let method = request & Wai.requestMethod
+  let clientInfo = request & Wai.remoteHost
+  let state = ServerState config conn clientInfo
   (status, bsResponse) <-
-    catch (callMethod conn config query path method) errorHandler
+    evalStateT
+      (catch (callMethod query path method) (errorHandler method))
+      state
   respond $
     Wai.responseLBS status [("Content-Type", "application/json")] bsResponse
   where
-    errorHandler (ErrorException status error) =
+    callMethodWithState state query path method =
+      evalStateT (callMethod query path method) state
+    errorHandler method (ErrorException status error) = do
+      Log.debug $ "Error response from " <> method <> ": " <> error
       return (status, encode $ errorResponse error)

@@ -11,16 +11,18 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Edit.Author       as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
-editAuthor ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-editAuthor conn queryString = do
+editAuthor :: [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+editAuthor queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, authorId] = requiredValues
   let [description] = optionalMaybeValues
-  DB.adminGuard conn token
-  DB.editAuthor conn (toInt authorId) description
+  DB.adminGuard token
+  DB.editAuthor (toInt authorId) description
+  Log.info $ "Author '" <> authorId <> "' successfully edited"
   return (status200, okResponse)
   where
     requiredNames = ["token", "author_id"]

@@ -13,13 +13,14 @@ import           Data.Time.LocalTime            (LocalTime (LocalTime),
 import           Database.Create.User
 import           Database.Delete.User
 import           Database.Get.User
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
 import           TestHelper
+
 spec :: Spec
 spec =
   describeDB DB.init "User: " $ do
@@ -39,7 +40,10 @@ insert =
   itDB "can insert" $ do
     conn <- getConnection
     id <- lift $ addTestUser conn
-    user <- lift $ getUsers conn Nothing Nothing Nothing Nothing Nothing Nothing
+    user <-
+      lift $
+      runWithState conn $
+      getUsers Nothing Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` [testUser]
 
 getById :: SpecWith TestDB
@@ -47,7 +51,9 @@ getById =
   itDB "can get by id" $ do
     conn <- getConnection
     user <-
-      lift $ getUsers conn (Just 1) Nothing Nothing Nothing Nothing Nothing
+      lift $
+      runWithState conn $
+      getUsers (Just 1) Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadId :: SpecWith TestDB
@@ -55,7 +61,9 @@ getByBadId =
   itDB "get empty with incorrect id" $ do
     conn <- getConnection
     user <-
-      lift $ getUsers conn (Just 2) Nothing Nothing Nothing Nothing Nothing
+      lift $
+      runWithState conn $
+      getUsers (Just 2) Nothing Nothing Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` []
 
 getByLogin :: SpecWith TestDB
@@ -64,7 +72,8 @@ getByLogin =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing (Just "testLogin") Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getUsers Nothing (Just "testLogin") Nothing Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadLogin :: SpecWith TestDB
@@ -73,7 +82,8 @@ getByBadLogin =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing (Just "badLogin") Nothing Nothing Nothing Nothing
+      runWithState conn $
+      getUsers Nothing (Just "badLogin") Nothing Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` []
 
 getByFName :: SpecWith TestDB
@@ -82,7 +92,8 @@ getByFName =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing Nothing (Just "testName") Nothing Nothing Nothing
+      runWithState conn $
+      getUsers Nothing Nothing (Just "testName") Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadFName :: SpecWith TestDB
@@ -91,7 +102,8 @@ getByBadFName =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing Nothing (Just "badName") Nothing Nothing Nothing
+      runWithState conn $
+      getUsers Nothing Nothing (Just "badName") Nothing Nothing Nothing
     (withDefTime <$> user) `shouldBe` []
 
 getByLName :: SpecWith TestDB
@@ -100,7 +112,8 @@ getByLName =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing Nothing Nothing (Just "testLName") Nothing Nothing
+      runWithState conn $
+      getUsers Nothing Nothing Nothing (Just "testLName") Nothing Nothing
     (withDefTime <$> user) `shouldBe` [testUser]
 
 getByBadLName :: SpecWith TestDB
@@ -109,17 +122,16 @@ getByBadLName =
     conn <- getConnection
     user <-
       lift $
-      getUsers conn Nothing Nothing Nothing (Just "badLName") Nothing Nothing
+      runWithState conn $
+      getUsers Nothing Nothing Nothing (Just "badLName") Nothing Nothing
     (withDefTime <$> user) `shouldBe` []
 
 delete :: SpecWith TestDB
 delete =
   itDB "delete" $ do
     conn <- getConnection
-    res <- lift $ deleteUser conn 1
+    res <- lift $ runWithState conn $ deleteUser 1
     res `shouldBe` ()
-
-
 
 testUser :: User
 testUser = User 1 "testLogin" "testName" "testLName" Nothing defTime False
@@ -129,4 +141,5 @@ withDefTime user = user {userCreationTime = defTime}
 
 addTestUser :: Connection -> IO UserId
 addTestUser conn =
-  addUser conn "testLogin" "" "testName" "testLName" Nothing False
+  runWithState conn $
+  addUser "testLogin" "" "testName" "testLName" Nothing False

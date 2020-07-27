@@ -16,16 +16,16 @@ import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           TestHelper
 import qualified MethodsTest.User               as User
-import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -50,7 +50,7 @@ createCategoryByUser =
   itDB "user can't create category" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ createCategory conn (query token)
+    res <- lift $ try $ runWithState conn $ createCategory (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("name", Just "someName"), ("token", Just token)]
@@ -60,7 +60,7 @@ createCategoryByAdmin =
   itDB "admin can create category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createCategory (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("name", Just "someName"), ("token", Just token)]
@@ -70,7 +70,7 @@ createChildCategoryByAdmin =
   itDB "admin can create child category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createCategory conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createCategory (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -84,7 +84,7 @@ createMissingName =
   itDB "admin can't create category without required 'name'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    res <- lift $ try $ createCategory conn (query token)
+    res <- lift $ try $ runWithState conn $ createCategory (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
@@ -93,7 +93,7 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create category without required 'token'" $ do
     conn <- getConnection
-    res <- lift $ try $ createCategory conn query
+    res <- lift $ try $ runWithState conn $ createCategory query
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query = [("name", Just "someName")]
@@ -102,7 +102,7 @@ getCategories_ :: SpecWith TestDB
 getCategories_ =
   itDB "can get category with child" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = []
@@ -111,7 +111,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get category by id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just [testCategory]
   where
     query = [("category_id", Just "1")]
@@ -120,7 +120,7 @@ getChildById :: SpecWith TestDB
 getChildById =
   itDB "can get child category" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("category_id", Just "2")]
@@ -129,7 +129,7 @@ getChildByName :: SpecWith TestDB
 getChildByName =
   itDB "can get child by name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("name", Just "someName2")]
@@ -138,7 +138,7 @@ getChildByParentId :: SpecWith TestDB
 getChildByParentId =
   itDB "can get child by parent_id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just [testChildCategory]
   where
     query = [("parent_id", Just "1")]
@@ -148,7 +148,7 @@ deleteByUser =
   itDB "user can't delete category" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ deleteCategory conn (query token)
+    res <- lift $ try $ runWithState conn $ deleteCategory (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("category_id", Just "1"), ("token", Just token)]
@@ -158,7 +158,7 @@ deleteByAdmin =
   itDB "admin can delete category" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ deleteCategory conn (query token)
+    (status, resp) <- lift $ runWithState conn $ deleteCategory (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("category_id", Just "1"), ("token", Just token)]
@@ -167,7 +167,7 @@ getAfterDelete :: SpecWith TestDB
 getAfterDelete =
   itDB "result list is empty after delete parent category" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getCategories conn query
+    (status, resp) <- lift $ runWithState conn $ getCategories query
     (resp & responseResult) `shouldBe` Just []
   where
     query = []

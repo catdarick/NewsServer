@@ -7,15 +7,20 @@ import           Api.ErrorException
 import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types.Status        (status400)
+import           State.Types
 
-deleteDraft :: Connection -> NewsId -> IO ()
-deleteDraft conn newsId = do
+deleteDraft :: NewsId -> ServerStateIO ()
+deleteDraft newsId = do
+  conn <- gets conn
   res <-
+    lift $
     execute
       conn
       [sql|
@@ -27,11 +32,13 @@ deleteDraft conn newsId = do
     0 -> throwM $ ErrorException status400 Err.noDraft
     1 -> return ()
 
-deleteDraftTags :: Connection -> NewsId -> IO Int64
-deleteDraftTags conn draftId =
-  execute
-    conn
-    [sql|
-          DELETE FROM news_tag
-          WHERE news_id=?|]
-    (Only draftId)
+deleteDraftTags :: NewsId -> ServerStateIO Int64
+deleteDraftTags draftId = do
+  conn <- gets conn
+  lift $
+    execute
+      conn
+      [sql|
+            DELETE FROM news_tag
+            WHERE news_id=?|]
+      (Only draftId)

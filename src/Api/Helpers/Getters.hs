@@ -4,17 +4,19 @@ module Api.Helpers.Getters where
 
 import           Api.ErrorException
 import           Api.Helpers.Checks
-import           Network.HTTP.Types         (Status, status200)
 import           Api.Types.Synonyms
-import           Control.Monad.Catch   (MonadThrow (throwM))
-import           Data.ByteString       (ByteString, length)
-import           Data.ByteString.Char8 (unpack)
-import           Data.List             (find)
-import           Data.Maybe            (fromMaybe, isJust, isNothing)
-import           Data.Text.Encoding    (decodeUtf8)
-import           Data.Time.LocalTime   (LocalTime)
-import           Network.HTTP.Types    (status400, status404)
-import           System.Random         (Random (randomRIO))
+import           Control.Monad.Catch       (MonadThrow (throwM))
+import           Control.Monad.Trans.Class (MonadTrans (lift))
+import           Data.ByteString           (ByteString, length)
+import           Data.ByteString.Char8     (unpack)
+import           Data.List                 (find)
+import           Data.Maybe                (fromMaybe, isJust, isNothing)
+import           Data.Text.Encoding        (decodeUtf8)
+import           Data.Time.LocalTime       (LocalTime)
+import           Network.HTTP.Types        (Status, status200, status400,
+                                            status404)
+import           State.Types
+import           System.Random             (Random (randomRIO))
 
 checkAndGetParameters ::
      MonadThrow m
@@ -67,7 +69,7 @@ getRequiredParams paramNames queryString = do
       let maybeListOfValues = sequence listOfMaybeValues
       case maybeListOfValues of
         Nothing -> Left $ "Missing required arguments: " <> missingArguments
-        Just listOfValues -> Right listOfValues 
+        Just listOfValues -> Right listOfValues
   where
     missingArguments = foldr1 ((<>) . (<> ", ")) byteStringArgs
     textArgs = map decodeUtf8 byteStringArgs
@@ -93,8 +95,8 @@ genRandomString length = do
   xs <- genRandomString (length - 1)
   return $ x : xs
 
-genToken :: IO TokenString
-genToken = genRandomString 50
+genToken :: ServerStateIO TokenString
+genToken = lift $ genRandomString 50
 
 toBool :: ByteString -> Bool
 toBool "true"  = True

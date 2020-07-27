@@ -11,16 +11,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Delete.Tag        as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
 deleteTag ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-deleteTag conn queryString = do
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response Idcont)
+deleteTag queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, tagId] = requiredValues
   let [] = optionalMaybeValues
-  DB.adminGuard conn token
-  DB.deleteTag conn (toInt tagId)
+  DB.adminGuard token
+  DB.deleteTag (toInt tagId)
+  Log.info $ "Tag '" <> tagId <> "' successfully deleted"
   return (status200, okResponse)
   where
     requiredNames = ["token", "tag_id"]

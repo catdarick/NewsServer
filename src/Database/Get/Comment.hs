@@ -7,14 +7,18 @@ module Database.Get.Comment where
 
 import           Api.Types.Comment
 import           Api.Types.Synonyms
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           State.Types
 
-getComments ::
-     Connection -> NewsId -> Maybe Limit -> Maybe Offset -> IO [Comment]
-getComments conn newsId mbLimit mbOffset = do
+getComments :: NewsId -> Maybe Limit -> Maybe Offset -> ServerStateIO [Comment]
+getComments newsId mbLimit mbOffset = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -29,11 +33,13 @@ getComments conn newsId mbLimit mbOffset = do
       (newsId, mbLimit, mbOffset)
   return $ map tupleToComment res
 
-getCommentCreator :: Connection -> CommentId -> IO [Only UserId]
-getCommentCreator conn commentId =
-  query
-    conn
-    [sql|
-      SELECT user_id FROM comment
-      WHERE id = ?|]
-    (Only commentId)
+getCommentCreator :: CommentId -> ServerStateIO [Only UserId]
+getCommentCreator commentId = do
+  conn <- gets conn
+  lift $
+    query
+      conn
+      [sql|
+        SELECT user_id FROM comment
+        WHERE id = ?|]
+      (Only commentId)

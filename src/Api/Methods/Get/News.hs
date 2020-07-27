@@ -14,19 +14,18 @@ import qualified Database.Get.News          as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getNews ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [News])
-getNews conn queryString = do
+     [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response [News])
+getNews queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
   let [mbAuthorId, mbLogin, mbFName, mbLName, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset, mbSort, mbDate, mbAfterDate, mbBeforeDate] =
         optionalMaybeValues
   news <-
     DB.getNews
-      conn
       (toInt <$> mbAuthorId)
       mbLogin
       mbFName

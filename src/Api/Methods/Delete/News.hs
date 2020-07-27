@@ -13,16 +13,18 @@ import qualified Database.Checks.User       as DB
 import qualified Database.Delete.News       as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
-deleteNews ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-deleteNews conn queryString = do
+deleteNews :: [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+deleteNews queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, newsId] = requiredValues
   let [] = optionalMaybeValues
-  DB.adminOrAuthorGuard conn (toInt newsId) token
-  DB.deleteNews conn (toInt newsId)
+  DB.adminOrAuthorGuard (toInt newsId) token
+  DB.deleteNews (toInt newsId)
+  Log.info $ "News '" <> newsId <> "' successfully deleted"
   return (status200, okResponse)
   where
     requiredNames = ["token", "news_id"]

@@ -7,15 +7,20 @@ import           Api.ErrorException
 import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types.Status        (status400)
+import           State.Types
 
-deleteAuthor :: Connection -> AuthorId -> IO ()
-deleteAuthor conn authorId = do
+deleteAuthor :: AuthorId -> ServerStateIO ()
+deleteAuthor authorId = do
+  conn <- gets conn
   res <-
+    lift $
     execute
       conn
       [sql|

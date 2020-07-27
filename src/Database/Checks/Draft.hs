@@ -8,16 +8,21 @@ import           Api.ErrorException
 import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.Checks.User
 import           Database.Get.Draft
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types               (status403)
+import           State.Types
 
-isDraftExists :: Connection -> NewsId -> IO Bool
-isDraftExists conn newsId = do
+isDraftExists :: NewsId -> ServerStateIO Bool
+isDraftExists newsId = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -30,9 +35,11 @@ isDraftExists conn newsId = do
     [id :: Only Int] -> return True
   return True
 
-isDraftAuthorToken :: Connection -> NewsId -> Token -> IO Bool
-isDraftAuthorToken conn newsId token = do
+isDraftAuthorToken :: NewsId -> Token -> ServerStateIO Bool
+isDraftAuthorToken newsId token = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -47,9 +54,11 @@ isDraftAuthorToken conn newsId token = do
     []               -> return False
     [id :: Only Int] -> return True
 
-isDraftPublished :: Connection -> NewsId -> IO Bool
-isDraftPublished conn newsId = do
+isDraftPublished :: NewsId -> ServerStateIO Bool
+isDraftPublished newsId = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -62,17 +71,17 @@ isDraftPublished conn newsId = do
     []               -> return False
     [id :: Only Int] -> return True
 
-draftAuthorGuard :: Connection -> NewsId -> Token -> IO ()
-draftAuthorGuard conn draftId token = do
-  isDraftAuthor <- isDraftAuthorToken conn draftId token
+draftAuthorGuard :: NewsId -> Token -> ServerStateIO ()
+draftAuthorGuard draftId token = do
+  isDraftAuthor <- isDraftAuthorToken draftId token
   if isDraftAuthor
     then return ()
     else throwM $ ErrorException status403 Err.noPerms
 
-adminOrAuthorGuard :: Connection -> NewsId -> Token -> IO ()
-adminOrAuthorGuard conn draftId token = do
-  isAdmin <- isAdminToken conn token
-  isDraftAuthor <- isDraftAuthorToken conn draftId token
+adminOrAuthorGuard :: NewsId -> Token -> ServerStateIO ()
+adminOrAuthorGuard draftId token = do
+  isAdmin <- isAdminToken token
+  isDraftAuthor <- isDraftAuthorToken draftId token
   if isDraftAuthor || isAdmin
     then return ()
     else throwM $ ErrorException status403 Err.noPerms

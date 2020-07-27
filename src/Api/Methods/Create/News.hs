@@ -4,7 +4,6 @@
 module Api.Methods.Create.News where
 
 import           Api.Helpers.Checks
-import           Network.HTTP.Types         (Status, status200)
 import           Api.Helpers.Getters
 import           Api.Types.Response
 import           Api.Types.Synonyms
@@ -13,14 +12,19 @@ import qualified Database.Checks.Draft      as DB
 import qualified Database.Create.Draft      as DB
 import qualified Database.Get.Draft         as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
+import           Network.HTTP.Types         (Status, status200)
+import           State.Types
 
-publishDraft :: Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-publishDraft conn queryString = do
+publishDraft ::
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+publishDraft queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, draftId] = requiredValues
   let [] = optionalMaybeValues
-  DB.draftAuthorGuard conn (toInt draftId) token
-  DB.publishDraft conn (toInt draftId)
+  DB.draftAuthorGuard (toInt draftId) token
+  DB.publishDraft (toInt draftId)
+  Log.info $ "Draft '" <> draftId <> "' successfully published"
   return (status200, okResponse)
   where
     requiredNames = ["token", "draft_id"]

@@ -11,6 +11,7 @@ import           Data.Time                      (Day (ModifiedJulianDay),
                                                  midnight)
 import           Database.Create.Comment
 import           Database.Get.Comment
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
@@ -18,10 +19,10 @@ import qualified DatabaseTest.Category          as Category
 import qualified DatabaseTest.Draft             as Draft
 import qualified DatabaseTest.Tag               as Tag
 import qualified DatabaseTest.User              as User
-import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -38,21 +39,18 @@ create :: SpecWith TestDB
 create =
   itDB "create" $ do
     conn <- getConnection
-    res <- lift $ addComment conn 1 1 "someText"
+    res <- lift $ runWithState conn $ addComment 1 1 "someText"
     res `shouldBe` 1
 
 get :: SpecWith TestDB
 get =
   itDB "can get by category id" $ do
     conn <- getConnection
-    res <- lift $ getComments conn 1 Nothing Nothing
+    res <- lift $ runWithState conn $ getComments 1 Nothing Nothing
     (withDefTime <$> res) `shouldBe` [testComment]
 
 testComment :: Comment
 testComment = Comment 1 Author.testUser defTime "someText"
-
-defTime :: LocalTime
-defTime = LocalTime (ModifiedJulianDay 0) midnight
 
 withDefTime :: Comment -> Comment
 withDefTime comment@Comment {commentUser = user} =

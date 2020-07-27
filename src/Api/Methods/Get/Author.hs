@@ -13,19 +13,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.Author        as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getAuthors ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [Author])
-getAuthors conn queryString = do
+     [(ByteString, Maybe ByteString)]
+  -> ServerStateIO (Status, Response [Author])
+getAuthors queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
   let [mbAuthorId, mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset] =
         optionalMaybeValues
   authors <-
     DB.getAuthors
-      conn
       (toInt <$> mbAuthorId)
       (toInt <$> mbUserId)
       mbLogin

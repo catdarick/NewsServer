@@ -9,6 +9,8 @@ module Database.Get.News where
 import           Api.Types.Author
 import           Api.Types.News
 import           Api.Types.Synonyms
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Time                        (LocalTime)
 import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category
@@ -16,10 +18,10 @@ import           Database.Get.Comment
 import           Database.Get.Tag
 import           Database.PostgreSQL.Simple       (Connection, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           State.Types
 
 getNews ::
-     Connection
-  -> Maybe AuthorId
+     Maybe AuthorId
   -> Maybe Login
   -> Maybe FirstName
   -> Maybe LastName
@@ -35,9 +37,11 @@ getNews ::
   -> Maybe LocalTime
   -> Maybe Limit
   -> Maybe Offset
-  -> IO [News]
-getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbSort mbDate mbDateBefore mbDateAfter mbLimit mbOffset = do
+  -> ServerStateIO [News]
+getNews mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbSort mbDate mbDateBefore mbDateAfter mbLimit mbOffset = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -70,8 +74,8 @@ getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn 
                 AND (? IS NULL OR (? && (foo.tags_id)))
                 ORDER BY CASE WHEN (foo.sort IS NULL) OR (foo.sort = 1)  THEN news_creation_time END DESC,
                          CASE WHEN foo.sort = 2 THEN news_creation_time END ASC,
-                         CASE WHEN foo.sort = 3 THEN first_name END, last_name ASC,
-                         CASE WHEN foo.sort = 4 THEN first_name END, last_name DESC,
+                         CASE WHEN foo.sort = 3 THEN CONCAT(first_name, last_name) END ASC,
+                         CASE WHEN foo.sort = 4 THEN CONCAT(first_name, last_name) END DESC,
                          CASE WHEN foo.sort = 5 THEN category_name END ASC,
                          CASE WHEN foo.sort = 6 THEN category_name END DESC,
                          CASE WHEN foo.sort = 7 THEN array_length(pictures,1) END ASC,
@@ -101,9 +105,8 @@ getNews conn mbAuthorId mbLogin mbFName mbLName mbCategotyId mbTagId mbTagsIdIn 
     toTemplate Nothing  = "%"
     toTemplate (Just a) = "%" <> a <> "%"
     f (id, title, time, content, mainPic, addPics, categoryId, tagsId, authorId, mbDescr, userId, login, fName, lName, userPic, userCrTime, userIsAdmin) = do
-      tags <-
-        getTags conn Nothing (Just $ toList tagsId) Nothing Nothing Nothing
-      category <- getCategoryTreeFromBottom conn categoryId
+      tags <- getTags Nothing (Just $ toList tagsId) Nothing Nothing Nothing
+      category <- getCategoryTreeFromBottom categoryId
       let news =
             tupleToNews
               ( id

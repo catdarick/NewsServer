@@ -13,19 +13,18 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getUsers ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [User])
-getUsers conn queryString = do
+     [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response [User])
+getUsers queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [] = requiredValues
   let [mbUserId, mbLogin, mbFName, mbLName, mbLimit, mbOffset] =
         optionalMaybeValues
   users <-
     DB.getUsers
-      conn
       (toInt <$> mbUserId)
       mbLogin
       mbFName

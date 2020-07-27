@@ -16,16 +16,16 @@ import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
-import           TestHelper
 import qualified MethodsTest.User               as User
-import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (status200, status400,
                                                  status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -51,7 +51,7 @@ createAuthorByUser =
   itDB "user can't create author" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ createAuthor conn (query token)
+    res <- lift $ try $ runWithState conn $ createAuthor (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("user_id", Just "3"), ("token", Just token)]
@@ -61,7 +61,7 @@ createAuthor1ByAdmin =
   itDB "admin can create author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createAuthor (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -75,7 +75,7 @@ createAuthor2ByAdmin =
   itDB "admin can make himsel an author" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ createAuthor conn (query token)
+    (status, resp) <- lift $ runWithState conn $ createAuthor (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -89,7 +89,7 @@ createMissingUserId =
   itDB "admin can't create author without required 'user_id'" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    res <- lift $ try $ createAuthor conn (query token)
+    res <- lift $ try $ runWithState conn $ createAuthor (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("token", Just token)]
@@ -98,7 +98,7 @@ createMissingToken :: SpecWith TestDB
 createMissingToken =
   itDB "can't create author without required 'token'" $ do
     conn <- getConnection
-    res <- lift $ try $ createAuthor conn query
+    res <- lift $ try $ runWithState conn $ createAuthor query
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query = [("user_id", Just "1")]
@@ -107,7 +107,7 @@ getAuthors_ :: SpecWith TestDB
 getAuthors_ =
   itDB "get only two aauthors" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testAuthor1, testAuthor2]
   where
@@ -117,7 +117,7 @@ getById :: SpecWith TestDB
 getById =
   itDB "can get by id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("author_id", Just "1")]
@@ -126,7 +126,7 @@ getByUserId :: SpecWith TestDB
 getByUserId =
   itDB "can get by user id" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("user_id", Just "3")]
@@ -135,7 +135,7 @@ getByLogin :: SpecWith TestDB
 getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("login", Just "author1")]
@@ -144,7 +144,7 @@ getByFName :: SpecWith TestDB
 getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("first_name", Just "author1FName")]
@@ -153,7 +153,7 @@ getByLName :: SpecWith TestDB
 getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
   where
     query = [("last_name", Just "author1LName")]
@@ -163,7 +163,7 @@ deleteByUser =
   itDB "user can't delete author" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ deleteAuthor conn (query token)
+    res <- lift $try $ runWithState conn $ deleteAuthor (query token)
     res `shouldBe` (Left $ ErrorException status404 "")
   where
     query token = [("author_id", Just "1"), ("token", Just token)]
@@ -173,7 +173,7 @@ deleteByAdmin =
   itDB "admin can delete account" $ do
     conn <- getConnection
     token <- User.getAdminToken conn
-    (status, resp) <- lift $ deleteAuthor conn (query token)
+    (status, resp) <- lift $ runWithState conn $ deleteAuthor (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("author_id", Just "1"), ("token", Just token)]
@@ -182,7 +182,7 @@ getUsersAfterDelete :: SpecWith TestDB
 getUsersAfterDelete =
   itDB "get only one author after delete (author2)" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getAuthors conn query
+    (status, resp) <- lift $ runWithState conn $ getAuthors query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor2]
   where
     query = []

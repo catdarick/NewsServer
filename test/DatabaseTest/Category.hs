@@ -19,6 +19,7 @@ import           Database.PostgreSQL.Transact   (getConnection)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -33,40 +34,40 @@ insert :: SpecWith TestDB
 insert =
   itDB "can insert (category)" $ do
     conn <- getConnection
-    id <- lift $ addCategory conn "testName" Nothing
-    category <- lift $ getRootCategoriesTree conn
+    id <- lift $ runWithState conn $ addCategory "testName" Nothing
+    category <- lift $ runWithState conn $ getRootCategoriesTree
     category `shouldBe` [testCategory]
 
 getById :: SpecWith TestDB
 getById =
   itDB "can get by id" $ do
     conn <- getConnection
-    category <- lift $ getCategoryTreeFromBottom conn 1
+    category <- lift $ runWithState conn $ getCategoryTreeFromBottom 1
     category `shouldBe` testCategory
 
 addChildAndGet :: SpecWith TestDB
 addChildAndGet =
   itDB "can add and get child" $ do
     conn <- getConnection
-    id <- lift $ addCategory conn "testChildName" (Just 1)
-    category <- lift $ getRootCategoriesTree conn
+    id <- lift $ runWithState conn $ addCategory "testChildName" (Just 1)
+    category <- lift $ runWithState conn $ getRootCategoriesTree
     category `shouldBe` [testParentCategory]
 
 edit :: SpecWith TestDB
 edit =
   itDB "edit" $ do
     conn <- getConnection
-    lift $ editCategory conn 2 (Just "newTestName") (Just 0)
-    categories <- lift $ getRootCategoriesTree conn
+    lift $ runWithState conn $ editCategory 2 (Just "newTestName") (Just 0)
+    categories <- lift $ runWithState conn $ getRootCategoriesTree
     categories `shouldBe` [testCategory, testEditedCategory]
 
 delete :: SpecWith TestDB
 delete =
   itDB "delete" $ do
     conn <- getConnection
-    lift $ deleteCategory conn 1
-    lift $ deleteCategory conn 2
-    category <- lift $ getRootCategoriesTree conn
+    lift $ runWithState conn $ deleteCategory 1
+    lift $ runWithState conn $ deleteCategory 2
+    category <- lift $ runWithState conn $ getRootCategoriesTree
     category `shouldBe` []
 
 testCategory :: Category

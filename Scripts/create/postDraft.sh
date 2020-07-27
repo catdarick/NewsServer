@@ -7,7 +7,7 @@ fi
 id=$(<draft.id)
 categoryId=$(<category.id)
 query="http://localhost:3000/publishDraft?&token=$token&draft_id=$id"
-result=$(curl -X POST $query)
+result=$(curl -X PUT $query)
 
 echo $result
 

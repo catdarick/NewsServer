@@ -12,15 +12,18 @@ import qualified Database.Checks.User       as DB
 import qualified Database.Delete.Author     as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 deleteAuthor ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response ())
-deleteAuthor conn queryString = do
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response ())
+deleteAuthor queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, authorId] = requiredValues
   let [] = optionalMaybeValues
-  DB.adminGuard conn token
-  DB.deleteAuthor conn (toInt authorId)
+  DB.adminGuard token
+  DB.deleteAuthor (toInt authorId)
+  Log.info $ "Author '" <> authorId <> "' successfully deleted"
   return (status200, okResponse)
   where
     requiredNames = ["token", "author_id"]

@@ -4,9 +4,9 @@ module MethodsTest.Comment where
 
 import           Api.ErrorException
 import qualified Api.Errors                     as Err
+import           Api.Methods.Create.Comment
 import           Api.Methods.Delete.Comment
 import           Api.Methods.Get.Comment
-import           Api.Methods.Create.Comment
 import           Api.Types.Comment
 import           Api.Types.Response
 import           Control.Exception              (try)
@@ -17,20 +17,20 @@ import           Data.Maybe                     (fromJust)
 import           Data.Time.Calendar             (Day (ModifiedJulianDay))
 import           Data.Time.LocalTime            (LocalTime (LocalTime),
                                                  midnight)
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (DBT, getConnection)
 import qualified MethodsTest.Author             as Author
 import qualified MethodsTest.Category           as Category
 import qualified MethodsTest.Draft              as Draft
-import           TestHelper
 import qualified MethodsTest.Tag                as Tag
 import qualified MethodsTest.User               as User
-import qualified Database.Init                  as DB
 import           Network.HTTP.Types.Status      (Status, status200, status400,
                                                  status403, status404)
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -56,7 +56,7 @@ spec =
 createCommentByUser = do
   conn <- getConnection
   token <- User.getUserToken conn
-  lift $ try $ createComment conn (query token)
+  lift $ try $ runWithState conn $ createComment (query token)
   where
     query token =
       [ ("news_id", Just "1")
@@ -74,13 +74,13 @@ createCommentAfterPost :: SpecWith TestDB
 createCommentAfterPost =
   itDB "user can post comment after draft is published" $ do
     res <- createCommentByUser
-    (responseSuccess.snd <$> res) `shouldBe` Right True
+    (responseSuccess . snd <$> res) `shouldBe` Right True
 
 getComment :: SpecWith TestDB
 getComment =
   itDB "can get comment" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getComments conn query
+    (status, resp) <- lift $ runWithState conn $ getComments query
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testComment1]
   where
     query = [("news_id", Just "1")]
@@ -90,7 +90,7 @@ deleteCommentByAuthor =
   itDB "non admin or creator account can't delete comment" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    res <- lift $ try $ deleteComment conn (query token)
+    res <- lift $ try $ runWithState conn $ deleteComment (query token)
     res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token = [("token", Just token), ("comment_id", Just "1")]
@@ -100,7 +100,7 @@ deleteCommentByUser =
   itDB "user can delete own comment" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteComment conn (query token)
+    (status, resp) <- lift $ runWithState conn $ deleteComment (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("token", Just token), ("comment_id", Just "1")]
@@ -109,7 +109,7 @@ getCommentAfterDelete :: SpecWith TestDB
 getCommentAfterDelete =
   itDB "comment is deleted" $ do
     conn <- getConnection
-    (status, resp) <- lift $ getComments conn query
+    (status, resp) <- lift $ runWithState conn $ getComments query
     (resp & responseResult) `shouldBe` Just []
   where
     query = [("news_id", Just "1")]
@@ -119,7 +119,7 @@ deleteCommentByAdmin =
   itDB "admin can delete comment" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    (status, resp) <- lift $ deleteComment conn (query token)
+    (status, resp) <- lift $ runWithState conn $ deleteComment (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("token", Just token), ("comment_id", Just "2")]

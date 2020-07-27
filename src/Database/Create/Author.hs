@@ -9,14 +9,19 @@ import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Exception                (SomeException, try)
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Only (Only))
 import           Network.HTTP.Types               (status400)
+import           State.Types
 
-addAuthor :: Connection -> UserId -> Maybe Description -> IO AuthorId
-addAuthor conn userId description = do
+addAuthor :: UserId -> Maybe Description -> ServerStateIO AuthorId
+addAuthor userId description = do
+  conn <- gets conn
   res <-
+    lift $
     try $
     query
       conn

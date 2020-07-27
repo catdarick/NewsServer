@@ -5,13 +5,18 @@
 module Database.Checks.Comment where
 
 import           Api.Types.Synonyms
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           State.Types
 
-isCommentCreator :: Connection -> CommentId -> Token -> IO Bool
-isCommentCreator conn commentId token = do
+isCommentCreator :: CommentId -> Token -> ServerStateIO Bool
+isCommentCreator commentId token = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|

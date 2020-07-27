@@ -11,16 +11,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Create.Category   as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status201)
+import           State.Types
 
 createCategory ::
-     Connection -> [(ByteString, Maybe Login)] -> IO (Status, Response Idcont)
-createCategory conn queryString = do
+     [(ByteString, Maybe Login)] -> ServerStateIO (Status, Response Idcont)
+createCategory queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, name] = requiredValues
   let [parentId] = optionalMaybeValues
-  DB.adminGuard conn token
-  id <- DB.addCategory conn name (toInt <$> parentId)
+  DB.adminGuard token
+  id <- DB.addCategory name (toInt <$> parentId)
+  Log.info $ "Category '" <> name <> "' successfully created"
   return (status201, idResponse id)
   where
     requiredNames = ["token", "name"]

@@ -8,16 +8,18 @@ module Database.Get.Draft where
 import           Api.Types.Author
 import           Api.Types.News
 import           Api.Types.Synonyms
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Vector                      (fromList, toList)
 import           Database.Get.Category
 import           Database.Get.Tag
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
+import           State.Types
 
 getDrafts ::
-     Connection
-  -> Token
+     Token
   -> Maybe NewsId
   -> Maybe CategoryId
   -> Maybe TagId
@@ -27,9 +29,11 @@ getDrafts ::
   -> Maybe Content
   -> Maybe Limit
   -> Maybe Offset
-  -> IO [News]
-getDrafts conn token mbDraftId mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbLimit mbOffset = do
+  -> ServerStateIO [News]
+getDrafts token mbDraftId mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mbContent mbLimit mbOffset = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -71,23 +75,24 @@ getDrafts conn token mbDraftId mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTit
     toTemplate Nothing  = "%"
     toTemplate (Just a) = "%" <> a <> "%"
     toNews (id, title, time, content, mainPic, addPics, categoryId, tagsId) = do
-      tags <-
-        getTags conn Nothing (Just $ toList tagsId) Nothing Nothing Nothing
-      category <- getCategoryTreeFromBottom conn categoryId
+      tags <- getTags Nothing (Just $ toList tagsId) Nothing Nothing Nothing
+      category <- getCategoryTreeFromBottom categoryId
       let drafts =
             tupleToDraft
               (id, title, time, content, mainPic, addPics, tags, category)
       return drafts
 
-getDraftAuthorToken :: Connection -> NewsId -> IO [(Only Token)]
-getDraftAuthorToken conn newsId =
-  query
-    conn
-    [sql|
+getDraftAuthorToken :: NewsId -> ServerStateIO [(Only Token)]
+getDraftAuthorToken newsId = do
+  conn <- gets conn
+  lift $
+    query
+      conn
+      [sql|
         SELECT user_token.token FROM user_token, author, news
         WHERE news.id = ?
         AND news.is_published = false
         AND news.author_id = author.id
         AND author.user_id = user_token.user_id
         |]
-    (Only newsId)
+      (Only newsId)

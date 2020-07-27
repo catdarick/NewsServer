@@ -9,24 +9,28 @@ import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Exception                (SomeException, try)
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Data.Int                         (Int64)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Database.PostgreSQL.Simple.Types (Binary (Binary))
 import           Network.HTTP.Types.Status        (status400)
+import           State.Types
 
 addUser ::
-     Connection
-  -> Login
+     Login
   -> PassHash
   -> FirstName
   -> LastName
   -> Maybe Picture
   -> Bool
-  -> IO UserId
-addUser conn login passHash fName lName pictureId isAdmin = do
+  -> ServerStateIO UserId
+addUser login passHash fName lName pictureId isAdmin = do
+  conn <- gets conn
   res <-
+    lift $
     try $
     query
       conn
@@ -39,15 +43,17 @@ addUser conn login passHash fName lName pictureId isAdmin = do
     Left (e :: SomeException) -> throwM $ ErrorException status400 Err.loginBusy
     Right [Only id] -> return id
 
-setToken :: Connection -> UserId -> TokenString -> IO Int64
-setToken conn userId token =
-  execute
-    conn
-    [sql|
-        INSERT INTO user_token
-        (user_id, token)
-        VALUES (?,?)
-        ON CONFLICT (user_id) DO UPDATE
-        SET token = excluded.token
-        |]
-    (userId, token)
+setToken :: UserId -> TokenString -> ServerStateIO Int64
+setToken userId token = do
+  conn <- gets conn
+  lift $
+    execute
+      conn
+      [sql|
+              INSERT INTO user_token
+              (user_id, token)
+              VALUES (?,?)
+              ON CONFLICT (user_id) DO UPDATE
+              SET token = excluded.token
+              |]
+      (userId, token)

@@ -8,14 +8,19 @@ import           Api.ErrorException
 import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types.Status        (status400)
+import           State.Types
 
-addCategory :: Connection -> Name -> Maybe CategoryId -> IO CategoryId
-addCategory conn name parentId = do
+addCategory :: Name -> Maybe CategoryId -> ServerStateIO CategoryId
+addCategory name parentId = do
+  conn <- gets conn
   res <-
+    lift $
     case parentId of
       Nothing ->
         query

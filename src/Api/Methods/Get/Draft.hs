@@ -14,19 +14,18 @@ import qualified Database.Get.Draft         as DB
 import qualified Database.Get.User          as DB
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.HTTP.Types         (Status, status200)
+import           State.Types
+import qualified Logger.Interact            as Log
 
 getDrafts ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response [News])
-getDrafts conn queryString = do
+     [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response [News])
+getDrafts queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token] = requiredValues
   let [mbDraftId, mbCategoryId, mbTagId, mbTagsIdIn, mbTagsIdAll, mbTitle, mbContent, mbLimit, mbOffset] =
         optionalMaybeValues
   news <-
     DB.getDrafts
-      conn
       token
       (toInt <$> mbDraftId)
       (toInt <$> mbCategoryId)

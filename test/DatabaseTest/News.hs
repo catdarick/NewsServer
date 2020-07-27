@@ -13,16 +13,17 @@ import           Data.Time                      (Day (ModifiedJulianDay),
                                                  midnight)
 import           Database.Delete.News
 import           Database.Get.News
+import qualified Database.Init                  as DB
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Transact   (getConnection)
 import qualified DatabaseTest.Author            as Author
 import qualified DatabaseTest.Category          as Category
 import qualified DatabaseTest.Draft             as Draft
 import qualified DatabaseTest.Tag               as Tag
-import qualified Database.Init                  as DB
 import           Test.Hspec                     (Spec, SpecWith, hspec)
 import           Test.Hspec.DB
 import           Test.Hspec.Expectations.Lifted
+import           TestHelper
 
 spec :: Spec
 spec =
@@ -137,7 +138,7 @@ delete :: SpecWith TestDB
 delete =
   itDB "can delete" $ do
     conn <- getConnection
-    amount <- lift $ deleteNews conn 1
+    amount <- lift $ runWithState conn $ deleteNews 1
     amount `shouldBe` ()
 
 getNews1 ::
@@ -152,8 +153,8 @@ getNews1 ::
   -> t IO [News]
 getNews1 conn categoryId tagId tagsInId tagsAllId title content =
   lift $
+  runWithState conn $
   getNews
-    conn
     Nothing
     Nothing
     Nothing
@@ -170,9 +171,6 @@ getNews1 conn categoryId tagId tagsInId tagsAllId title content =
     Nothing
     Nothing
     Nothing
-
-defTime :: LocalTime
-defTime = LocalTime (ModifiedJulianDay 0) midnight
 
 withDefTime :: News -> News
 withDefTime news@News {newsAuthor = author} =

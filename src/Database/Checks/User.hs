@@ -7,14 +7,19 @@ module Database.Checks.User where
 import           Api.ErrorException
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM))
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, Only (Only),
                                                    execute, query)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types               (status404)
+import           State.Types
 
-isAdminToken :: Connection -> Token -> IO Bool
-isAdminToken conn token = do
+isAdminToken :: Token -> ServerStateIO Bool
+isAdminToken token = do
+  conn <- gets conn
   res <-
+    lift $
     query
       conn
       [sql|
@@ -26,9 +31,9 @@ isAdminToken conn token = do
     [Only True] -> return True
     _           -> return False
 
-adminGuard :: Connection -> Token -> IO ()
-adminGuard conn token = do
-  isAdmin <- isAdminToken conn token
+adminGuard :: Token -> ServerStateIO ()
+adminGuard token = do
+  isAdmin <- isAdminToken token
   if isAdmin
     then return ()
     else throwM $ ErrorException status404 ""

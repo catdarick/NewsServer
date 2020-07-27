@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 336e1ef361003a1d067f232bb41fee8e1389b9ab4a7690072047938bb0174ea6
+-- hash: ced08e1cac9bc0b8f3447796054b6c839d6aaeffc7c727eb02cd616856feeadd
 
 name:           NewsServer
 version:        0.1.0.0
@@ -99,8 +99,10 @@ library
       Database.Get.User
       Database.Init
       Lib
+      Logger.Interact
+      Logger.Types
       RequestHandler
-      Types.Picture
+      State.Types
   other-modules:
       Paths_NewsServer
   hs-source-dirs:
@@ -123,6 +125,7 @@ library
     , http-types
     , lens
     , lens-aeson
+    , network
     , pg-transact
     , postgresql-simple
     , postgresql-simple-migration
@@ -161,6 +164,7 @@ executable NewsServer-exe
     , http-types
     , lens
     , lens-aeson
+    , network
     , pg-transact
     , postgresql-simple
     , postgresql-simple-migration
@@ -215,6 +219,7 @@ test-suite NewsServer-test
     , http-types
     , lens
     , lens-aeson
+    , network
     , pg-transact
     , postgresql-simple
     , postgresql-simple-migration

@@ -65,7 +65,8 @@ createDraftByUser =
   itDB "user can't create draft" $ do
     conn <- getConnection
     token <- User.getUserToken conn
-    res <- lift $ try $ createDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  createDraft  (query token)
     res `shouldBe` (Left $ ErrorException status403 Err.notAuthor)
   where
     query token =
@@ -81,7 +82,8 @@ createDraftByAuthor1 =
   itDB "author1 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ createDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -97,7 +99,8 @@ createDraftByAuthor2 =
   itDB "author2 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ createDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ createDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -113,7 +116,8 @@ createDraftMissingTitle =
   itDB "can't create draft without required 'title'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    res <- lift $ try $ createDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  createDraft  (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
@@ -128,7 +132,8 @@ createDraftMissingContent =
   itDB "can't create draft without required 'content'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    res <- lift $ try $ createDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  createDraft  (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
@@ -143,7 +148,8 @@ createDraftMissingCategory =
   itDB "can't create draft without required 'category_id'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    res <- lift $ try $ createDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  createDraft  (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
@@ -158,7 +164,8 @@ createDraftMissingToken =
   itDB "can't create draft without required 'token'" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    res <- lift $ try $ createDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  createDraft  (query token)
     withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query token =
@@ -173,7 +180,8 @@ publishDraft1 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ publishDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ publishDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
@@ -183,7 +191,8 @@ publishDraft2 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ publishDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ publishDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "2"), ("token", Just token)]
@@ -193,7 +202,8 @@ getDraftBy1Author =
   itDB "can get 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ getDrafts  (query token)
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft1]
   where
     query token = [("token", Just token)]
@@ -203,7 +213,8 @@ getDraftBy2Author =
   itDB "can get 2'st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ getDrafts  (query token)
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft2]
   where
     query token = [("token", Just token)]
@@ -213,7 +224,8 @@ editDraftBy1Author =
   itDB "can edit 1st author's draft by himself" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ editDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ editDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token =
@@ -230,7 +242,8 @@ isDraftCorrectlyEdited =
   itDB "draft is correctly edited" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ getDrafts  (query token)
     (withDefTime_ (resp & responseResult)) `shouldBe` Just [editedDraft1]
   where
     query token = [("token", Just token)]
@@ -240,7 +253,8 @@ editDraftBy2Author =
   itDB "can't edit 1st author's draft by author2" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    res <- lift $ try $ editDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  editDraft  (query token)
     res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token =
@@ -257,7 +271,8 @@ deleteDraftBy2Author =
   itDB "author2 can't delete 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    res <- lift $ try $ deleteDraft conn (query token)
+    res <- lift $ try $
+      runWithState conn $  deleteDraft  (query token)
     res `shouldBe` (Left $ ErrorException status403 Err.noPerms)
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
@@ -267,7 +282,8 @@ deleteDraftBy1Author =
   itDB "author1 can delete 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ deleteDraft conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ deleteDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
     query token = [("draft_id", Just "1"), ("token", Just token)]
@@ -277,7 +293,8 @@ isDraftDeleted =
   itDB "draft is deleted" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ getDrafts conn (query token)
+    (status, resp) <- lift $ 
+      runWithState conn $ getDrafts  (query token)
     (resp & responseResult) `shouldBe` Just []
   where
     query token = [("token", Just token)]

@@ -9,13 +9,18 @@ import qualified Api.Errors                       as Err
 import           Api.Types.Synonyms
 import           Control.Monad.Catch              (MonadThrow (throwM),
                                                    SomeException, try)
+import           Control.Monad.Trans.Class        (MonadTrans (lift))
+import           Control.Monad.Trans.State        (gets)
 import           Database.PostgreSQL.Simple       (Connection, execute)
 import           Database.PostgreSQL.Simple.SqlQQ (sql)
 import           Network.HTTP.Types.Status        (status400)
+import           State.Types
 
-editTag :: Connection -> TagId -> Maybe Name -> IO ()
-editTag conn tagId mbName = do
+editTag :: TagId -> Maybe Name -> ServerStateIO ()
+editTag tagId mbName = do
+  conn <- gets conn
   res <-
+    lift $
     try $
     execute
       conn

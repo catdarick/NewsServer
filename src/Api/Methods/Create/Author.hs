@@ -11,18 +11,19 @@ import           Data.ByteString            (ByteString)
 import qualified Database.Checks.User       as DB
 import qualified Database.Create.Author     as DB
 import           Database.PostgreSQL.Simple (Connection)
+import qualified Logger.Interact            as Log
 import           Network.HTTP.Types         (Status, status201)
+import           State.Types
 
 createAuthor ::
-     Connection
-  -> [(ByteString, Maybe ByteString)]
-  -> IO (Status, Response Idcont)
-createAuthor conn queryString = do
+     [(ByteString, Maybe ByteString)] -> ServerStateIO (Status, Response Idcont)
+createAuthor queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [token, userId] = requiredValues
   let [description] = optionalMaybeValues
-  DB.adminGuard conn token
-  id <- DB.addAuthor conn (toInt userId) description
+  DB.adminGuard token
+  id <- DB.addAuthor (toInt userId) description
+  Log.info $ "User '" <> userId <> "' granted author permissions"
   return (status201, idResponse id)
   where
     requiredNames = ["token", "user_id"]

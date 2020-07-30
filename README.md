@@ -8,9 +8,10 @@ Previously you must install `libpq-dev` package.
 git clone https://github.com/catdarick/NewsServer
 cd NewsServer
 stack install
+mkdir -p /home/$USER/configs && cp ./templates/server.cfg $_
 ```
 ## Usage
-Set PostgreSQL connection info in `/NewsServer/app/server.cfg`.
+Set PostgreSQL connection info in `/home/<user>/configs/server.cfg`.
 
 ```sh
 # Create tables in PostgreSQL database

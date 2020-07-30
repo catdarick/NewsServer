@@ -40,9 +40,12 @@ connectDatabaseAndDoAction config = do
 
 main :: IO ()
 main = do
-  eitherCfg <- try $ load [Required "$(PWD)/app/server.cfg"]
+  eitherCfg <- try $ load [Required "$(HOME)/configs/server.cfg"]
   case eitherCfg of
-    Left (e :: SomeException) -> print "Can't find config file" >> print e
+    Left (e :: SomeException) -> print "Can't open config file" >> print e
     Right handleConfig -> do
       config <- parseConfig handleConfig
-      connectDatabaseAndDoAction config
+      case checkConfig config of
+        Left badField ->
+          print $ "The field must be set in the config file: " ++ badField
+        Right _ -> connectDatabaseAndDoAction config

@@ -24,9 +24,7 @@ cabal.project.local~
 .vscode
 .history
 .stack-work
-*.backup
 *.log
-*.cfg
 NewsServer/
 *.token
 *.id

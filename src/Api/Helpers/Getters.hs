@@ -61,7 +61,7 @@ checkAndGetParametersEither (requiredNames, requiredChecks) (optionalNames, opti
 
 getRequiredParams :: [FieldName] -> [(FieldName, Maybe a)] -> Either Error [a]
 getRequiredParams paramNames queryString = do
-  let listOfMaybeMaybeValues = map ((flip lookup) queryString) paramNames
+  let listOfMaybeMaybeValues = map (`lookup` queryString) paramNames
   let maybeListOfMaybeValues = sequence listOfMaybeMaybeValues
   case maybeListOfMaybeValues of
     Nothing -> Left $ "Missing required arguments: " <> missingArguments
@@ -79,11 +79,11 @@ getRequiredParams paramNames queryString = do
 getOptionalParams ::
      [FieldName] -> [(FieldName, Maybe ByteString)] -> [Maybe ByteString]
 getOptionalParams paramNames queryString = do
-  let listOfMaybeMaybeValues = map ((flip lookup) queryString) paramNames
+  let listOfMaybeMaybeValues = map (`lookup` queryString) paramNames
   let listOfMaybeValues = map (fromMaybe Nothing) listOfMaybeMaybeValues
   listOfMaybeValues
 
-genRandomString :: Int -> IO [Char]
+genRandomString :: Int -> IO String
 genRandomString 0 = return []
 genRandomString length = do
   t <- randomRIO (1 :: Int, 3 :: Int)

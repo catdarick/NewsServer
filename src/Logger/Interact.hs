@@ -52,6 +52,6 @@ withErrorLogging f = do
   res <- lift (try f)
   case res of
     Left (e :: SomeException) -> do
-      warn $ (pack $ show e)
+      warn $ pack (show e)
       return mempty
     Right x -> return x

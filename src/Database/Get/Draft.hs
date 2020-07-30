@@ -82,7 +82,7 @@ getDrafts token mbDraftId mbCategotyId mbTagId mbTagsIdIn mbTagsIdAll mbTitle mb
               (id, title, time, content, mainPic, addPics, tags, category)
       return drafts
 
-getDraftAuthorToken :: NewsId -> ServerStateIO [(Only Token)]
+getDraftAuthorToken :: NewsId -> ServerStateIO [Only Token]
 getDraftAuthorToken newsId = do
   conn <- gets conn
   lift $

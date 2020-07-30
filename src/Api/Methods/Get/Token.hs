@@ -22,7 +22,7 @@ getToken ::
 getToken queryString = do
   (requiredValues, optionalMaybeValues) <- parameters
   let [login, password] = requiredValues
-  let passHash = (hash password)
+  let passHash = hash password
   id <- DB.getUserIdByPass login passHash
   token <- genToken
   DB.setToken id token

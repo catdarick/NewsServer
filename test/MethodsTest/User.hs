@@ -57,7 +57,7 @@ createUser =
   itDB "can create user" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ createAccount query
-    (status, (resp & responseSuccess)) `shouldBe` (status201, True)
+    (status, resp & responseSuccess) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "user1")
@@ -71,7 +71,7 @@ createAuthor1Account =
   itDB "can create author1 account" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ createAccount query
-    (status, (resp & responseSuccess)) `shouldBe` (status201, True)
+    (status, resp & responseSuccess) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "author1")
@@ -85,7 +85,7 @@ createAuthor2Account =
   itDB "can create author2 account" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ createAccount query
-    (status, (resp & responseSuccess)) `shouldBe` (status201, True)
+    (status, resp & responseSuccess) `shouldBe` (status201, True)
   where
     query =
       [ ("login", Just "author2")
@@ -188,7 +188,7 @@ createAdminWithBadPass :: SpecWith TestDB
 createAdminWithBadPass =
   itDB "can't create admin with bad pass" $ do
     conn <- getConnection
-    res <- lift $ try $ runWithState conn $ createAccount (query)
+    res <- lift $ try $ runWithState conn $ createAccount query
     withEmptyError res `shouldBe` (Left $ ErrorException status400 "")
   where
     query =
@@ -204,7 +204,7 @@ getUsers_ =
   itDB "can get only two accounts (user and admin)" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser, testAdmin]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testUser, testAdmin]
   where
     query = []
 
@@ -222,7 +222,7 @@ getById =
   itDB "can get by id" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testUser]
   where
     query = [("user_id", Just "1")]
 
@@ -231,7 +231,7 @@ getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testUser]
   where
     query = [("login", Just "user1")]
 
@@ -240,7 +240,7 @@ getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testUser]
   where
     query = [("first_name", Just "userFName")]
 
@@ -249,7 +249,7 @@ getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testUser]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testUser]
   where
     query = [("last_name", Just "userLName")]
 
@@ -278,7 +278,7 @@ getUsersAfterDelete =
   itDB "can get only one account after delete (admin)" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getUsers query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAdmin]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAdmin]
   where
     query = []
 

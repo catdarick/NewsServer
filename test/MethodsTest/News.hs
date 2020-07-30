@@ -62,7 +62,7 @@ getNewsByUser =
   itDB "user can get news" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
     query = []
@@ -72,7 +72,7 @@ getByAuthorId =
   itDB "can get by author id" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews1]
   where
     query = [("author_id", Just "1")]
 
@@ -81,7 +81,7 @@ getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews1]
   where
     query = [("login", Just "author1")]
 
@@ -90,7 +90,7 @@ getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews1]
   where
     query = [("first_name", Just "author1FName")]
 
@@ -99,7 +99,7 @@ getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews1]
   where
     query = [("last_name", Just "author1LName")]
 
@@ -108,7 +108,7 @@ getNewsByCategoryId =
   itDB "can get by category id" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
     query = [("category_id", Just "2")]
@@ -118,7 +118,7 @@ getNewsByTagId =
   itDB "can get by tag id name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews2]
   where
     query = [("tag_id", Just "2")]
 
@@ -127,7 +127,7 @@ getNewsByTagsIdIn =
   itDB "can get by tags_in" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
     query = [("tags_id_in", Just "[1,2,3]")]
@@ -137,7 +137,7 @@ getNewsByTagsIdAll =
   itDB "can get by tags_all" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews2]
   where
     query = [("tags_id_all", Just "[1,2]")]
 
@@ -146,7 +146,7 @@ getNewsByTitleSearch1 =
   itDB "get both news by title search" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
     query = [("title", Just "some")]
@@ -156,7 +156,7 @@ getNewsByTitleSearch2 =
   itDB "get only one news by title search" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews2]
   where
     query = [("title", Just "Title2")]
 
@@ -165,7 +165,7 @@ getNewsByContentSearch1 =
   itDB "get both news by content search" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testNews1, testNews2]
   where
     query = [("content", Just "some")]
@@ -175,7 +175,7 @@ getNewsByContentSearch2 =
   itDB "get only one news by content search" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testNews2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testNews2]
   where
     query = [("content", Just "Content2")]
 
@@ -184,7 +184,7 @@ getNewsWithSort3 =
   itDB "correctly sorted by author name ASC" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
+    withDefTime_ (resp & responseResult) `shouldBe`
       Just [testNews1, testNews2]
   where
     query = [("sort", Just "3")]
@@ -194,7 +194,7 @@ getNewsWithSort4 =
   itDB "correctly sorted by author name DESC" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getNews query
-    (withDefTime_ (resp & responseResult)) `shouldBe`
+    withDefTime_ (resp & responseResult) `shouldBe`
       Just [testNews2, testNews1]
   where
     query = [("sort", Just "4")]

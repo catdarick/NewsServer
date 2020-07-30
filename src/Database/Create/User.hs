@@ -61,7 +61,7 @@ addAdmin conn login pass fName lName = do
       , Binary passHash
       , fName
       , lName
-      , (Nothing :: Maybe ByteString)
+      , Nothing :: Maybe ByteString
       , True)
   case res of
     Left (e :: SomeException) -> throwM $ ErrorException status400 Err.loginBusy

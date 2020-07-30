@@ -2,14 +2,12 @@
 
 module Api.Types.Tag where
 
-import           Data.Text         (Text)
-
+import           Api.Types.Synonyms
 import           Data.Aeson
 import           Data.Aeson.Casing
-import           Data.Text         (Text)
-import           Data.Time         (LocalTime, UTCTime)
-import           Api.Types.Synonyms
-import           GHC.Generics      (Generic)
+import           Data.Text          (Text)
+import           Data.Time          (LocalTime, UTCTime)
+import           GHC.Generics       (Generic)
 
 data Tag =
   Tag

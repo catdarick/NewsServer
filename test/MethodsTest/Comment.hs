@@ -81,7 +81,7 @@ getComment =
   itDB "can get comment" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getComments query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testComment1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testComment1]
   where
     query = [("news_id", Just "1")]
 

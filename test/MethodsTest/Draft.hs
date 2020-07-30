@@ -82,7 +82,7 @@ createDraftByAuthor1 =
   itDB "author1 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ createDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -99,7 +99,7 @@ createDraftByAuthor2 =
   itDB "author2 can create draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ createDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -180,7 +180,7 @@ publishDraft1 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ publishDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -191,7 +191,7 @@ publishDraft2 =
   itDB "author can post draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ publishDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -202,9 +202,9 @@ getDraftBy1Author =
   itDB "can get 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ getDrafts  (query token)
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testDraft1]
   where
     query token = [("token", Just token)]
 
@@ -213,9 +213,9 @@ getDraftBy2Author =
   itDB "can get 2'st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor2Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ getDrafts  (query token)
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testDraft2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testDraft2]
   where
     query token = [("token", Just token)]
 
@@ -224,7 +224,7 @@ editDraftBy1Author =
   itDB "can edit 1st author's draft by himself" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ editDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -242,9 +242,9 @@ isDraftCorrectlyEdited =
   itDB "draft is correctly edited" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ getDrafts  (query token)
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [editedDraft1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [editedDraft1]
   where
     query token = [("token", Just token)]
 
@@ -282,7 +282,7 @@ deleteDraftBy1Author =
   itDB "author1 can delete 1st author's draft" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ deleteDraft  (query token)
     (resp & responseSuccess) `shouldBe` True
   where
@@ -293,7 +293,7 @@ isDraftDeleted =
   itDB "draft is deleted" $ do
     conn <- getConnection
     token <- User.getAuthor1Token conn
-    (status, resp) <- lift $ 
+    (status, resp) <- lift $
       runWithState conn $ getDrafts  (query token)
     (resp & responseResult) `shouldBe` Just []
   where

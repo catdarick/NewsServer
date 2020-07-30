@@ -35,7 +35,7 @@ insert =
   itDB "can insert (category)" $ do
     conn <- getConnection
     id <- lift $ runWithState conn $ addCategory "testName" Nothing
-    category <- lift $ runWithState conn $ getRootCategoriesTree
+    category <- lift $ runWithState conn getRootCategoriesTree
     category `shouldBe` [testCategory]
 
 getById :: SpecWith TestDB
@@ -50,7 +50,7 @@ addChildAndGet =
   itDB "can add and get child" $ do
     conn <- getConnection
     id <- lift $ runWithState conn $ addCategory "testChildName" (Just 1)
-    category <- lift $ runWithState conn $ getRootCategoriesTree
+    category <- lift $ runWithState conn getRootCategoriesTree
     category `shouldBe` [testParentCategory]
 
 edit :: SpecWith TestDB
@@ -58,7 +58,7 @@ edit =
   itDB "edit" $ do
     conn <- getConnection
     lift $ runWithState conn $ editCategory 2 (Just "newTestName") (Just 0)
-    categories <- lift $ runWithState conn $ getRootCategoriesTree
+    categories <- lift $ runWithState conn getRootCategoriesTree
     categories `shouldBe` [testCategory, testEditedCategory]
 
 delete :: SpecWith TestDB
@@ -67,7 +67,7 @@ delete =
     conn <- getConnection
     lift $ runWithState conn $ deleteCategory 1
     lift $ runWithState conn $ deleteCategory 2
-    category <- lift $ runWithState conn $ getRootCategoriesTree
+    category <- lift $ runWithState conn getRootCategoriesTree
     category `shouldBe` []
 
 testCategory :: Category

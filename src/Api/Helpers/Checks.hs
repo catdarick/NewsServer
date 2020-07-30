@@ -80,8 +80,8 @@ isIntBetween min max (name, val)
   | fromJust maybeInteger < min = Left $ name <> bsMinAppend
   | otherwise = Right True
   where
-    bsMinAppend = " is too little, " <> (pack $ show min <> " is minimal")
-    bsMaxAppend = " is too large, " <> (pack $ show max <> " is maximal")
+    bsMinAppend = " is too little, " <> pack (show min <> " is minimal")
+    bsMaxAppend = " is too large, " <> pack (show max <> " is maximal")
     strVal = unpack val
     maybeInteger :: Maybe Integer
     maybeInteger = readMaybe strVal

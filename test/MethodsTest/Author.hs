@@ -108,7 +108,7 @@ getAuthors_ =
   itDB "get only two aauthors" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (fromJust $ withDefTime_ (resp & responseResult)) `shouldMatchList`
+    fromJust (withDefTime_ (resp & responseResult)) `shouldMatchList`
       [testAuthor1, testAuthor2]
   where
     query = []
@@ -118,7 +118,7 @@ getById =
   itDB "can get by id" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor1]
   where
     query = [("author_id", Just "1")]
 
@@ -127,7 +127,7 @@ getByUserId =
   itDB "can get by user id" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor1]
   where
     query = [("user_id", Just "3")]
 
@@ -136,7 +136,7 @@ getByLogin =
   itDB "can get by login" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor1]
   where
     query = [("login", Just "author1")]
 
@@ -145,7 +145,7 @@ getByFName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor1]
   where
     query = [("first_name", Just "author1FName")]
 
@@ -154,7 +154,7 @@ getByLName =
   itDB "can get by first name" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor1]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor1]
   where
     query = [("last_name", Just "author1LName")]
 
@@ -183,7 +183,7 @@ getUsersAfterDelete =
   itDB "get only one author after delete (author2)" $ do
     conn <- getConnection
     (status, resp) <- lift $ runWithState conn $ getAuthors query
-    (withDefTime_ (resp & responseResult)) `shouldBe` Just [testAuthor2]
+    withDefTime_ (resp & responseResult) `shouldBe` Just [testAuthor2]
   where
     query = []
 
